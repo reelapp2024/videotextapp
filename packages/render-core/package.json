@@ -1,0 +1,26 @@
+{
+  "name": "@reel-maker/render-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./browser": "./src/index.browser.js",
+    "./node": "./src/index.node.js"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js test/parity/*.test.js"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^0.1.67"
+  },
+  "peerDependencies": {
+    "@napi-rs/canvas": "^0.1.67"
+  },
+  "peerDependenciesMeta": {
+    "@napi-rs/canvas": {
+      "optional": true
+    }
+  }
+}
