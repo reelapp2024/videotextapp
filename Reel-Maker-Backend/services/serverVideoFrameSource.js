@@ -53,7 +53,7 @@ class ServerVideoFrameSource {
     }
 
     const vf = [
-      `fps=fps=${this.fps}:start_time=0:round=near`, // OPTIMIZATION: Changed round=down to round=near to fix micro-stuttering frame shaking
+      `fps=fps=${this.fps}:start_time=0:round=near`, // FIXED: Prevents micro-stutters and frame shaking loops
       `scale=${this.width}:${this.height}:force_original_aspect_ratio=decrease`,
       `pad=${this.width}:${this.height}:(ow-iw)/2:(oh-ih)/2:black`,
     ].join(',');
@@ -61,14 +61,14 @@ class ServerVideoFrameSource {
     const args = [
       '-hide_banner',
       '-loglevel', 'error',
-      '-threads', '4', // Enforce multithreading allocation context for faster background video demuxing
+      '-threads', '4', // Allocate multithreading context to accelerate decoding background streams
     ];
     if (this.loop) args.push('-stream_loop', '-1');
     args.push(
       '-i', this.filePath,
       '-an',
       '-vf', vf,
-      '-fps_mode', 'cfr', // OPTIMIZATION: Upgraded legacy deprecated -vsync parameter to modern -fps_mode CFR syntax
+      '-fps_mode', 'cfr', // FIXED: Upgraded legacy deprecated syntax to modern -fps_mode CFR structure
       '-f', 'rawvideo',
       '-pix_fmt', 'rgba',
       'pipe:1',

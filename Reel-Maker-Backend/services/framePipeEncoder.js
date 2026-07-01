@@ -242,18 +242,25 @@ class FramePipeEncoder {
       if (audio?.path) args.push('-i', audio.path);
     }
 
+    const isNVENC = this.videoEncodeOptions.includes('h264_nvenc') || this.videoEncodeOptions.includes('hevc_nvenc');
+    const isQSV = this.videoEncodeOptions.includes('h264_qsv');
+    const outputPixFmt = isQSV ? 'nv12' : 'yuv420p';
+
     if (this.audioFilter) {
-      const outputPixFmt = this.videoEncodeOptions.includes('h264_qsv') ? 'nv12' : 'yuv420p';
       const vf = `[0:v]format=${outputPixFmt}[vout]`;
       args.push('-filter_complex', `${vf};${this.audioFilter.filter}`);
       args.push('-map', '[vout]', '-map', `[${this.audioFilter.audioLabel}]`);
       args.push(...this.videoEncodeOptions);
       args.push(...this.audioEncodeOptions);
     } else {
-      const outputPixFmt = this.videoEncodeOptions.includes('h264_qsv') ? 'nv12' : 'yuv420p';
       args.push('-vf', `format=${outputPixFmt}`);
       args.push('-an');
       args.push(...this.videoEncodeOptions);
+    }
+
+    // FIXED: Enforce high-performance multithreading attributes for software fallbacks
+    if (!isQSV && !isNVENC && this.videoEncodeOptions.includes('libx264')) {
+      args.push('-threads', '0', '-preset', 'ultrafast', '-tune', 'animation', '-crf', '18');
     }
 
     if (this.container === 'webm') {

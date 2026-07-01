@@ -24,7 +24,7 @@ async function getRenderCore() {
 async function renderServerFrame(params) {
   const renderCore = await getRenderCore();
   
-  // OPTIMIZATION: Cache asset loader and overlay configurations globally to avoid per-frame resource allocation loops
+  // OPTIMIZATION: Cache loader and configuration structures out of per-frame allocation loops
   if (!globalAssetLoader) {
     globalAssetLoader = createServerAssetLoader();
   }
