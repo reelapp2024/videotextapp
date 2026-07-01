@@ -17,10 +17,6 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
@@ -221,11 +217,12 @@ async function ensureFontFamilies(families) {
     })
   );
 }
-function listGoogleFontsToInstall() {
+
+function loadAppFontList() {
   const presetsPath = import_path.default.resolve(BACKEND_ROOT, "../Reel-Maker/src/textStylePresets.js");
   if (!import_fs.default.existsSync(presetsPath)) return [];
   const src = import_fs.default.readFileSync(presetsPath, "utf-8");
-  const block = src.match(/export const FONTS = \[([\s\S]*?)\];/);
+  const block = src.match(/const FONTS_RAW = \[([\s\S]*?)\];/);
   if (!block) return [];
   const names = [];
   const re = /'([^']+)'|"([^"]+)"/g;
@@ -235,9 +232,11 @@ function listGoogleFontsToInstall() {
   }
   return [...new Set(names)];
 }
+
 function listGoogleFontsToInstall() {
   return loadAppFontList().filter((f) => !isSystemFont(f));
 }
+
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   WINDOWS_SYSTEM_FONTS,

@@ -13,7 +13,7 @@
     "test": "node --test test/*.test.js test/parity/*.test.js"
   },
   "devDependencies": {
-    "@napi-rs/canvas": "^0.1.67"
+    "@napi-rs/canvas": "^0.1.100"
   },
   "peerDependencies": {
     "@napi-rs/canvas": "^0.1.67"
