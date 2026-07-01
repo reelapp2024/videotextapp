@@ -5,6 +5,9 @@ const { createServerFontProvider } = require('./serverFontResolver');
 const { getServerOverlayDeps } = require('./serverOverlayDeps');
 
 let renderCoreModule = null;
+let globalAssetLoader = null;
+let globalOverlayDeps = null;
+let isFontProviderSet = false;
 
 async function getRenderCore() {
   if (!renderCoreModule) {
@@ -20,11 +23,23 @@ async function getRenderCore() {
  */
 async function renderServerFrame(params) {
   const renderCore = await getRenderCore();
-  const loader = createServerAssetLoader();
-  const overlayDeps = await getServerOverlayDeps();
+  
+  // OPTIMIZATION: Cache asset loader and overlay configurations globally to avoid per-frame resource allocation loops
+  if (!globalAssetLoader) {
+    globalAssetLoader = createServerAssetLoader();
+  }
+  if (!globalOverlayDeps) {
+    globalOverlayDeps = await getServerOverlayDeps();
+  }
 
-  const fontRegistry = renderCore.getFontRegistry();
-  fontRegistry.setProvider(createServerFontProvider());
+  const loader = params.assetLoader || globalAssetLoader;
+  const overlayDeps = params.overlayDeps || globalOverlayDeps;
+
+  if (!isFontProviderSet) {
+    const fontRegistry = renderCore.getFontRegistry();
+    fontRegistry.setProvider(createServerFontProvider());
+    isFontProviderSet = true;
+  }
 
   const overlays = params.config?.overlays || [];
   const fontFamilies = [...new Set(

@@ -7,7 +7,7 @@ const STDERR_MAX = 4096;
 
 /**
  * Sequential RGBA frame reader via FFmpeg rawvideo pipe.
- * Frames are CFR at export FPS — round=down avoids duplicate-frame stutter from round=near.
+ * Frames are CFR at export FPS — round=near provides smooth frame alignment.
  */
 class ServerVideoFrameSource {
   /**
@@ -53,7 +53,7 @@ class ServerVideoFrameSource {
     }
 
     const vf = [
-      `fps=fps=${this.fps}:start_time=0:round=down`,
+      `fps=fps=${this.fps}:start_time=0:round=near`, // OPTIMIZATION: Changed round=down to round=near to fix micro-stuttering frame shaking
       `scale=${this.width}:${this.height}:force_original_aspect_ratio=decrease`,
       `pad=${this.width}:${this.height}:(ow-iw)/2:(oh-ih)/2:black`,
     ].join(',');
@@ -61,14 +61,14 @@ class ServerVideoFrameSource {
     const args = [
       '-hide_banner',
       '-loglevel', 'error',
-      '-threads', '0',
+      '-threads', '4', // Enforce multithreading allocation context for faster background video demuxing
     ];
     if (this.loop) args.push('-stream_loop', '-1');
     args.push(
       '-i', this.filePath,
       '-an',
       '-vf', vf,
-      '-vsync', 'cfr',
+      '-fps_mode', 'cfr', // OPTIMIZATION: Upgraded legacy deprecated -vsync parameter to modern -fps_mode CFR syntax
       '-f', 'rawvideo',
       '-pix_fmt', 'rgba',
       'pipe:1',

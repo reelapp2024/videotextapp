@@ -68,7 +68,6 @@ function validateAudioInputs(audioInputs) {
   }
 }
 
-/** Build atempo chain for FFmpeg (each atempo supports 0.5–2). */
 function buildAtempoChain(speed) {
   const s = clamp(speed, 0.25, 4, 1);
   if (Math.abs(s - 1) < 0.001) return null;
@@ -86,12 +85,6 @@ function buildAtempoChain(speed) {
   return parts.map((v) => `atempo=${v.toFixed(5)}`).join(',');
 }
 
-/**
- * Build audio filter graph matching videoProcessor.buildAudioFilter.
- * Video is input 0 (stdin); audio inputs start at index 1.
- *
- * Uses apad=whole_len + atrim (bundled FFmpeg 4.x) — NOT apad=whole_dur (FFmpeg 5+).
- */
 function buildDurationFitFilters(durationSec, sampleRate) {
   if (!durationSec || durationSec <= 0) {
     return 'apad';
@@ -195,23 +188,7 @@ function normalizeRgbaBuffer(rgba) {
   });
 }
 
-/**
- * Stream RGBA frames to FFmpeg stdin and encode to MP4 (GPU when available).
- */
 class FramePipeEncoder {
-  /**
-   * @param {object} options
-   * @param {number} options.width
-   * @param {number} options.height
-   * @param {number} options.fps
-   * @param {string} options.outputPath
-   * @param {string[]} [options.videoEncodeOptions]
-   * @param {string[]} [options.audioEncodeOptions]
-   * @param {Array<{ path: string }>} [options.audioInputs]
-   * @param {object|null} [options.audioFilter]
-   * @param {number} [options.durationSec]
-   * @param {string} [options.container] — mp4 | webm | matroska
-   */
   constructor(options) {
     this.width = options.width;
     this.height = options.height;
