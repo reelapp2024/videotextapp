@@ -53,7 +53,7 @@ class ServerVideoFrameSource {
     }
 
     const vf = [
-      `fps=fps=${this.fps}:start_time=0:round=near`, // FIXED: Prevents micro-stutters and frame shaking loops
+      `fps=fps=${this.fps}:start_time=0:round=near`, // Maintained round=near to stop frame stuttering/shaking
       `scale=${this.width}:${this.height}:force_original_aspect_ratio=decrease`,
       `pad=${this.width}:${this.height}:(ow-iw)/2:(oh-ih)/2:black`,
     ].join(',');
@@ -61,14 +61,14 @@ class ServerVideoFrameSource {
     const args = [
       '-hide_banner',
       '-loglevel', 'error',
-      '-threads', '4', // Allocate multithreading context to accelerate decoding background streams
+      '-threads', '4', 
     ];
     if (this.loop) args.push('-stream_loop', '-1');
     args.push(
       '-i', this.filePath,
       '-an',
       '-vf', vf,
-      '-fps_mode', 'cfr', // FIXED: Upgraded legacy deprecated syntax to modern -fps_mode CFR structure
+      '-vsync', 'cfr', // FIXED: Swapped back to legacy flag to support bundled installer binaries safely
       '-f', 'rawvideo',
       '-pix_fmt', 'rgba',
       'pipe:1',
