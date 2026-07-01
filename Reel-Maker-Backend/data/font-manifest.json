@@ -1,0 +1,4419 @@
+{
+  "Montserrat": {
+    "family": "Montserrat",
+    "files": [
+      "Montserrat-Regular.ttf",
+      "Montserrat-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lato": {
+    "family": "Lato",
+    "files": [
+      "Lato-Regular.ttf",
+      "Lato-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Open Sans": {
+    "family": "Open Sans",
+    "files": [
+      "Open-Sans-Regular.ttf",
+      "Open-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Roboto": {
+    "family": "Roboto",
+    "files": [
+      "Roboto-Regular.ttf",
+      "Roboto-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Poppins": {
+    "family": "Poppins",
+    "files": [
+      "Poppins-Regular.ttf",
+      "Poppins-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nunito": {
+    "family": "Nunito",
+    "files": [
+      "Nunito-Regular.ttf",
+      "Nunito-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Oswald": {
+    "family": "Oswald",
+    "files": [
+      "Oswald-Regular.ttf",
+      "Oswald-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Raleway": {
+    "family": "Raleway",
+    "files": [
+      "Raleway-Regular.ttf",
+      "Raleway-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Bebas Neue": {
+    "family": "Bebas Neue",
+    "files": [
+      "Bebas-Neue-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Anton": {
+    "family": "Anton",
+    "files": [
+      "Anton-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Playfair Display": {
+    "family": "Playfair Display",
+    "files": [
+      "Playfair-Display-Regular.ttf",
+      "Playfair-Display-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Merriweather": {
+    "family": "Merriweather",
+    "files": [
+      "Merriweather-Regular.ttf",
+      "Merriweather-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Inter": {
+    "family": "Inter",
+    "files": [
+      "Inter-Regular.ttf",
+      "Inter-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik": {
+    "family": "Rubik",
+    "files": [
+      "Rubik-Regular.ttf",
+      "Rubik-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Work Sans": {
+    "family": "Work Sans",
+    "files": [
+      "Work-Sans-Regular.ttf",
+      "Work-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Quicksand": {
+    "family": "Quicksand",
+    "files": [
+      "Quicksand-Regular.ttf",
+      "Quicksand-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ubuntu": {
+    "family": "Ubuntu",
+    "files": [
+      "Ubuntu-Regular.ttf",
+      "Ubuntu-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Exo 2": {
+    "family": "Exo 2",
+    "files": [
+      "Exo-2-Regular.ttf",
+      "Exo-2-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kanit": {
+    "family": "Kanit",
+    "files": [
+      "Kanit-Regular.ttf",
+      "Kanit-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Manrope": {
+    "family": "Manrope",
+    "files": [
+      "Manrope-Regular.ttf",
+      "Manrope-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Outfit": {
+    "family": "Outfit",
+    "files": [
+      "Outfit-Regular.ttf",
+      "Outfit-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Space Grotesk": {
+    "family": "Space Grotesk",
+    "files": [
+      "Space-Grotesk-Regular.ttf",
+      "Space-Grotesk-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sora": {
+    "family": "Sora",
+    "files": [
+      "Sora-Regular.ttf",
+      "Sora-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lexend": {
+    "family": "Lexend",
+    "files": [
+      "Lexend-Regular.ttf",
+      "Lexend-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "DM Sans": {
+    "family": "DM Sans",
+    "files": [
+      "DM-Sans-Regular.ttf",
+      "DM-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Figtree": {
+    "family": "Figtree",
+    "files": [
+      "Figtree-Regular.ttf",
+      "Figtree-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pacifico": {
+    "family": "Pacifico",
+    "files": [
+      "Pacifico-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Plus Jakarta Sans": {
+    "family": "Plus Jakarta Sans",
+    "files": [
+      "Plus-Jakarta-Sans-Regular.ttf",
+      "Plus-Jakarta-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Permanent Marker": {
+    "family": "Permanent Marker",
+    "files": [
+      "Permanent-Marker-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lobster": {
+    "family": "Lobster",
+    "files": [
+      "Lobster-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Righteous": {
+    "family": "Righteous",
+    "files": [
+      "Righteous-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Dancing Script": {
+    "family": "Dancing Script",
+    "files": [
+      "Dancing-Script-Regular.ttf",
+      "Dancing-Script-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Bangers": {
+    "family": "Bangers",
+    "files": [
+      "Bangers-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Russo One": {
+    "family": "Russo One",
+    "files": [
+      "Russo-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Staatliches": {
+    "family": "Staatliches",
+    "files": [
+      "Staatliches-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Orbitron": {
+    "family": "Orbitron",
+    "files": [
+      "Orbitron-Regular.ttf",
+      "Orbitron-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Caveat": {
+    "family": "Caveat",
+    "files": [
+      "Caveat-Regular.ttf",
+      "Caveat-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Satisfy": {
+    "family": "Satisfy",
+    "files": [
+      "Satisfy-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Great Vibes": {
+    "family": "Great Vibes",
+    "files": [
+      "Great-Vibes-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Amatic SC": {
+    "family": "Amatic SC",
+    "files": [
+      "Amatic-SC-Regular.ttf",
+      "Amatic-SC-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Archivo Black": {
+    "family": "Archivo Black",
+    "files": [
+      "Archivo-Black-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Unbounded": {
+    "family": "Unbounded",
+    "files": [
+      "Unbounded-Regular.ttf",
+      "Unbounded-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Comfortaa": {
+    "family": "Comfortaa",
+    "files": [
+      "Comfortaa-Regular.ttf",
+      "Comfortaa-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "PT Sans": {
+    "family": "PT Sans",
+    "files": [
+      "PT-Sans-Regular.ttf",
+      "PT-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Shadows Into Light": {
+    "family": "Shadows Into Light",
+    "files": [
+      "Shadows-Into-Light-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Fira Sans": {
+    "family": "Fira Sans",
+    "files": [
+      "Fira-Sans-Regular.ttf",
+      "Fira-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Libre Baskerville": {
+    "family": "Libre Baskerville",
+    "files": [
+      "Libre-Baskerville-Regular.ttf",
+      "Libre-Baskerville-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sacramento": {
+    "family": "Sacramento",
+    "files": [
+      "Sacramento-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Courgette": {
+    "family": "Courgette",
+    "files": [
+      "Courgette-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Indie Flower": {
+    "family": "Indie Flower",
+    "files": [
+      "Indie-Flower-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Black Ops One": {
+    "family": "Black Ops One",
+    "files": [
+      "Black-Ops-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Titan One": {
+    "family": "Titan One",
+    "files": [
+      "Titan-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Audiowide": {
+    "family": "Audiowide",
+    "files": [
+      "Audiowide-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Bungee": {
+    "family": "Bungee",
+    "files": [
+      "Bungee-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Press Start 2P": {
+    "family": "Press Start 2P",
+    "files": [
+      "Press-Start-2P-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Cinzel": {
+    "family": "Cinzel",
+    "files": [
+      "Cinzel-Regular.ttf",
+      "Cinzel-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Cormorant": {
+    "family": "Cormorant",
+    "files": [
+      "Cormorant-Regular.ttf",
+      "Cormorant-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "EB Garamond": {
+    "family": "EB Garamond",
+    "files": [
+      "EB-Garamond-Regular.ttf",
+      "EB-Garamond-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lora": {
+    "family": "Lora",
+    "files": [
+      "Lora-Regular.ttf",
+      "Lora-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Crimson Text": {
+    "family": "Crimson Text",
+    "files": [
+      "Crimson-Text-Regular.ttf",
+      "Crimson-Text-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Josefin Sans": {
+    "family": "Josefin Sans",
+    "files": [
+      "Josefin-Sans-Regular.ttf",
+      "Josefin-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Arvo": {
+    "family": "Arvo",
+    "files": [
+      "Arvo-Regular.ttf",
+      "Arvo-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Atkinson Hyperlegible": {
+    "family": "Atkinson Hyperlegible",
+    "files": [
+      "Atkinson-Hyperlegible-Regular.ttf",
+      "Atkinson-Hyperlegible-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Instrument Serif": {
+    "family": "Instrument Serif",
+    "files": [
+      "Instrument-Serif-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Fraunces": {
+    "family": "Fraunces",
+    "files": [
+      "Fraunces-Regular.ttf",
+      "Fraunces-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "DM Serif Display": {
+    "family": "DM Serif Display",
+    "files": [
+      "DM-Serif-Display-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Playfair": {
+    "family": "Playfair",
+    "files": [
+      "Playfair-Regular.ttf",
+      "Playfair-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Abril Fatface": {
+    "family": "Abril Fatface",
+    "files": [
+      "Abril-Fatface-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Alfa Slab One": {
+    "family": "Alfa Slab One",
+    "files": [
+      "Alfa-Slab-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Creepster": {
+    "family": "Creepster",
+    "files": [
+      "Creepster-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lilita One": {
+    "family": "Lilita One",
+    "files": [
+      "Lilita-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Newsreader": {
+    "family": "Newsreader",
+    "files": [
+      "Newsreader-Regular.ttf",
+      "Newsreader-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Passion One": {
+    "family": "Passion One",
+    "files": [
+      "Passion-One-Regular.ttf",
+      "Passion-One-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Yellowtail": {
+    "family": "Yellowtail",
+    "files": [
+      "Yellowtail-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Luckiest Guy": {
+    "family": "Luckiest Guy",
+    "files": [
+      "Luckiest-Guy-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kaushan Script": {
+    "family": "Kaushan Script",
+    "files": [
+      "Kaushan-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Cookie": {
+    "family": "Cookie",
+    "files": [
+      "Cookie-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Alex Brush": {
+    "family": "Alex Brush",
+    "files": [
+      "Alex-Brush-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Allura": {
+    "family": "Allura",
+    "files": [
+      "Allura-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Zeyada": {
+    "family": "Zeyada",
+    "files": [
+      "Zeyada-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Varela Round": {
+    "family": "Varela Round",
+    "files": [
+      "Varela-Round-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pathway Gothic One": {
+    "family": "Pathway Gothic One",
+    "files": [
+      "Pathway-Gothic-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Signika": {
+    "family": "Signika",
+    "files": [
+      "Signika-Regular.ttf",
+      "Signika-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Prompt": {
+    "family": "Prompt",
+    "files": [
+      "Prompt-Regular.ttf",
+      "Prompt-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noto Sans": {
+    "family": "Noto Sans",
+    "files": [
+      "Noto-Sans-Regular.ttf",
+      "Noto-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Oxygen": {
+    "family": "Oxygen",
+    "files": [
+      "Oxygen-Regular.ttf",
+      "Oxygen-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mukta": {
+    "family": "Mukta",
+    "files": [
+      "Mukta-Regular.ttf",
+      "Mukta-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Karla": {
+    "family": "Karla",
+    "files": [
+      "Karla-Regular.ttf",
+      "Karla-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Asap": {
+    "family": "Asap",
+    "files": [
+      "Asap-Regular.ttf",
+      "Asap-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Questrial": {
+    "family": "Questrial",
+    "files": [
+      "Questrial-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Titillium Web": {
+    "family": "Titillium Web",
+    "files": [
+      "Titillium-Web-Regular.ttf",
+      "Titillium-Web-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Cuprum": {
+    "family": "Cuprum",
+    "files": [
+      "Cuprum-Regular.ttf",
+      "Cuprum-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Barlow": {
+    "family": "Barlow",
+    "files": [
+      "Barlow-Regular.ttf",
+      "Barlow-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Barlow Condensed": {
+    "family": "Barlow Condensed",
+    "files": [
+      "Barlow-Condensed-Regular.ttf",
+      "Barlow-Condensed-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Libre Franklin": {
+    "family": "Libre Franklin",
+    "files": [
+      "Libre-Franklin-Regular.ttf",
+      "Libre-Franklin-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Source Code Pro": {
+    "family": "Source Code Pro",
+    "files": [
+      "Source-Code-Pro-Regular.ttf",
+      "Source-Code-Pro-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Inconsolata": {
+    "family": "Inconsolata",
+    "files": [
+      "Inconsolata-Regular.ttf",
+      "Inconsolata-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "JetBrains Mono": {
+    "family": "JetBrains Mono",
+    "files": [
+      "JetBrains-Mono-Regular.ttf",
+      "JetBrains-Mono-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Fira Code": {
+    "family": "Fira Code",
+    "files": [
+      "Fira-Code-Regular.ttf",
+      "Fira-Code-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Anonymous Pro": {
+    "family": "Anonymous Pro",
+    "files": [
+      "Anonymous-Pro-Regular.ttf",
+      "Anonymous-Pro-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "IBM Plex Mono": {
+    "family": "IBM Plex Mono",
+    "files": [
+      "IBM-Plex-Mono-Regular.ttf",
+      "IBM-Plex-Mono-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Red Hat Mono": {
+    "family": "Red Hat Mono",
+    "files": [
+      "Red-Hat-Mono-Regular.ttf",
+      "Red-Hat-Mono-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Amethysta": {
+    "family": "Amethysta",
+    "files": [
+      "Amethysta-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Almendra": {
+    "family": "Almendra",
+    "files": [
+      "Almendra-Regular.ttf",
+      "Almendra-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Archivo": {
+    "family": "Archivo",
+    "files": [
+      "Archivo-Regular.ttf",
+      "Archivo-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Arimo": {
+    "family": "Arimo",
+    "files": [
+      "Arimo-Regular.ttf",
+      "Arimo-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Bitter": {
+    "family": "Bitter",
+    "files": [
+      "Bitter-Regular.ttf",
+      "Bitter-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Cabin": {
+    "family": "Cabin",
+    "files": [
+      "Cabin-Regular.ttf",
+      "Cabin-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Cardo": {
+    "family": "Cardo",
+    "files": [
+      "Cardo-Regular.ttf",
+      "Cardo-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Catamaran": {
+    "family": "Catamaran",
+    "files": [
+      "Catamaran-Regular.ttf",
+      "Catamaran-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Domine": {
+    "family": "Domine",
+    "files": [
+      "Domine-Regular.ttf",
+      "Domine-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Cormorant Garamond": {
+    "family": "Cormorant Garamond",
+    "files": [
+      "Cormorant-Garamond-Regular.ttf",
+      "Cormorant-Garamond-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Encode Sans": {
+    "family": "Encode Sans",
+    "files": [
+      "Encode-Sans-Regular.ttf",
+      "Encode-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Epilogue": {
+    "family": "Epilogue",
+    "files": [
+      "Epilogue-Regular.ttf",
+      "Epilogue-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "El Messiri": {
+    "family": "El Messiri",
+    "files": [
+      "El-Messiri-Regular.ttf",
+      "El-Messiri-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Hind": {
+    "family": "Hind",
+    "files": [
+      "Hind-Regular.ttf",
+      "Hind-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Fauna One": {
+    "family": "Fauna One",
+    "files": [
+      "Fauna-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Fahkwang": {
+    "family": "Fahkwang",
+    "files": [
+      "Fahkwang-Regular.ttf",
+      "Fahkwang-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Gothic A1": {
+    "family": "Gothic A1",
+    "files": [
+      "Gothic-A1-Regular.ttf",
+      "Gothic-A1-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Heebo": {
+    "family": "Heebo",
+    "files": [
+      "Heebo-Regular.ttf",
+      "Heebo-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "IM Fell English": {
+    "family": "IM Fell English",
+    "files": [
+      "IM-Fell-English-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "IBM Plex Sans": {
+    "family": "IBM Plex Sans",
+    "files": [
+      "IBM-Plex-Sans-Regular.ttf",
+      "IBM-Plex-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "IBM Plex Serif": {
+    "family": "IBM Plex Serif",
+    "files": [
+      "IBM-Plex-Serif-Regular.ttf",
+      "IBM-Plex-Serif-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Julee": {
+    "family": "Julee",
+    "files": [
+      "Julee-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Inknut Antiqua": {
+    "family": "Inknut Antiqua",
+    "files": [
+      "Inknut-Antiqua-Regular.ttf",
+      "Inknut-Antiqua-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Julius Sans One": {
+    "family": "Julius Sans One",
+    "files": [
+      "Julius-Sans-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Jost": {
+    "family": "Jost",
+    "files": [
+      "Jost-Regular.ttf",
+      "Jost-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "K2D": {
+    "family": "K2D",
+    "files": [
+      "K2D-Regular.ttf",
+      "K2D-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kadwa": {
+    "family": "Kadwa",
+    "files": [
+      "Kadwa-Regular.ttf",
+      "Kadwa-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kalam": {
+    "family": "Kalam",
+    "files": [
+      "Kalam-Regular.ttf",
+      "Kalam-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kameron": {
+    "family": "Kameron",
+    "files": [
+      "Kameron-Regular.ttf",
+      "Kameron-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Katibeh": {
+    "family": "Katibeh",
+    "files": [
+      "Katibeh-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kantumruy Pro": {
+    "family": "Kantumruy Pro",
+    "files": [
+      "Kantumruy-Pro-Regular.ttf",
+      "Kantumruy-Pro-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kavivanar": {
+    "family": "Kavivanar",
+    "files": [
+      "Kavivanar-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Karma": {
+    "family": "Karma",
+    "files": [
+      "Karma-Regular.ttf",
+      "Karma-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kavoon": {
+    "family": "Kavoon",
+    "files": [
+      "Kavoon-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kelly Slab": {
+    "family": "Kelly Slab",
+    "files": [
+      "Kelly-Slab-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kenia": {
+    "family": "Kenia",
+    "files": [
+      "Kenia-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kings": {
+    "family": "Kings",
+    "files": [
+      "Kings-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Khand": {
+    "family": "Khand",
+    "files": [
+      "Khand-Regular.ttf",
+      "Khand-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kirang Haerang": {
+    "family": "Kirang Haerang",
+    "files": [
+      "Kirang-Haerang-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Khula": {
+    "family": "Khula",
+    "files": [
+      "Khula-Regular.ttf",
+      "Khula-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kiwi Maru": {
+    "family": "Kiwi Maru",
+    "files": [
+      "Kiwi-Maru-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kite One": {
+    "family": "Kite One",
+    "files": [
+      "Kite-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Klee One": {
+    "family": "Klee One",
+    "files": [
+      "Klee-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Knewave": {
+    "family": "Knewave",
+    "files": [
+      "Knewave-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kolker Brush": {
+    "family": "Kolker Brush",
+    "files": [
+      "Kolker-Brush-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kosugi": {
+    "family": "Kosugi",
+    "files": [
+      "Kosugi-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kosugi Maru": {
+    "family": "Kosugi Maru",
+    "files": [
+      "Kosugi-Maru-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "KoHo": {
+    "family": "KoHo",
+    "files": [
+      "KoHo-Regular.ttf",
+      "KoHo-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kotta One": {
+    "family": "Kotta One",
+    "files": [
+      "Kotta-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Koulen": {
+    "family": "Koulen",
+    "files": [
+      "Koulen-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kranky": {
+    "family": "Kranky",
+    "files": [
+      "Kranky-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kristi": {
+    "family": "Kristi",
+    "files": [
+      "Kristi-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Krona One": {
+    "family": "Krona One",
+    "files": [
+      "Krona-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kreon": {
+    "family": "Kreon",
+    "files": [
+      "Kreon-Regular.ttf",
+      "Kreon-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kumar One": {
+    "family": "Kumar One",
+    "files": [
+      "Kumar-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Krub": {
+    "family": "Krub",
+    "files": [
+      "Krub-Regular.ttf",
+      "Krub-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kufam": {
+    "family": "Kufam",
+    "files": [
+      "Kufam-Regular.ttf",
+      "Kufam-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kulim Park": {
+    "family": "Kulim Park",
+    "files": [
+      "Kulim-Park-Regular.ttf",
+      "Kulim-Park-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kumar One Outline": {
+    "family": "Kumar One Outline",
+    "files": [
+      "Kumar-One-Outline-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kurale": {
+    "family": "Kurale",
+    "files": [
+      "Kurale-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "La Belle Aurore": {
+    "family": "La Belle Aurore",
+    "files": [
+      "La-Belle-Aurore-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Kumbh Sans": {
+    "family": "Kumbh Sans",
+    "files": [
+      "Kumbh-Sans-Regular.ttf",
+      "Kumbh-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lacquer": {
+    "family": "Lacquer",
+    "files": [
+      "Lacquer-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Labrada": {
+    "family": "Labrada",
+    "files": [
+      "Labrada-Regular.ttf",
+      "Labrada-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lakki Reddy": {
+    "family": "Lakki Reddy",
+    "files": [
+      "Lakki-Reddy-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Laila": {
+    "family": "Laila",
+    "files": [
+      "Laila-Regular.ttf",
+      "Laila-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Langar": {
+    "family": "Langar",
+    "files": [
+      "Langar-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "League Gothic": {
+    "family": "League Gothic",
+    "files": [
+      "League-Gothic-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "League Script": {
+    "family": "League Script",
+    "files": [
+      "League-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lateef": {
+    "family": "Lateef",
+    "files": [
+      "Lateef-Regular.ttf",
+      "Lateef-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Leckerli One": {
+    "family": "Leckerli One",
+    "files": [
+      "Leckerli-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "League Spartan": {
+    "family": "League Spartan",
+    "files": [
+      "League-Spartan-Regular.ttf",
+      "League-Spartan-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lekton": {
+    "family": "Lekton",
+    "files": [
+      "Lekton-Regular.ttf",
+      "Lekton-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lexend Deca": {
+    "family": "Lexend Deca",
+    "files": [
+      "Lexend-Deca-Regular.ttf",
+      "Lexend-Deca-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lexend Exa": {
+    "family": "Lexend Exa",
+    "files": [
+      "Lexend-Exa-Regular.ttf",
+      "Lexend-Exa-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Libre Bodoni": {
+    "family": "Libre Bodoni",
+    "files": [
+      "Libre-Bodoni-Regular.ttf",
+      "Libre-Bodoni-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Libre Caslon Text": {
+    "family": "Libre Caslon Text",
+    "files": [
+      "Libre-Caslon-Text-Regular.ttf",
+      "Libre-Caslon-Text-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Licorice": {
+    "family": "Licorice",
+    "files": [
+      "Licorice-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lily Script One": {
+    "family": "Lily Script One",
+    "files": [
+      "Lily-Script-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Limelight": {
+    "family": "Limelight",
+    "files": [
+      "Limelight-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ledger": {
+    "family": "Ledger",
+    "files": [
+      "Ledger-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Literata": {
+    "family": "Literata",
+    "files": [
+      "Literata-Regular.ttf",
+      "Literata-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Long Cang": {
+    "family": "Long Cang",
+    "files": [
+      "Long-Cang-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Livvic": {
+    "family": "Livvic",
+    "files": [
+      "Livvic-Regular.ttf",
+      "Livvic-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lobster Two": {
+    "family": "Lobster Two",
+    "files": [
+      "Lobster-Two-Regular.ttf",
+      "Lobster-Two-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Love Light": {
+    "family": "Love Light",
+    "files": [
+      "Love-Light-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Love Ya Like A Sister": {
+    "family": "Love Ya Like A Sister",
+    "files": [
+      "Love-Ya-Like-A-Sister-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Loved by the King": {
+    "family": "Loved by the King",
+    "files": [
+      "Loved-by-the-King-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lovers Quarrel": {
+    "family": "Lovers Quarrel",
+    "files": [
+      "Lovers-Quarrel-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Luxurious Script": {
+    "family": "Luxurious Script",
+    "files": [
+      "Luxurious-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Luxurious Roman": {
+    "family": "Luxurious Roman",
+    "files": [
+      "Luxurious-Roman-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Lusitana": {
+    "family": "Lusitana",
+    "files": [
+      "Lusitana-Regular.ttf",
+      "Lusitana-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Macondo": {
+    "family": "Macondo",
+    "files": [
+      "Macondo-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Madimi One": {
+    "family": "Madimi One",
+    "files": [
+      "Madimi-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mada": {
+    "family": "Mada",
+    "files": [
+      "Mada-Regular.ttf",
+      "Mada-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Magra": {
+    "family": "Magra",
+    "files": [
+      "Magra-Regular.ttf",
+      "Magra-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Maitree": {
+    "family": "Maitree",
+    "files": [
+      "Maitree-Regular.ttf",
+      "Maitree-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Major Mono Display": {
+    "family": "Major Mono Display",
+    "files": [
+      "Major-Mono-Display-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mandali": {
+    "family": "Mandali",
+    "files": [
+      "Mandali-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mansalva": {
+    "family": "Mansalva",
+    "files": [
+      "Mansalva-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Marcellus": {
+    "family": "Marcellus",
+    "files": [
+      "Marcellus-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Manjari": {
+    "family": "Manjari",
+    "files": [
+      "Manjari-Regular.ttf",
+      "Manjari-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Manuale": {
+    "family": "Manuale",
+    "files": [
+      "Manuale-Regular.ttf",
+      "Manuale-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Marcellus SC": {
+    "family": "Marcellus SC",
+    "files": [
+      "Marcellus-SC-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Marck Script": {
+    "family": "Marck Script",
+    "files": [
+      "Marck-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Margarine": {
+    "family": "Margarine",
+    "files": [
+      "Margarine-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Marko One": {
+    "family": "Marko One",
+    "files": [
+      "Marko-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Marhey": {
+    "family": "Marhey",
+    "files": [
+      "Marhey-Regular.ttf",
+      "Marhey-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Marmelad": {
+    "family": "Marmelad",
+    "files": [
+      "Marmelad-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Markazi Text": {
+    "family": "Markazi Text",
+    "files": [
+      "Markazi-Text-Regular.ttf",
+      "Markazi-Text-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mate": {
+    "family": "Mate",
+    "files": [
+      "Mate-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mate SC": {
+    "family": "Mate SC",
+    "files": [
+      "Mate-SC-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Martel": {
+    "family": "Martel",
+    "files": [
+      "Martel-Regular.ttf",
+      "Martel-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "McLaren": {
+    "family": "McLaren",
+    "files": [
+      "McLaren-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mea Culpa": {
+    "family": "Mea Culpa",
+    "files": [
+      "Mea-Culpa-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Martel Sans": {
+    "family": "Martel Sans",
+    "files": [
+      "Martel-Sans-Regular.ttf",
+      "Martel-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Meddon": {
+    "family": "Meddon",
+    "files": [
+      "Meddon-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "MedievalSharp": {
+    "family": "MedievalSharp",
+    "files": [
+      "MedievalSharp-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Medula One": {
+    "family": "Medula One",
+    "files": [
+      "Medula-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Megrim": {
+    "family": "Megrim",
+    "files": [
+      "Megrim-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Meie Script": {
+    "family": "Meie Script",
+    "files": [
+      "Meie-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Merienda": {
+    "family": "Merienda",
+    "files": [
+      "Merienda-Regular.ttf",
+      "Merienda-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Metamorphous": {
+    "family": "Metamorphous",
+    "files": [
+      "Metamorphous-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Metal Mania": {
+    "family": "Metal Mania",
+    "files": [
+      "Metal-Mania-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Metrophobic": {
+    "family": "Metrophobic",
+    "files": [
+      "Metrophobic-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Merriweather Sans": {
+    "family": "Merriweather Sans",
+    "files": [
+      "Merriweather-Sans-Regular.ttf",
+      "Merriweather-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Michroma": {
+    "family": "Michroma",
+    "files": [
+      "Michroma-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Milonga": {
+    "family": "Milonga",
+    "files": [
+      "Milonga-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Miltonian": {
+    "family": "Miltonian",
+    "files": [
+      "Miltonian-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Miltonian Tattoo": {
+    "family": "Miltonian Tattoo",
+    "files": [
+      "Miltonian-Tattoo-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Modak": {
+    "family": "Modak",
+    "files": [
+      "Modak-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Modern Antiqua": {
+    "family": "Modern Antiqua",
+    "files": [
+      "Modern-Antiqua-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Molengo": {
+    "family": "Molengo",
+    "files": [
+      "Molengo-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mohave": {
+    "family": "Mohave",
+    "files": [
+      "Mohave-Regular.ttf",
+      "Mohave-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mogra": {
+    "family": "Mogra",
+    "files": [
+      "Mogra-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Monofett": {
+    "family": "Monofett",
+    "files": [
+      "Monofett-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Monda": {
+    "family": "Monda",
+    "files": [
+      "Monda-Regular.ttf",
+      "Monda-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Monsieur La Doulaise": {
+    "family": "Monsieur La Doulaise",
+    "files": [
+      "Monsieur-La-Doulaise-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Monoton": {
+    "family": "Monoton",
+    "files": [
+      "Monoton-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Montaga": {
+    "family": "Montaga",
+    "files": [
+      "Montaga-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Moo Lah Lah": {
+    "family": "Moo Lah Lah",
+    "files": [
+      "Moo-Lah-Lah-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Moon Dance": {
+    "family": "Moon Dance",
+    "files": [
+      "Moon-Dance-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Montserrat Alternates": {
+    "family": "Montserrat Alternates",
+    "files": [
+      "Montserrat-Alternates-Regular.ttf",
+      "Montserrat-Alternates-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Moul": {
+    "family": "Moul",
+    "files": [
+      "Moul-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mouse Memoirs": {
+    "family": "Mouse Memoirs",
+    "files": [
+      "Mouse-Memoirs-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Moulpali": {
+    "family": "Moulpali",
+    "files": [
+      "Moulpali-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mr Bedfort": {
+    "family": "Mr Bedfort",
+    "files": [
+      "Mr-Bedfort-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mountains of Christmas": {
+    "family": "Mountains of Christmas",
+    "files": [
+      "Mountains-of-Christmas-Regular.ttf",
+      "Mountains-of-Christmas-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mr Dafoe": {
+    "family": "Mr Dafoe",
+    "files": [
+      "Mr-Dafoe-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mr De Haviland": {
+    "family": "Mr De Haviland",
+    "files": [
+      "Mr-De-Haviland-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mrs Saint Delafield": {
+    "family": "Mrs Saint Delafield",
+    "files": [
+      "Mrs-Saint-Delafield-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ms Madi": {
+    "family": "Ms Madi",
+    "files": [
+      "Ms-Madi-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mulish": {
+    "family": "Mulish",
+    "files": [
+      "Mulish-Regular.ttf",
+      "Mulish-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mukta Mahee": {
+    "family": "Mukta Mahee",
+    "files": [
+      "Mukta-Mahee-Regular.ttf",
+      "Mukta-Mahee-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Murecho": {
+    "family": "Murecho",
+    "files": [
+      "Murecho-Regular.ttf",
+      "Murecho-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "MuseoModerno": {
+    "family": "MuseoModerno",
+    "files": [
+      "MuseoModerno-Regular.ttf",
+      "MuseoModerno-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mynerve": {
+    "family": "Mynerve",
+    "files": [
+      "Mynerve-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "NTR": {
+    "family": "NTR",
+    "files": [
+      "NTR-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Mystery Quest": {
+    "family": "Mystery Quest",
+    "files": [
+      "Mystery-Quest-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "My Soul": {
+    "family": "My Soul",
+    "files": [
+      "My-Soul-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nabla": {
+    "family": "Nabla",
+    "files": [
+      "Nabla-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nanum Brush Script": {
+    "family": "Nanum Brush Script",
+    "files": [
+      "Nanum-Brush-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nanum Gothic": {
+    "family": "Nanum Gothic",
+    "files": [
+      "Nanum-Gothic-Regular.ttf",
+      "Nanum-Gothic-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nanum Gothic Coding": {
+    "family": "Nanum Gothic Coding",
+    "files": [
+      "Nanum-Gothic-Coding-Regular.ttf",
+      "Nanum-Gothic-Coding-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nanum Pen Script": {
+    "family": "Nanum Pen Script",
+    "files": [
+      "Nanum-Pen-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nanum Myeongjo": {
+    "family": "Nanum Myeongjo",
+    "files": [
+      "Nanum-Myeongjo-Regular.ttf",
+      "Nanum-Myeongjo-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Neonderthaw": {
+    "family": "Neonderthaw",
+    "files": [
+      "Neonderthaw-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "New Tegomin": {
+    "family": "New Tegomin",
+    "files": [
+      "New-Tegomin-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Neuton": {
+    "family": "Neuton",
+    "files": [
+      "Neuton-Regular.ttf",
+      "Neuton-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Niconne": {
+    "family": "Niconne",
+    "files": [
+      "Niconne-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "News Cycle": {
+    "family": "News Cycle",
+    "files": [
+      "News-Cycle-Regular.ttf",
+      "News-Cycle-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "New Rocker": {
+    "family": "New Rocker",
+    "files": [
+      "New-Rocker-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nixie One": {
+    "family": "Nixie One",
+    "files": [
+      "Nixie-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Niramit": {
+    "family": "Niramit",
+    "files": [
+      "Niramit-Regular.ttf",
+      "Niramit-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nobile": {
+    "family": "Nobile",
+    "files": [
+      "Nobile-Regular.ttf",
+      "Nobile-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Norican": {
+    "family": "Norican",
+    "files": [
+      "Norican-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nosifer": {
+    "family": "Nosifer",
+    "files": [
+      "Nosifer-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nokora": {
+    "family": "Nokora",
+    "files": [
+      "Nokora-Regular.ttf",
+      "Nokora-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Notable": {
+    "family": "Notable",
+    "files": [
+      "Notable-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nothing You Could Do": {
+    "family": "Nothing You Could Do",
+    "files": [
+      "Nothing-You-Could-Do-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noticia Text": {
+    "family": "Noticia Text",
+    "files": [
+      "Noticia-Text-Regular.ttf",
+      "Noticia-Text-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noto Color Emoji": {
+    "family": "Noto Color Emoji",
+    "files": [
+      "Noto-Color-Emoji-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noto Music": {
+    "family": "Noto Music",
+    "files": [
+      "Noto-Music-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noto Kufi Arabic": {
+    "family": "Noto Kufi Arabic",
+    "files": [
+      "Noto-Kufi-Arabic-Regular.ttf",
+      "Noto-Kufi-Arabic-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noto Rashi Hebrew": {
+    "family": "Noto Rashi Hebrew",
+    "files": [
+      "Noto-Rashi-Hebrew-Regular.ttf",
+      "Noto-Rashi-Hebrew-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noto Sans JP": {
+    "family": "Noto Sans JP",
+    "files": [
+      "Noto-Sans-JP-Regular.ttf",
+      "Noto-Sans-JP-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noto Nastaliq Urdu": {
+    "family": "Noto Nastaliq Urdu",
+    "files": [
+      "Noto-Nastaliq-Urdu-Regular.ttf",
+      "Noto-Nastaliq-Urdu-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noto Sans KR": {
+    "family": "Noto Sans KR",
+    "files": [
+      "Noto-Sans-KR-Regular.ttf",
+      "Noto-Sans-KR-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noto Serif": {
+    "family": "Noto Serif",
+    "files": [
+      "Noto-Serif-Regular.ttf",
+      "Noto-Serif-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noto Serif Display": {
+    "family": "Noto Serif Display",
+    "files": [
+      "Noto-Serif-Display-Regular.ttf",
+      "Noto-Serif-Display-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noto Serif JP": {
+    "family": "Noto Serif JP",
+    "files": [
+      "Noto-Serif-JP-Regular.ttf",
+      "Noto-Serif-JP-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Noto Sans SC": {
+    "family": "Noto Sans SC",
+    "files": [
+      "Noto-Sans-SC-Regular.ttf",
+      "Noto-Sans-SC-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nova Cut": {
+    "family": "Nova Cut",
+    "files": [
+      "Nova-Cut-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nova Flat": {
+    "family": "Nova Flat",
+    "files": [
+      "Nova-Flat-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nova Mono": {
+    "family": "Nova Mono",
+    "files": [
+      "Nova-Mono-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nova Oval": {
+    "family": "Nova Oval",
+    "files": [
+      "Nova-Oval-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nova Script": {
+    "family": "Nova Script",
+    "files": [
+      "Nova-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nova Round": {
+    "family": "Nova Round",
+    "files": [
+      "Nova-Round-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nova Slim": {
+    "family": "Nova Slim",
+    "files": [
+      "Nova-Slim-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Numans": {
+    "family": "Numans",
+    "files": [
+      "Numans-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nuosu SIL": {
+    "family": "Nuosu SIL",
+    "files": [
+      "Nuosu-SIL-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Odibee Sans": {
+    "family": "Odibee Sans",
+    "files": [
+      "Odibee-Sans-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Odor Mean Chey": {
+    "family": "Odor Mean Chey",
+    "files": [
+      "Odor-Mean-Chey-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Nunito Sans": {
+    "family": "Nunito Sans",
+    "files": [
+      "Nunito-Sans-Regular.ttf",
+      "Nunito-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Offside": {
+    "family": "Offside",
+    "files": [
+      "Offside-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Oi": {
+    "family": "Oi",
+    "files": [
+      "Oi-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Oldenburg": {
+    "family": "Oldenburg",
+    "files": [
+      "Oldenburg-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Old Standard TT": {
+    "family": "Old Standard TT",
+    "files": [
+      "Old-Standard-TT-Regular.ttf",
+      "Old-Standard-TT-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Oleo Script": {
+    "family": "Oleo Script",
+    "files": [
+      "Oleo-Script-Regular.ttf",
+      "Oleo-Script-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Oleo Script Swash Caps": {
+    "family": "Oleo Script Swash Caps",
+    "files": [
+      "Oleo-Script-Swash-Caps-Regular.ttf",
+      "Oleo-Script-Swash-Caps-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Oooh Baby": {
+    "family": "Oooh Baby",
+    "files": [
+      "Oooh-Baby-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Onest": {
+    "family": "Onest",
+    "files": [
+      "Onest-Regular.ttf",
+      "Onest-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Oranienbaum": {
+    "family": "Oranienbaum",
+    "files": [
+      "Oranienbaum-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Oregano": {
+    "family": "Oregano",
+    "files": [
+      "Oregano-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Orelega One": {
+    "family": "Orelega One",
+    "files": [
+      "Orelega-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Orienta": {
+    "family": "Orienta",
+    "files": [
+      "Orienta-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Original Surfer": {
+    "family": "Original Surfer",
+    "files": [
+      "Original-Surfer-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Over the Rainbow": {
+    "family": "Over the Rainbow",
+    "files": [
+      "Over-the-Rainbow-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Overlock SC": {
+    "family": "Overlock SC",
+    "files": [
+      "Overlock-SC-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Overlock": {
+    "family": "Overlock",
+    "files": [
+      "Overlock-Regular.ttf",
+      "Overlock-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ovo": {
+    "family": "Ovo",
+    "files": [
+      "Ovo-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Overpass Mono": {
+    "family": "Overpass Mono",
+    "files": [
+      "Overpass-Mono-Regular.ttf",
+      "Overpass-Mono-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Oxygen Mono": {
+    "family": "Oxygen Mono",
+    "files": [
+      "Oxygen-Mono-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Oxanium": {
+    "family": "Oxanium",
+    "files": [
+      "Oxanium-Regular.ttf",
+      "Oxanium-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "PT Mono": {
+    "family": "PT Mono",
+    "files": [
+      "PT-Mono-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Padyakke Expanded One": {
+    "family": "Padyakke Expanded One",
+    "files": [
+      "Padyakke-Expanded-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "PT Serif": {
+    "family": "PT Serif",
+    "files": [
+      "PT-Serif-Regular.ttf",
+      "PT-Serif-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Padauk": {
+    "family": "Padauk",
+    "files": [
+      "Padauk-Regular.ttf",
+      "Padauk-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Overpass": {
+    "family": "Overpass",
+    "files": [
+      "Overpass-Regular.ttf",
+      "Overpass-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Palanquin": {
+    "family": "Palanquin",
+    "files": [
+      "Palanquin-Regular.ttf",
+      "Palanquin-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Palette Mosaic": {
+    "family": "Palette Mosaic",
+    "files": [
+      "Palette-Mosaic-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Palanquin Dark": {
+    "family": "Palanquin Dark",
+    "files": [
+      "Palanquin-Dark-Regular.ttf",
+      "Palanquin-Dark-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pangolin": {
+    "family": "Pangolin",
+    "files": [
+      "Pangolin-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Paprika": {
+    "family": "Paprika",
+    "files": [
+      "Paprika-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Parisienne": {
+    "family": "Parisienne",
+    "files": [
+      "Parisienne-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Passero One": {
+    "family": "Passero One",
+    "files": [
+      "Passero-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Passions Conflict": {
+    "family": "Passions Conflict",
+    "files": [
+      "Passions-Conflict-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Patrick Hand": {
+    "family": "Patrick Hand",
+    "files": [
+      "Patrick-Hand-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Patrick Hand SC": {
+    "family": "Patrick Hand SC",
+    "files": [
+      "Patrick-Hand-SC-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pathway Extreme": {
+    "family": "Pathway Extreme",
+    "files": [
+      "Pathway-Extreme-Regular.ttf",
+      "Pathway-Extreme-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pattaya": {
+    "family": "Pattaya",
+    "files": [
+      "Pattaya-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Patua One": {
+    "family": "Patua One",
+    "files": [
+      "Patua-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pavanam": {
+    "family": "Pavanam",
+    "files": [
+      "Pavanam-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Paytone One": {
+    "family": "Paytone One",
+    "files": [
+      "Paytone-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Peddana": {
+    "family": "Peddana",
+    "files": [
+      "Peddana-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Peralta": {
+    "family": "Peralta",
+    "files": [
+      "Peralta-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Petemoss": {
+    "family": "Petemoss",
+    "files": [
+      "Petemoss-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Petit Formal Script": {
+    "family": "Petit Formal Script",
+    "files": [
+      "Petit-Formal-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Petrona": {
+    "family": "Petrona",
+    "files": [
+      "Petrona-Regular.ttf",
+      "Petrona-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Philosopher": {
+    "family": "Philosopher",
+    "files": [
+      "Philosopher-Regular.ttf",
+      "Philosopher-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Phudu": {
+    "family": "Phudu",
+    "files": [
+      "Phudu-Regular.ttf",
+      "Phudu-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Piazzolla": {
+    "family": "Piazzolla",
+    "files": [
+      "Piazzolla-Regular.ttf",
+      "Piazzolla-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Piedra": {
+    "family": "Piedra",
+    "files": [
+      "Piedra-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pinyon Script": {
+    "family": "Pinyon Script",
+    "files": [
+      "Pinyon-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pirata One": {
+    "family": "Pirata One",
+    "files": [
+      "Pirata-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Plaster": {
+    "family": "Plaster",
+    "files": [
+      "Plaster-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Playball": {
+    "family": "Playball",
+    "files": [
+      "Playball-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pixelify Sans": {
+    "family": "Pixelify Sans",
+    "files": [
+      "Pixelify-Sans-Regular.ttf",
+      "Pixelify-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Play": {
+    "family": "Play",
+    "files": [
+      "Play-Regular.ttf",
+      "Play-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Poiret One": {
+    "family": "Poiret One",
+    "files": [
+      "Poiret-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Poller One": {
+    "family": "Poller One",
+    "files": [
+      "Poller-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Podkova": {
+    "family": "Podkova",
+    "files": [
+      "Podkova-Regular.ttf",
+      "Podkova-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Poly": {
+    "family": "Poly",
+    "files": [
+      "Poly-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pompiere": {
+    "family": "Pompiere",
+    "files": [
+      "Pompiere-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Poor Story": {
+    "family": "Poor Story",
+    "files": [
+      "Poor-Story-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Port Lligat Sans": {
+    "family": "Port Lligat Sans",
+    "files": [
+      "Port-Lligat-Sans-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pontano Sans": {
+    "family": "Pontano Sans",
+    "files": [
+      "Pontano-Sans-Regular.ttf",
+      "Pontano-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Port Lligat Slab": {
+    "family": "Port Lligat Slab",
+    "files": [
+      "Port-Lligat-Slab-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Potta One": {
+    "family": "Potta One",
+    "files": [
+      "Potta-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Prata": {
+    "family": "Prata",
+    "files": [
+      "Prata-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Praise": {
+    "family": "Praise",
+    "files": [
+      "Praise-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Preahvihear": {
+    "family": "Preahvihear",
+    "files": [
+      "Preahvihear-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pragati Narrow": {
+    "family": "Pragati Narrow",
+    "files": [
+      "Pragati-Narrow-Regular.ttf",
+      "Pragati-Narrow-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Princess Sofia": {
+    "family": "Princess Sofia",
+    "files": [
+      "Princess-Sofia-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Prociono": {
+    "family": "Prociono",
+    "files": [
+      "Prociono-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Prosto One": {
+    "family": "Prosto One",
+    "files": [
+      "Prosto-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Pridi": {
+    "family": "Pridi",
+    "files": [
+      "Pridi-Regular.ttf",
+      "Pridi-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Protest Guerrilla": {
+    "family": "Protest Guerrilla",
+    "files": [
+      "Protest-Guerrilla-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Protest Revolution": {
+    "family": "Protest Revolution",
+    "files": [
+      "Protest-Revolution-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Protest Strike": {
+    "family": "Protest Strike",
+    "files": [
+      "Protest-Strike-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Protest Riot": {
+    "family": "Protest Riot",
+    "files": [
+      "Protest-Riot-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Quando": {
+    "family": "Quando",
+    "files": [
+      "Quando-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Qahiri": {
+    "family": "Qahiri",
+    "files": [
+      "Qahiri-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Purple Purse": {
+    "family": "Purple Purse",
+    "files": [
+      "Purple-Purse-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Puritan": {
+    "family": "Puritan",
+    "files": [
+      "Puritan-Regular.ttf",
+      "Puritan-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Quintessential": {
+    "family": "Quintessential",
+    "files": [
+      "Quintessential-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Quattrocento Sans": {
+    "family": "Quattrocento Sans",
+    "files": [
+      "Quattrocento-Sans-Regular.ttf",
+      "Quattrocento-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Quantico": {
+    "family": "Quantico",
+    "files": [
+      "Quantico-Regular.ttf",
+      "Quantico-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Quattrocento": {
+    "family": "Quattrocento",
+    "files": [
+      "Quattrocento-Regular.ttf",
+      "Quattrocento-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Qwigley": {
+    "family": "Qwigley",
+    "files": [
+      "Qwigley-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Racing Sans One": {
+    "family": "Racing Sans One",
+    "files": [
+      "Racing-Sans-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Radley": {
+    "family": "Radley",
+    "files": [
+      "Radley-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Qwitcher Grypen": {
+    "family": "Qwitcher Grypen",
+    "files": [
+      "Qwitcher-Grypen-Regular.ttf",
+      "Qwitcher-Grypen-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rakkas": {
+    "family": "Rakkas",
+    "files": [
+      "Rakkas-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rajdhani": {
+    "family": "Rajdhani",
+    "files": [
+      "Rajdhani-Regular.ttf",
+      "Rajdhani-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ramaraja": {
+    "family": "Ramaraja",
+    "files": [
+      "Ramaraja-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Raleway Dots": {
+    "family": "Raleway Dots",
+    "files": [
+      "Raleway-Dots-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ramabhadra": {
+    "family": "Ramabhadra",
+    "files": [
+      "Ramabhadra-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rampart One": {
+    "family": "Rampart One",
+    "files": [
+      "Rampart-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rammetto One": {
+    "family": "Rammetto One",
+    "files": [
+      "Rammetto-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ranchers": {
+    "family": "Ranchers",
+    "files": [
+      "Ranchers-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rambla": {
+    "family": "Rambla",
+    "files": [
+      "Rambla-Regular.ttf",
+      "Rambla-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rancho": {
+    "family": "Rancho",
+    "files": [
+      "Rancho-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rationale": {
+    "family": "Rationale",
+    "files": [
+      "Rationale-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rasa": {
+    "family": "Rasa",
+    "files": [
+      "Rasa-Regular.ttf",
+      "Rasa-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ranga": {
+    "family": "Ranga",
+    "files": [
+      "Ranga-Regular.ttf",
+      "Ranga-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ravi Prakash": {
+    "family": "Ravi Prakash",
+    "files": [
+      "Ravi-Prakash-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Readex Pro": {
+    "family": "Readex Pro",
+    "files": [
+      "Readex-Pro-Regular.ttf",
+      "Readex-Pro-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Recursive": {
+    "family": "Recursive",
+    "files": [
+      "Recursive-Regular.ttf",
+      "Recursive-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Red Hat Display": {
+    "family": "Red Hat Display",
+    "files": [
+      "Red-Hat-Display-Regular.ttf",
+      "Red-Hat-Display-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Red Hat Text": {
+    "family": "Red Hat Text",
+    "files": [
+      "Red-Hat-Text-Regular.ttf",
+      "Red-Hat-Text-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Redacted": {
+    "family": "Redacted",
+    "files": [
+      "Redacted-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Redacted Script": {
+    "family": "Redacted Script",
+    "files": [
+      "Redacted-Script-Regular.ttf",
+      "Redacted-Script-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Reem Kufi": {
+    "family": "Reem Kufi",
+    "files": [
+      "Reem-Kufi-Regular.ttf",
+      "Reem-Kufi-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Reem Kufi Fun": {
+    "family": "Reem Kufi Fun",
+    "files": [
+      "Reem-Kufi-Fun-Regular.ttf",
+      "Reem-Kufi-Fun-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Reem Kufi Ink": {
+    "family": "Reem Kufi Ink",
+    "files": [
+      "Reem-Kufi-Ink-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Reenie Beanie": {
+    "family": "Reenie Beanie",
+    "files": [
+      "Reenie-Beanie-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Reggae One": {
+    "family": "Reggae One",
+    "files": [
+      "Reggae-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rhodium Libre": {
+    "family": "Rhodium Libre",
+    "files": [
+      "Rhodium-Libre-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ribeye": {
+    "family": "Ribeye",
+    "files": [
+      "Ribeye-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "REM": {
+    "family": "REM",
+    "files": [
+      "REM-Regular.ttf",
+      "REM-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ribeye Marrow": {
+    "family": "Ribeye Marrow",
+    "files": [
+      "Ribeye-Marrow-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Risque": {
+    "family": "Risque",
+    "files": [
+      "Risque-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Road Rage": {
+    "family": "Road Rage",
+    "files": [
+      "Road-Rage-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Roboto Flex": {
+    "family": "Roboto Flex",
+    "files": [
+      "Roboto-Flex-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Roboto Condensed": {
+    "family": "Roboto Condensed",
+    "files": [
+      "Roboto-Condensed-Regular.ttf",
+      "Roboto-Condensed-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Roboto Mono": {
+    "family": "Roboto Mono",
+    "files": [
+      "Roboto-Mono-Regular.ttf",
+      "Roboto-Mono-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rochester": {
+    "family": "Rochester",
+    "files": [
+      "Rochester-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Roboto Serif": {
+    "family": "Roboto Serif",
+    "files": [
+      "Roboto-Serif-Regular.ttf",
+      "Roboto-Serif-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Roboto Slab": {
+    "family": "Roboto Slab",
+    "files": [
+      "Roboto-Slab-Regular.ttf",
+      "Roboto-Slab-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rock Salt": {
+    "family": "Rock Salt",
+    "files": [
+      "Rock-Salt-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "RocknRoll One": {
+    "family": "RocknRoll One",
+    "files": [
+      "RocknRoll-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Romanesco": {
+    "family": "Romanesco",
+    "files": [
+      "Romanesco-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rokkitt": {
+    "family": "Rokkitt",
+    "files": [
+      "Rokkitt-Regular.ttf",
+      "Rokkitt-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ropa Sans": {
+    "family": "Ropa Sans",
+    "files": [
+      "Ropa-Sans-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rosarivo": {
+    "family": "Rosarivo",
+    "files": [
+      "Rosarivo-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rosario": {
+    "family": "Rosario",
+    "files": [
+      "Rosario-Regular.ttf",
+      "Rosario-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rouge Script": {
+    "family": "Rouge Script",
+    "files": [
+      "Rouge-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rowdies": {
+    "family": "Rowdies",
+    "files": [
+      "Rowdies-Regular.ttf",
+      "Rowdies-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rozha One": {
+    "family": "Rozha One",
+    "files": [
+      "Rozha-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Beastly": {
+    "family": "Rubik Beastly",
+    "files": [
+      "Rubik-Beastly-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Bubbles": {
+    "family": "Rubik Bubbles",
+    "files": [
+      "Rubik-Bubbles-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Burned": {
+    "family": "Rubik Burned",
+    "files": [
+      "Rubik-Burned-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Dirt": {
+    "family": "Rubik Dirt",
+    "files": [
+      "Rubik-Dirt-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Redressed": {
+    "family": "Redressed",
+    "files": [
+      "Redressed-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Distressed": {
+    "family": "Rubik Distressed",
+    "files": [
+      "Rubik-Distressed-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Gemstones": {
+    "family": "Rubik Gemstones",
+    "files": [
+      "Rubik-Gemstones-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Glitch": {
+    "family": "Rubik Glitch",
+    "files": [
+      "Rubik-Glitch-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Iso": {
+    "family": "Rubik Iso",
+    "files": [
+      "Rubik-Iso-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Maze": {
+    "family": "Rubik Maze",
+    "files": [
+      "Rubik-Maze-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Marker Hatch": {
+    "family": "Rubik Marker Hatch",
+    "files": [
+      "Rubik-Marker-Hatch-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Microbe": {
+    "family": "Rubik Microbe",
+    "files": [
+      "Rubik-Microbe-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Mono One": {
+    "family": "Rubik Mono One",
+    "files": [
+      "Rubik-Mono-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Pixels": {
+    "family": "Rubik Pixels",
+    "files": [
+      "Rubik-Pixels-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Puddles": {
+    "family": "Rubik Puddles",
+    "files": [
+      "Rubik-Puddles-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Scribble": {
+    "family": "Rubik Scribble",
+    "files": [
+      "Rubik-Scribble-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Storm": {
+    "family": "Rubik Storm",
+    "files": [
+      "Rubik-Storm-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Vinyl": {
+    "family": "Rubik Vinyl",
+    "files": [
+      "Rubik-Vinyl-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Wet Paint": {
+    "family": "Rubik Wet Paint",
+    "files": [
+      "Rubik-Wet-Paint-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ruda": {
+    "family": "Ruda",
+    "files": [
+      "Ruda-Regular.ttf",
+      "Ruda-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rufina": {
+    "family": "Rufina",
+    "files": [
+      "Rufina-Regular.ttf",
+      "Rufina-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ruge Boogie": {
+    "family": "Ruge Boogie",
+    "files": [
+      "Ruge-Boogie-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rubik Moonrocks": {
+    "family": "Rubik Moonrocks",
+    "files": [
+      "Rubik-Moonrocks-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ruluko": {
+    "family": "Ruluko",
+    "files": [
+      "Ruluko-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rum Raisin": {
+    "family": "Rum Raisin",
+    "files": [
+      "Rum-Raisin-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ruslan Display": {
+    "family": "Ruslan Display",
+    "files": [
+      "Ruslan-Display-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ruthie": {
+    "family": "Ruthie",
+    "files": [
+      "Ruthie-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rye": {
+    "family": "Rye",
+    "files": [
+      "Rye-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Ruwudu": {
+    "family": "Ruwudu",
+    "files": [
+      "Ruwudu-Regular.ttf",
+      "Ruwudu-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sahitya": {
+    "family": "Sahitya",
+    "files": [
+      "Sahitya-Regular.ttf",
+      "Sahitya-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sail": {
+    "family": "Sail",
+    "files": [
+      "Sail-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Rock 3D": {
+    "family": "Rock 3D",
+    "files": [
+      "Rock-3D-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Saira": {
+    "family": "Saira",
+    "files": [
+      "Saira-Regular.ttf",
+      "Saira-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Saira Condensed": {
+    "family": "Saira Condensed",
+    "files": [
+      "Saira-Condensed-Regular.ttf",
+      "Saira-Condensed-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "STIX Two Text": {
+    "family": "STIX Two Text",
+    "files": [
+      "STIX-Two-Text-Regular.ttf",
+      "STIX-Two-Text-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Salsa": {
+    "family": "Salsa",
+    "files": [
+      "Salsa-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sanchez": {
+    "family": "Sanchez",
+    "files": [
+      "Sanchez-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Saira Extra Condensed": {
+    "family": "Saira Extra Condensed",
+    "files": [
+      "Saira-Extra-Condensed-Regular.ttf",
+      "Saira-Extra-Condensed-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Saira Semi Condensed": {
+    "family": "Saira Semi Condensed",
+    "files": [
+      "Saira-Semi-Condensed-Regular.ttf",
+      "Saira-Semi-Condensed-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sancreek": {
+    "family": "Sancreek",
+    "files": [
+      "Sancreek-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sansita": {
+    "family": "Sansita",
+    "files": [
+      "Sansita-Regular.ttf",
+      "Sansita-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sansita Swashed": {
+    "family": "Sansita Swashed",
+    "files": [
+      "Sansita-Swashed-Regular.ttf",
+      "Sansita-Swashed-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sarabun": {
+    "family": "Sarabun",
+    "files": [
+      "Sarabun-Regular.ttf",
+      "Sarabun-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sarala": {
+    "family": "Sarala",
+    "files": [
+      "Sarala-Regular.ttf",
+      "Sarala-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sarina": {
+    "family": "Sarina",
+    "files": [
+      "Sarina-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sassy Frass": {
+    "family": "Sassy Frass",
+    "files": [
+      "Sassy-Frass-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sawarabi Gothic": {
+    "family": "Sawarabi Gothic",
+    "files": [
+      "Sawarabi-Gothic-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sarpanch": {
+    "family": "Sarpanch",
+    "files": [
+      "Sarpanch-Regular.ttf",
+      "Sarpanch-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sawarabi Mincho": {
+    "family": "Sawarabi Mincho",
+    "files": [
+      "Sawarabi-Mincho-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Scada": {
+    "family": "Scada",
+    "files": [
+      "Scada-Regular.ttf",
+      "Scada-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Schoolbell": {
+    "family": "Schoolbell",
+    "files": [
+      "Schoolbell-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Schibsted Grotesk": {
+    "family": "Schibsted Grotesk",
+    "files": [
+      "Schibsted-Grotesk-Regular.ttf",
+      "Schibsted-Grotesk-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Scheherazade New": {
+    "family": "Scheherazade New",
+    "files": [
+      "Scheherazade-New-Regular.ttf",
+      "Scheherazade-New-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Scope One": {
+    "family": "Scope One",
+    "files": [
+      "Scope-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Seaweed Script": {
+    "family": "Seaweed Script",
+    "files": [
+      "Seaweed-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sedan": {
+    "family": "Sedan",
+    "files": [
+      "Sedan-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Secular One": {
+    "family": "Secular One",
+    "files": [
+      "Secular-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sedgwick Ave": {
+    "family": "Sedgwick Ave",
+    "files": [
+      "Sedgwick-Ave-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sedan SC": {
+    "family": "Sedan SC",
+    "files": [
+      "Sedan-SC-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sedgwick Ave Display": {
+    "family": "Sedgwick Ave Display",
+    "files": [
+      "Sedgwick-Ave-Display-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Send Flowers": {
+    "family": "Send Flowers",
+    "files": [
+      "Send-Flowers-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sevillana": {
+    "family": "Sevillana",
+    "files": [
+      "Sevillana-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sen": {
+    "family": "Sen",
+    "files": [
+      "Sen-Regular.ttf",
+      "Sen-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Seymour One": {
+    "family": "Seymour One",
+    "files": [
+      "Seymour-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Shadows Into Light Two": {
+    "family": "Shadows Into Light Two",
+    "files": [
+      "Shadows-Into-Light-Two-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Shalimar": {
+    "family": "Shalimar",
+    "files": [
+      "Shalimar-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Shanti": {
+    "family": "Shanti",
+    "files": [
+      "Shanti-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Share Tech": {
+    "family": "Share Tech",
+    "files": [
+      "Share-Tech-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Share Tech Mono": {
+    "family": "Share Tech Mono",
+    "files": [
+      "Share-Tech-Mono-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Share": {
+    "family": "Share",
+    "files": [
+      "Share-Regular.ttf",
+      "Share-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Shippori Antique": {
+    "family": "Shippori Antique",
+    "files": [
+      "Shippori-Antique-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Shippori Antique B1": {
+    "family": "Shippori Antique B1",
+    "files": [
+      "Shippori-Antique-B1-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Shizuru": {
+    "family": "Shizuru",
+    "files": [
+      "Shizuru-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Shippori Mincho": {
+    "family": "Shippori Mincho",
+    "files": [
+      "Shippori-Mincho-Regular.ttf",
+      "Shippori-Mincho-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Shojumaru": {
+    "family": "Shojumaru",
+    "files": [
+      "Shojumaru-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Shippori Mincho B1": {
+    "family": "Shippori Mincho B1",
+    "files": [
+      "Shippori-Mincho-B1-Regular.ttf",
+      "Shippori-Mincho-B1-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Short Stack": {
+    "family": "Short Stack",
+    "files": [
+      "Short-Stack-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Shrikhand": {
+    "family": "Shrikhand",
+    "files": [
+      "Shrikhand-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Siemreap": {
+    "family": "Siemreap",
+    "files": [
+      "Siemreap-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sigmar": {
+    "family": "Sigmar",
+    "files": [
+      "Sigmar-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sigmar One": {
+    "family": "Sigmar One",
+    "files": [
+      "Sigmar-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Simonetta": {
+    "family": "Simonetta",
+    "files": [
+      "Simonetta-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Single Day": {
+    "family": "Single Day",
+    "files": [
+      "Single-Day-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Signika Negative": {
+    "family": "Signika Negative",
+    "files": [
+      "Signika-Negative-Regular.ttf",
+      "Signika-Negative-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Silkscreen": {
+    "family": "Silkscreen",
+    "files": [
+      "Silkscreen-Regular.ttf",
+      "Silkscreen-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Six Caps": {
+    "family": "Six Caps",
+    "files": [
+      "Six-Caps-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sirin Stencil": {
+    "family": "Sirin Stencil",
+    "files": [
+      "Sirin-Stencil-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sintony": {
+    "family": "Sintony",
+    "files": [
+      "Sintony-Regular.ttf",
+      "Sintony-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Slabo 13px": {
+    "family": "Slabo 13px",
+    "files": [
+      "Slabo-13px-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Slabo 27px": {
+    "family": "Slabo 27px",
+    "files": [
+      "Slabo-27px-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Skranji": {
+    "family": "Skranji",
+    "files": [
+      "Skranji-Regular.ttf",
+      "Skranji-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Slackey": {
+    "family": "Slackey",
+    "files": [
+      "Slackey-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Slackside One": {
+    "family": "Slackside One",
+    "files": [
+      "Slackside-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Smooch": {
+    "family": "Smooch",
+    "files": [
+      "Smooch-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Smythe": {
+    "family": "Smythe",
+    "files": [
+      "Smythe-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Smooch Sans": {
+    "family": "Smooch Sans",
+    "files": [
+      "Smooch-Sans-Regular.ttf",
+      "Smooch-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sniglet": {
+    "family": "Sniglet",
+    "files": [
+      "Sniglet-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Snippet": {
+    "family": "Snippet",
+    "files": [
+      "Snippet-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sofadi One": {
+    "family": "Sofadi One",
+    "files": [
+      "Sofadi-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sofia": {
+    "family": "Sofia",
+    "files": [
+      "Sofia-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sofia Sans": {
+    "family": "Sofia Sans",
+    "files": [
+      "Sofia-Sans-Regular.ttf",
+      "Sofia-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sofia Sans Condensed": {
+    "family": "Sofia Sans Condensed",
+    "files": [
+      "Sofia-Sans-Condensed-Regular.ttf",
+      "Sofia-Sans-Condensed-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sofia Sans Extra Condensed": {
+    "family": "Sofia Sans Extra Condensed",
+    "files": [
+      "Sofia-Sans-Extra-Condensed-Regular.ttf",
+      "Sofia-Sans-Extra-Condensed-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Snowburst One": {
+    "family": "Snowburst One",
+    "files": [
+      "Snowburst-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Solitreo": {
+    "family": "Solitreo",
+    "files": [
+      "Solitreo-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sofia Sans Semi Condensed": {
+    "family": "Sofia Sans Semi Condensed",
+    "files": [
+      "Sofia-Sans-Semi-Condensed-Regular.ttf",
+      "Sofia-Sans-Semi-Condensed-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Song Myung": {
+    "family": "Song Myung",
+    "files": [
+      "Song-Myung-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sometype Mono": {
+    "family": "Sometype Mono",
+    "files": [
+      "Sometype-Mono-Regular.ttf",
+      "Sometype-Mono-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sonsie One": {
+    "family": "Sonsie One",
+    "files": [
+      "Sonsie-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sorts Mill Goudy": {
+    "family": "Sorts Mill Goudy",
+    "files": [
+      "Sorts-Mill-Goudy-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sono": {
+    "family": "Sono",
+    "files": [
+      "Sono-Regular.ttf",
+      "Sono-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Special Elite": {
+    "family": "Special Elite",
+    "files": [
+      "Special-Elite-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Source Sans 3": {
+    "family": "Source Sans 3",
+    "files": [
+      "Source-Sans-3-Regular.ttf",
+      "Source-Sans-3-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Source Serif 4": {
+    "family": "Source Serif 4",
+    "files": [
+      "Source-Serif-4-Regular.ttf",
+      "Source-Serif-4-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Space Mono": {
+    "family": "Space Mono",
+    "files": [
+      "Space-Mono-Regular.ttf",
+      "Space-Mono-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Spicy Rice": {
+    "family": "Spicy Rice",
+    "files": [
+      "Spicy-Rice-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Spinnaker": {
+    "family": "Spinnaker",
+    "files": [
+      "Spinnaker-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Spectral SC": {
+    "family": "Spectral SC",
+    "files": [
+      "Spectral-SC-Regular.ttf",
+      "Spectral-SC-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Spirax": {
+    "family": "Spirax",
+    "files": [
+      "Spirax-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Splash": {
+    "family": "Splash",
+    "files": [
+      "Splash-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Spline Sans": {
+    "family": "Spline Sans",
+    "files": [
+      "Spline-Sans-Regular.ttf",
+      "Spline-Sans-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Squada One": {
+    "family": "Squada One",
+    "files": [
+      "Squada-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Spline Sans Mono": {
+    "family": "Spline Sans Mono",
+    "files": [
+      "Spline-Sans-Mono-Regular.ttf",
+      "Spline-Sans-Mono-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sree Krushnadevaraya": {
+    "family": "Sree Krushnadevaraya",
+    "files": [
+      "Sree-Krushnadevaraya-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sriracha": {
+    "family": "Sriracha",
+    "files": [
+      "Sriracha-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Spectral": {
+    "family": "Spectral",
+    "files": [
+      "Spectral-Regular.ttf",
+      "Spectral-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Stalemate": {
+    "family": "Stalemate",
+    "files": [
+      "Stalemate-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Stalinist One": {
+    "family": "Stalinist One",
+    "files": [
+      "Stalinist-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Srisakdi": {
+    "family": "Srisakdi",
+    "files": [
+      "Srisakdi-Regular.ttf",
+      "Srisakdi-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Stick": {
+    "family": "Stick",
+    "files": [
+      "Stick-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Stint Ultra Condensed": {
+    "family": "Stint Ultra Condensed",
+    "files": [
+      "Stint-Ultra-Condensed-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Stardos Stencil": {
+    "family": "Stardos Stencil",
+    "files": [
+      "Stardos-Stencil-Regular.ttf",
+      "Stardos-Stencil-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Stick No Bills": {
+    "family": "Stick No Bills",
+    "files": [
+      "Stick-No-Bills-Regular.ttf",
+      "Stick-No-Bills-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Stoke": {
+    "family": "Stoke",
+    "files": [
+      "Stoke-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Stint Ultra Expanded": {
+    "family": "Stint Ultra Expanded",
+    "files": [
+      "Stint-Ultra-Expanded-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Strait": {
+    "family": "Strait",
+    "files": [
+      "Strait-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Style Script": {
+    "family": "Style Script",
+    "files": [
+      "Style-Script-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sue Ellen Francisco": {
+    "family": "Sue Ellen Francisco",
+    "files": [
+      "Sue-Ellen-Francisco-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Stylish": {
+    "family": "Stylish",
+    "files": [
+      "Stylish-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Suez One": {
+    "family": "Suez One",
+    "files": [
+      "Suez-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sulphur Point": {
+    "family": "Sulphur Point",
+    "files": [
+      "Sulphur-Point-Regular.ttf",
+      "Sulphur-Point-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sunshiney": {
+    "family": "Sunshiney",
+    "files": [
+      "Sunshiney-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sunflower": {
+    "family": "Sunflower",
+    "files": [
+      "Sunflower-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sumana": {
+    "family": "Sumana",
+    "files": [
+      "Sumana-Regular.ttf",
+      "Sumana-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Supermercado One": {
+    "family": "Supermercado One",
+    "files": [
+      "Supermercado-One-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Suranna": {
+    "family": "Suranna",
+    "files": [
+      "Suranna-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Sura": {
+    "family": "Sura",
+    "files": [
+      "Sura-Regular.ttf",
+      "Sura-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Suravaram": {
+    "family": "Suravaram",
+    "files": [
+      "Suravaram-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Swanky and Moo Moo": {
+    "family": "Swanky and Moo Moo",
+    "files": [
+      "Swanky-and-Moo-Moo-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Suwannaphum": {
+    "family": "Suwannaphum",
+    "files": [
+      "Suwannaphum-Regular.ttf",
+      "Suwannaphum-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Syncopate": {
+    "family": "Syncopate",
+    "files": [
+      "Syncopate-Regular.ttf",
+      "Syncopate-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Syne Tactile": {
+    "family": "Syne Tactile",
+    "files": [
+      "Syne-Tactile-Regular.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Syne": {
+    "family": "Syne",
+    "files": [
+      "Syne-Regular.ttf",
+      "Syne-Bold.ttf"
+    ],
+    "installedWindows": true
+  },
+  "Syne Mono": {
+    "family": "Syne Mono",
+    "files": [
+      "Syne-Mono-Regular.ttf"
+    ],
+    "installedWindows": true
+  }
+}
