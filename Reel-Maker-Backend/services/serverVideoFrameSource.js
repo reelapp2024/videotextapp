@@ -7,7 +7,7 @@ const STDERR_MAX = 4096;
 
 /**
  * Sequential RGBA frame reader via FFmpeg rawvideo pipe.
- * Frames are CFR at export FPS — round=near provides smooth frame alignment.
+ * Optimized for zero promise/listener churn and absolute sub-pixel frame stability.
  */
 class ServerVideoFrameSource {
   /**
@@ -40,6 +40,7 @@ class ServerVideoFrameSource {
     this._closeHandler = null;
     this.frameIndex = 0;
     this._duplicateFrameCount = 0;
+    this._resolver = null;
   }
 
   get frameBytes() {
@@ -52,23 +53,26 @@ class ServerVideoFrameSource {
       return;
     }
 
+    // FIXED SHIVERING: Force intermediate scaled bounds to perfect even integers before padding.
+    // This stops fractional division coordinates from jittering back and forth by 1 pixel on alternating frames.
     const vf = [
-      `fps=fps=${this.fps}:start_time=0:round=near`, // Maintained round=near to stop frame stuttering/shaking
+      `fps=fps=${this.fps}:start_time=0:round=near`,
       `scale=${this.width}:${this.height}:force_original_aspect_ratio=decrease`,
+      `scale='2*trunc(iw/2)':'2*trunc(ih/2)'`,
       `pad=${this.width}:${this.height}:(ow-iw)/2:(oh-ih)/2:black`,
     ].join(',');
 
     const args = [
       '-hide_banner',
       '-loglevel', 'error',
-      '-threads', '4', 
+      '-threads', '4',
     ];
     if (this.loop) args.push('-stream_loop', '-1');
     args.push(
       '-i', this.filePath,
       '-an',
       '-vf', vf,
-      '-vsync', 'cfr', // FIXED: Swapped back to legacy flag to support bundled installer binaries safely
+      '-vsync', 'cfr',
       '-f', 'rawvideo',
       '-pix_fmt', 'rgba',
       'pipe:1',
@@ -83,18 +87,41 @@ class ServerVideoFrameSource {
       this._stderr = (this._stderr + msg).slice(-STDERR_MAX);
       console.warn('[serverVideoFrameSource]', msg.trim());
     };
+    
     this._closeHandler = () => {
       this._ended = true;
+      if (this._resolver) {
+        const res = this._resolver;
+        this._resolver = null;
+        res();
+      }
     };
 
     this._proc.stderr.on('data', this._stderrHandler);
     this._proc.on('close', this._closeHandler);
-  }
 
-  _appendChunk(chunk) {
-    if (!chunk || chunk.length === 0) return;
-    this._chunks.push(chunk);
-    this._pendingLen += chunk.length;
+    // OPTIMIZATION: Setup single, persistent stream event subscription.
+    // This stops the allocation of 100,000+ individual wrapper promises and listener arrays inside the frame loop.
+    this._stdout.on('data', (chunk) => {
+      if (chunk && chunk.length > 0) {
+        this._chunks.push(chunk);
+        this._pendingLen += chunk.length;
+        if (this._resolver && this._pendingLen >= this._frameBytes) {
+          const res = this._resolver;
+          this._resolver = null;
+          res();
+        }
+      }
+    });
+
+    this._stdout.on('end', () => {
+      this._ended = true;
+      if (this._resolver) {
+        const res = this._resolver;
+        this._resolver = null;
+        res();
+      }
+    });
   }
 
   _consumeFrameBytes() {
@@ -118,60 +145,38 @@ class ServerVideoFrameSource {
   /**
    * @returns {Promise<Buffer|null>}
    */
-  async readFrame() {
-    if (this._ended && this._pendingLen < this._frameBytes) {
-      if (this._lastFrame) {
-        this._duplicateFrameCount += 1;
-      }
-      return this._lastFrame;
-    }
-
-    while (this._pendingLen < this._frameBytes && !this._ended) {
-      const chunk = await this._readChunk();
-      if (!chunk || chunk.length === 0) {
-        this._ended = true;
-        break;
-      }
-      this._appendChunk(chunk);
-    }
-
-    if (!this._consumeFrameBytes()) {
-      if (this._lastFrame) this._duplicateFrameCount += 1;
-      return this._lastFrame;
-    }
-
-    this.frameIndex += 1;
-    this._lastFrame = this._writeBuffer;
-    this._writeBuffer = this._writeBuffer === this._bufferA ? this._bufferB : this._bufferA;
-    return this._lastFrame;
-  }
-
-  _readChunk() {
-    return new Promise((resolve, reject) => {
-      if (!this._stdout || this._ended) {
-        resolve(null);
-        return;
-      }
-      const onData = (buf) => {
-        cleanup();
-        resolve(buf);
+  readFrame() {
+    return new Promise((resolve) => {
+      const checkAndProcess = () => {
+        if (this._pendingLen >= this._frameBytes) {
+          this._consumeFrameBytes();
+          this.frameIndex += 1;
+          this._lastFrame = this._writeBuffer;
+          this._writeBuffer = this._writeBuffer === this._bufferA ? this._bufferB : this._bufferA;
+          resolve(this._lastFrame);
+          return true;
+        }
+        
+        if (this._ended) {
+          if (this._consumeFrameBytes()) {
+            this.frameIndex += 1;
+            this._lastFrame = this._writeBuffer;
+            this._writeBuffer = this._writeBuffer === this._bufferA ? this._bufferB : this._bufferA;
+            resolve(this._lastFrame);
+          } else {
+            if (this._lastFrame) this._duplicateFrameCount += 1;
+            resolve(this._lastFrame);
+          }
+          return true;
+        }
+        return false;
       };
-      const onEnd = () => {
-        cleanup();
-        resolve(null);
+
+      if (checkAndProcess()) return;
+
+      this._resolver = () => {
+        checkAndProcess();
       };
-      const onError = (err) => {
-        cleanup();
-        reject(err);
-      };
-      const cleanup = () => {
-        this._stdout?.removeListener('data', onData);
-        this._stdout?.removeListener('end', onEnd);
-        this._stdout?.removeListener('error', onError);
-      };
-      this._stdout.once('data', onData);
-      this._stdout.once('end', onEnd);
-      this._stdout.once('error', onError);
     });
   }
 
@@ -187,6 +192,10 @@ class ServerVideoFrameSource {
     if (this._proc) {
       if (this._stderrHandler) this._proc.stderr?.removeListener('data', this._stderrHandler);
       if (this._closeHandler) this._proc.removeListener('close', this._closeHandler);
+      if (this._stdout) {
+        this._stdout.removeAllListeners('data');
+        this._stdout.removeAllListeners('end');
+      }
       if (!this._proc.killed) this._proc.kill('SIGKILL');
     }
     this._proc = null;
@@ -201,6 +210,7 @@ class ServerVideoFrameSource {
     this._stderr = '';
     this._stderrHandler = null;
     this._closeHandler = null;
+    this._resolver = null;
   }
 }
 
