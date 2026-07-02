@@ -74,7 +74,7 @@ const CAPTION_EXPORT_PARALLEL = (() => {
   return 1;
 })();
 function getVideoEncodeOptions(config) {
-  return (0, import_encodeOptions.getEncodeOptions)(config, { fast: false });
+  return (0, import_encodeOptions.getEncodeOptions)(config, { fast: true });
 }
 console.log(`FFmpeg: ${import_ffmpeg.default.path}`);
 console.log(`CPU cores: ${CPU_CORES}, parallel jobs: ${PARALLEL_JOBS}, caption parallel: ${CAPTION_EXPORT_PARALLEL}`);
