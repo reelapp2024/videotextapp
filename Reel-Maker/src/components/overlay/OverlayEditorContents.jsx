@@ -3,6 +3,8 @@ import React from 'react';
 import OverlayQuickPresets from './OverlayQuickPresets';
 import OverlayExcelContentSource from './OverlayExcelContentSource';
 import OverlayContentAutoBreak from './OverlayContentAutoBreak';
+import { OverlayLineEditProvider } from './OverlayLineEditContext';
+import OverlayLineScopedSettings from './OverlayLineScopedSettings';
 import OverlayAutoPreset from './OverlayAutoPreset';
 import OverlayWordHighlight from './OverlayWordHighlight';
 import OverlayKineticEffects from './OverlayKineticEffects';
@@ -61,9 +63,22 @@ export default function OverlayEditorContents({
   DOODLE_ANIMATION_PRESETS,
   previewRowIndex,
   captionPreviewWords,
+  voiceCaptionMap,
+  voiceFiles,
+  previewVoiceIndex,
+  patchOverlayConfig,
 }) {
   return (
     <>
+      <OverlayLineEditProvider
+        activeOverlayIndex={activeOverlayIndex}
+        config={config}
+        patchOverlayConfig={patchOverlayConfig}
+        excelData={excelData}
+        voiceCaptionMap={voiceCaptionMap}
+        voiceFiles={voiceFiles}
+        previewVoiceIndex={previewVoiceIndex}
+      >
       <OverlayQuickPresets activeOverlayIndex={activeOverlayIndex} config={config} updateOverlayConfig={updateOverlayConfig} />
 
       <OverlayExcelContentSource
@@ -81,6 +96,12 @@ export default function OverlayEditorContents({
         config={config}
         updateOverlayConfig={updateOverlayConfig}
         excelData={excelData}
+        voiceCaptionMap={voiceCaptionMap}
+        voiceFiles={voiceFiles}
+        previewVoiceIndex={previewVoiceIndex}
+      />
+
+      <OverlayLineScopedSettings
         LINE_ANIM_MODES={LINE_ANIM_MODES}
         LINE_ANIM_EFFECTS={LINE_ANIM_EFFECTS}
       />
@@ -182,7 +203,8 @@ export default function OverlayEditorContents({
 
       <OverlayShadow activeOverlayIndex={activeOverlayIndex} config={config} updateOverlayConfig={updateOverlayConfig} />
 
-      <OverlayQuickStylePresets activeOverlayIndex={activeOverlayIndex} updateOverlayConfig={updateOverlayConfig} />
+      <OverlayQuickStylePresets activeOverlayIndex={activeOverlayIndex} config={config} updateOverlayConfig={updateOverlayConfig} />
+      </OverlayLineEditProvider>
     </>
   );
 }

@@ -204,7 +204,7 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
 
     (cfg.overlays || []).forEach((baseOverlay) => {
       if (!baseOverlay.enabled) return;
-      const overlay = deps.resolveOverlayWithCaptionPreset(baseOverlay);
+      let overlay = deps.resolveOverlayWithCaptionPreset(baseOverlay);
       const overlayCfg = deps.resolveConfigForCaptionPreset(cfg, baseOverlay);
       if (overlayCfg.contentMode === 'singleColumn' && overlay.id !== (overlayCfg.singleColumnIndex ?? 0)) return;
 
@@ -212,8 +212,11 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
       let rowText = data[colIdx] != null ? String(data[colIdx]) : '';
       const overlayCaptionActive =
         overlayCfg.captionSync?.enabled && overlayCfg.captionSync?.segments?.length && videoTime != null;
+      const useContentAutoBreak = overlay.contentTextSectionEnabled ?? false;
       if (overlayCaptionActive && deps.overlayUsesCaptions(baseOverlay, overlayCfg)) {
-        if (overlayCfg._captionFrameCache && videoTime != null) {
+        if (useContentAutoBreak) {
+          rowText = deps.buildFullCaptionScript(overlayCfg.captionSync.segments);
+        } else if (overlayCfg._captionFrameCache && videoTime != null) {
           rowText = overlayCfg._captionFrameCache.getCaptionTextAtTime(videoTime);
         } else {
           rowText = deps.getCaptionLayoutText(overlayCfg.captionSync.segments, videoTime, {
@@ -231,19 +234,62 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
       let partStartTime = 0;
       let contentParts = [];
 
+      const getPartIndexFromCaptionTiming = (parts, segments, time, holdAfterOverride) => {
+        if (time == null || !parts?.length || !segments?.length) return null;
+        const holdAfter = holdAfterOverride || overlay.contentPartHoldAfter || [];
+        const firstStart = Number(segments[0].start ?? 0);
+        if (time < firstStart) return { partIndex: -1, partStartTime: null };
+
+        if (parts.length === segments.length) {
+          for (let i = 0; i < segments.length; i++) {
+            const start = Number(segments[i].start ?? 0);
+            const end = Number(segments[i].end ?? start);
+            const hold = Number(holdAfter[i] ?? 0);
+            if (time >= start && time < end + hold) {
+              return { partIndex: i, partStartTime: start };
+            }
+            if (i < segments.length - 1) {
+              const nextStart = Number(segments[i + 1].start ?? end);
+              if (time >= end + hold && time < nextStart) {
+                return { partIndex: -1, partStartTime: null };
+              }
+            }
+          }
+          const last = segments.length - 1;
+          return { partIndex: last, partStartTime: Number(segments[last].start ?? 0) };
+        }
+
+        const totalStart = Number(segments[0].start ?? 0);
+        const totalEnd = Number(segments[segments.length - 1].end ?? totalStart);
+        const span = Math.max(0.05, totalEnd - totalStart);
+        const weights = parts.map((p) => Math.max(1, String(p).trim().length));
+        const sum = weights.reduce((a, b) => a + b, 0);
+        let cursor = totalStart;
+        for (let i = 0; i < parts.length; i++) {
+          const slice = (weights[i] / sum) * span;
+          const end = cursor + slice;
+          const hold = Number(holdAfter[i] ?? 0);
+          if (time < end + hold) return { partIndex: i, partStartTime: cursor };
+          cursor = end + hold;
+        }
+        return { partIndex: parts.length - 1, partStartTime: cursor };
+      };
+
       const getPartIndexFromDurations = (parts, durations, time, totDuration, overrides) => {
         const dur = durations || overlay.contentPartDurations || [];
         const holdAfter = overrides?.holdAfterOverride || overlay.contentPartHoldAfter || [];
         const lineAnim = overrides?.lineAnimOverride || overlay.contentPartLineAnimate || [];
-        const animSpeed = Math.max(0.1, overlay.contentLineAnimSpeed ?? 2);
+        const revealModeOverride = overrides?.revealModeOverride || null;
+        const animSpeedOverride = overrides?.animSpeedOverride || null;
         if (dur.length > 0 && time != null && time >= 0 && parts.length > 0) {
           let cumul = 0;
           const defaultSec = 5;
           const defaultHold = 0;
           for (let i = 0; i < parts.length; i++) {
+            const animSpeed = Math.max(0.1, animSpeedOverride?.[i] ?? overlay.contentPartLineAnimSpeed?.[i] ?? overlay.contentLineAnimSpeed ?? 2);
             let d = (dur[i] != null && dur[i] >= 0.1 && dur[i] <= 20) ? Number(dur[i]) : defaultSec;
             if (lineAnim[i]) {
-              const mode = overlay.contentLineRevealMode || 'wordByWord';
+              const mode = revealModeOverride?.[i] || overlay.contentPartLineRevealMode?.[i] || overlay.contentLineRevealMode || 'wordByWord';
               const isCharAnim = mode === 'characterByChar';
               const isLineByLine = mode === 'lineByLine';
               const isFrameByFrame = mode === 'frameByFrame';
@@ -258,15 +304,16 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
             cumul += d + h;
           }
           const lastIdx = Math.max(0, parts.length - 1);
+          const lastAnimSpeed = Math.max(0.1, animSpeedOverride?.[lastIdx] ?? overlay.contentPartLineAnimSpeed?.[lastIdx] ?? overlay.contentLineAnimSpeed ?? 2);
           let lastD = (dur[lastIdx] != null && dur[lastIdx] >= 0.1 && dur[lastIdx] <= 20) ? Number(dur[lastIdx]) : defaultSec;
           if (lineAnim[lastIdx]) {
-            const mode = overlay.contentLineRevealMode || 'wordByWord';
+            const mode = revealModeOverride?.[lastIdx] || overlay.contentPartLineRevealMode?.[lastIdx] || overlay.contentLineRevealMode || 'wordByWord';
             const isCharAnim = mode === 'characterByChar';
             const isLineByLine = mode === 'lineByLine';
             const isFrameByFrame = mode === 'frameByFrame';
             const wordCount = parts[lastIdx].split(/\s+/).filter(Boolean).length;
             const lineCount = Math.max(1, Math.ceil(wordCount / (overlay.wordsPerLine || 4)));
-            const minT = isCharAnim ? (parts[lastIdx].length / animSpeed) : isLineByLine ? (lineCount / animSpeed) : isFrameByFrame ? (1 / animSpeed) : (wordCount / animSpeed);
+            const minT = isCharAnim ? (parts[lastIdx].length / lastAnimSpeed) : isLineByLine ? (lineCount / lastAnimSpeed) : isFrameByFrame ? (1 / lastAnimSpeed) : (wordCount / lastAnimSpeed);
             lastD = Math.max(lastD, minT);
           }
           const lastH = (holdAfter[lastIdx] != null && holdAfter[lastIdx] >= 0 && holdAfter[lastIdx] <= 30) ? Number(holdAfter[lastIdx]) : defaultHold;
@@ -281,10 +328,13 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
       };
 
       let resolvedLineAnimate = overlay.contentPartLineAnimate || [];
+      let resolvedRevealModes = overlay.contentPartLineRevealMode || [];
+      let resolvedAnimTypes = overlay.contentPartLineAnimType || [];
+      let resolvedAnimSpeeds = overlay.contentPartLineAnimSpeed || [];
 
       const skipContentPartsForCaptions =
-        overlayCaptionActive && deps.overlayUsesCaptions(baseOverlay, overlayCfg)
-      if ((overlay.contentTextSectionEnabled ?? false) && rowText && !skipContentPartsForCaptions) {
+        overlayCaptionActive && deps.overlayUsesCaptions(baseOverlay, overlayCfg) && !useContentAutoBreak;
+      if (useContentAutoBreak && rowText && !skipContentPartsForCaptions) {
         try {
           const marks = (overlay.punctuationBreakMarks || []).filter(m => m && String(m).trim());
           const customBreak = (overlay.customBreakText || '').trim();
@@ -293,10 +343,24 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
             customBreak.split(/\s+/).forEach(b => { if (b && !allBreaks.includes(b)) allBreaks.push(b); });
           }
           let rawParts = [];
+          const segLines = (overlayCfg.captionSync?.segments || [])
+            .map((s) => String(s.text ?? '').trim())
+            .filter(Boolean);
           if (allBreaks.length > 0) {
             const pattern = allBreaks.map(m => String(m).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
             const regex = new RegExp(`(${pattern})`, 'g');
             rawParts = rowText.replace(regex, '$1\n').split('\n').map(p => p.trim()).filter(p => p);
+          } else if (segLines.length > 0 && overlayCaptionActive && deps.overlayUsesCaptions(baseOverlay, overlayCfg)) {
+            rawParts = segLines;
+            if (!overlay.contentPartDurations?.length || overlay.contentPartDurations.length !== segLines.length) {
+              overlay = {
+                ...overlay,
+                contentPartDurations: segLines.map((_, i) => {
+                  const seg = overlayCfg.captionSync.segments[i];
+                  return Math.max(0.08, (seg?.end ?? 0) - (seg?.start ?? 0));
+                }),
+              };
+            }
           } else {
             rawParts = [rowText];
           }
@@ -324,18 +388,65 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
           const groupLineAnimate = groups.map(g => {
             return g.indices.some(i => overlay.contentPartLineAnimate?.[i]);
           });
+          const groupRevealModes = groups.map(g => {
+            const fi = g.indices[0];
+            return overlay.contentPartLineRevealMode?.[fi] || overlay.contentLineRevealMode || 'wordByWord';
+          });
+          const groupAnimTypes = groups.map(g => {
+            const fi = g.indices[0];
+            return overlay.contentPartLineAnimType?.[fi] || overlay.contentLineAnimType || 'fadeIn';
+          });
+          const groupAnimSpeeds = groups.map(g => {
+            const fi = g.indices[0];
+            return overlay.contentPartLineAnimSpeed?.[fi] ?? overlay.contentLineAnimSpeed ?? 2;
+          });
           resolvedLineAnimate = groupLineAnimate;
+          resolvedRevealModes = groupRevealModes;
+          resolvedAnimTypes = groupAnimTypes;
+          resolvedAnimSpeeds = groupAnimSpeeds;
 
             fullTextForSync = overlayCaptionActive && deps.overlayUsesCaptions(baseOverlay, overlayCfg)
               ? deps.buildFullCaptionScript(overlayCfg.captionSync.segments)
               : contentParts.join(' ');
           if (contentParts.length > 0 && videoTime != null) {
-            const res = getPartIndexFromDurations(contentParts, groupDurations, videoTime, videoDuration,
-              { holdAfterOverride: groupHoldAfter, lineAnimOverride: groupLineAnimate });
+            const captionSegments = overlayCaptionActive && deps.overlayUsesCaptions(baseOverlay, overlayCfg)
+              ? overlayCfg.captionSync.segments
+              : null;
+            const captionRes = captionSegments?.length
+              ? getPartIndexFromCaptionTiming(contentParts, captionSegments, videoTime, groupHoldAfter)
+              : null;
+            const res = captionRes || getPartIndexFromDurations(contentParts, groupDurations, videoTime, videoDuration,
+              {
+                holdAfterOverride: groupHoldAfter,
+                lineAnimOverride: groupLineAnimate,
+                revealModeOverride: groupRevealModes,
+                animSpeedOverride: groupAnimSpeeds,
+              });
             partIndex = res.partIndex;
             partStartTime = res.partStartTime ?? 0;
-            if (partIndex === -1) { text = ''; }
-            else { text = contentParts[partIndex]; }
+            if (partIndex === -1) {
+              text = '';
+            } else if (
+              captionSegments?.length
+              && contentParts.length === captionSegments.length
+              && partIndex >= 0
+              && partIndex < captionSegments.length
+            ) {
+              const seg = captionSegments[partIndex];
+              const segStart = Number(seg?.start ?? 0);
+              if (videoTime < segStart) {
+                text = '';
+              } else {
+                const segSynced = deps.getCaptionLayoutText([seg], videoTime, {
+                  wordsPerLine: overlay.wordsPerLine ?? 4,
+                  linesPerFrame: overlay.linesPerFrame ?? 0,
+                  granularity: overlayCfg.captionSync.granularity || 'line',
+                });
+                text = segSynced || contentParts[partIndex];
+              }
+            } else {
+              text = contentParts[partIndex];
+            }
             } else if (contentParts.length > 0) {
               text = contentParts[0];
           } else {
@@ -357,6 +468,13 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
       }
 
       if (!text || String(text).trim() === '') return;
+
+      if (partIndex >= 0 && overlay.contentPartLineStyleOverrides?.[partIndex]) {
+        overlay = {
+          ...overlay,
+          ...overlay.contentPartLineStyleOverrides[partIndex],
+        };
+      }
       
       // Apply text transform
       text = text.toString();
@@ -529,9 +647,12 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
           }
         }
       }
-      const contentLineAnimSpeed = Math.max(0.1, overlay.contentLineAnimSpeed ?? 2);
-      const revealMode = overlay.contentLineRevealMode || (['characterByChar','wordByWord','lineByLine','frameByFrame'].includes(overlay.contentLineAnimType) ? (overlay.contentLineAnimType === 'typewriter' || overlay.contentLineAnimType === 'charByChar' ? 'characterByChar' : overlay.contentLineAnimType) : 'wordByWord');
-      const animEffect = deps.LINE_ANIM_EFFECTS.some(e => e.id === overlay.contentLineAnimType) ? overlay.contentLineAnimType : 'fadeIn';
+      const activePartIdx = partIndex >= 0 ? partIndex : 0;
+      const activeRevealMode = resolvedRevealModes?.[activePartIdx] || overlay.contentLineRevealMode;
+      const activeAnimType = resolvedAnimTypes?.[activePartIdx] || overlay.contentLineAnimType;
+      const contentLineAnimSpeed = Math.max(0.1, resolvedAnimSpeeds?.[activePartIdx] ?? overlay.contentLineAnimSpeed ?? 2);
+      const revealMode = activeRevealMode || (['characterByChar','wordByWord','lineByLine','frameByFrame'].includes(activeAnimType) ? (activeAnimType === 'typewriter' || activeAnimType === 'charByChar' ? 'characterByChar' : activeAnimType) : 'wordByWord');
+      const animEffect = deps.LINE_ANIM_EFFECTS.some(e => e.id === activeAnimType) ? activeAnimType : 'fadeIn';
       const lineAnimEnabled = (overlay.contentTextSectionEnabled ?? false) && partIndex >= 0 && (resolvedLineAnimate[partIndex] ?? false);
 
       const {

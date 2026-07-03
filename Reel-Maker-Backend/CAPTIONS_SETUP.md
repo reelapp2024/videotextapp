@@ -25,13 +25,21 @@ WHISPER_MODEL=base
 WHISPER_DEVICE=cpu
 WHISPER_COMPUTE=int8
 WHISPER_CPU_THREADS=4
-CAPTION_CPU_PARALLEL=1
+CAPTION_CPU_PARALLEL=3
 WHISPER_LANGUAGE=auto
+
+# Bull caption queue (Redis) — faster parallel transcription
+USE_BULL_CAPTIONS=true
+EMBED_CAPTION_WORKER=true
+CAPTION_WORKER_CONCURRENCY=3
+CAPTION_QUEUE_NAME=caption-transcribe
 ```
 
 - **base + int8** — best balance on CPU for Hindi/English/Punjabi mix.
 - **tiny** — faster, less accurate for Punjabi.
 - First uploaded voice is transcribed first so the editor opens sooner.
+- With Redis + Bull, each voice becomes its own queue job. Run extra workers for more speed:
+  `npm run worker:captions` (in another terminal, or multiple times).
 
 ## Use in app
 

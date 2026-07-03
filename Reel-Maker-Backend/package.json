@@ -31,6 +31,7 @@
     "fonts:setup": "node scripts/setup-fonts.js",
     "fonts:setup:quick": "node scripts/setup-fonts.js --quick",
     "test:render": "node --test test/renderFrame.test.js test/serverExportPipeline.test.js test/bullExport.test.js test/exportProduction.test.js test/exportStress.test.js test/exportFps.test.js test/framePipeEncoder.test.js test/audioFilterGraph.test.js",
-    "worker:export": "node workers/exportVideoWorker.js"
+    "worker:export": "node workers/exportVideoWorker.js",
+    "worker:captions": "node workers/captionTranscribeWorker.js"
   }
 }

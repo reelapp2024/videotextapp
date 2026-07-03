@@ -1,4 +1,5 @@
 import React from 'react';
+import { useScopedOverlay } from './OverlayLineEditContext.jsx';
 
 export default function OverlayLayout({
   activeOverlayIndex,
@@ -8,7 +9,7 @@ export default function OverlayLayout({
   previewRowIndex = 0,
   captionPreviewWords = null,
 }) {
-  const ov = config.overlays[activeOverlayIndex];
+  const { ov, setField, lineLabel } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
   const colIdx = ov?.excelColumnIndex ?? ov?.id ?? 0;
   const excelPreview =
     excelData.length > 0
@@ -33,8 +34,8 @@ export default function OverlayLayout({
             type="number"
             min="1"
             max="20"
-            value={config.overlays[activeOverlayIndex].wordsPerLine ?? 4}
-            onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'wordsPerLine', parseInt(e.target.value) || 4)}
+            value={ov.wordsPerLine ?? 4}
+            onChange={(e) => setField('wordsPerLine', parseInt(e.target.value) || 4)}
             className="w-full bg-gray-700 rounded text-xs p-1.5 border-none"
           />
         </div>
@@ -44,8 +45,8 @@ export default function OverlayLayout({
             type="number"
             min="0"
             max="20"
-            value={config.overlays[activeOverlayIndex].linesPerFrame ?? 0}
-            onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'linesPerFrame', parseInt(e.target.value) || 0)}
+            value={ov.linesPerFrame ?? 0}
+            onChange={(e) => setField('linesPerFrame', parseInt(e.target.value) || 0)}
             className="w-full bg-gray-700 rounded text-xs p-1.5 border-none"
             placeholder="0"
           />
@@ -57,8 +58,8 @@ export default function OverlayLayout({
             min="0.8"
             max="3"
             step="0.1"
-            value={config.overlays[activeOverlayIndex].lineHeight ?? 1.4}
-            onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'lineHeight', parseFloat(e.target.value))}
+            value={ov.lineHeight ?? 1.4}
+            onChange={(e) => setField('lineHeight', parseFloat(e.target.value))}
             className="w-full bg-gray-700 rounded text-xs p-1.5 border-none"
           />
         </div>
@@ -69,8 +70,8 @@ export default function OverlayLayout({
             min="0"
             max="10"
             step="1"
-            value={config.overlays[activeOverlayIndex].letterSpacing ?? 0}
-            onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'letterSpacing', parseInt(e.target.value) || 0)}
+            value={ov.letterSpacing ?? 0}
+            onChange={(e) => setField('letterSpacing', parseInt(e.target.value) || 0)}
             className="w-full bg-gray-700 rounded text-xs p-1.5 border-none"
           />
         </div>
@@ -85,10 +86,10 @@ export default function OverlayLayout({
                 const val = e.target.value;
                 if (val === '') return;
                 const gIdx = parseInt(val);
-                const current = config.overlays[activeOverlayIndex].wordOverrides || {};
-                updateOverlayConfig(activeOverlayIndex, 'wordOverrides', {
+                const current = ov.wordOverrides || {};
+                setField('wordOverrides', {
                   ...current,
-                  [gIdx]: { color: '#FFD700', fontWeight: 'bold', fontSize: config.overlays[activeOverlayIndex].fontSize },
+                  [gIdx]: { color: '#FFD700', fontWeight: 'bold', fontSize: ov.fontSize },
                 });
                 e.target.value = '';
               }}
@@ -104,8 +105,8 @@ export default function OverlayLayout({
                 const val = e.target.value;
                 if (val === '') return;
                 const lIdx = parseInt(val);
-                const current = config.overlays[activeOverlayIndex].lineOverrides || {};
-                updateOverlayConfig(activeOverlayIndex, 'lineOverrides', {
+                const current = ov.lineOverrides || {};
+                setField('lineOverrides', {
                   ...current,
                   [lIdx]: { color: '#FF69B4' },
                 });
@@ -122,15 +123,15 @@ export default function OverlayLayout({
         </div>
 
         <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-          {Object.entries(config.overlays[activeOverlayIndex].wordOverrides || {}).map(([idx, style]) => (
+          {Object.entries(ov.wordOverrides || {}).map(([idx, style]) => (
             <div key={`w-${idx}`} className="bg-gray-800/50 p-1.5 rounded flex flex-col gap-1 border border-gray-700/30">
               <div className="flex justify-between items-center">
                 <span className="text-[9px] text-indigo-400">Word {idx}</span>
                 <button
                   onClick={() => {
-                    const current = { ...config.overlays[activeOverlayIndex].wordOverrides };
+                    const current = { ...ov.wordOverrides };
                     delete current[idx];
-                    updateOverlayConfig(activeOverlayIndex, 'wordOverrides', current);
+                    setField('wordOverrides', current);
                   }}
                   className="text-[9px] text-red-400"
                 >
@@ -142,18 +143,18 @@ export default function OverlayLayout({
                   type="color"
                   value={style.color || '#ffffff'}
                   onChange={(e) => {
-                    const current = { ...config.overlays[activeOverlayIndex].wordOverrides };
+                    const current = { ...ov.wordOverrides };
                     current[idx] = { ...current[idx], color: e.target.value };
-                    updateOverlayConfig(activeOverlayIndex, 'wordOverrides', current);
+                    setField('wordOverrides', current);
                   }}
                   className="w-full h-4 bg-transparent border-none cursor-pointer"
                 />
                 <select
                   value={style.fontWeight || 'bold'}
                   onChange={(e) => {
-                    const current = { ...config.overlays[activeOverlayIndex].wordOverrides };
+                    const current = { ...ov.wordOverrides };
                     current[idx] = { ...current[idx], fontWeight: e.target.value };
-                    updateOverlayConfig(activeOverlayIndex, 'wordOverrides', current);
+                    setField('wordOverrides', current);
                   }}
                   className="bg-gray-700 text-[9px] rounded p-0.5"
                 >
@@ -164,15 +165,15 @@ export default function OverlayLayout({
               </div>
             </div>
           ))}
-          {Object.entries(config.overlays[activeOverlayIndex].lineOverrides || {}).map(([idx, style]) => (
+          {Object.entries(ov.lineOverrides || {}).map(([idx, style]) => (
             <div key={`l-${idx}`} className="bg-gray-800/50 p-1.5 rounded flex flex-col gap-1 border border-gray-700/30">
               <div className="flex justify-between items-center">
                 <span className="text-[9px] text-purple-400">Line {idx}</span>
                 <button
                   onClick={() => {
-                    const current = { ...config.overlays[activeOverlayIndex].lineOverrides };
+                    const current = { ...ov.lineOverrides };
                     delete current[idx];
-                    updateOverlayConfig(activeOverlayIndex, 'lineOverrides', current);
+                    setField('lineOverrides', current);
                   }}
                   className="text-[9px] text-red-400"
                 >
@@ -183,9 +184,9 @@ export default function OverlayLayout({
                 type="color"
                 value={style.color || '#ffffff'}
                 onChange={(e) => {
-                  const current = { ...config.overlays[activeOverlayIndex].lineOverrides };
+                  const current = { ...ov.lineOverrides };
                   current[idx] = { ...current[idx], color: e.target.value };
-                  updateOverlayConfig(activeOverlayIndex, 'lineOverrides', current);
+                  setField('lineOverrides', current);
                 }}
                 className="w-full h-4 bg-transparent border-none cursor-pointer"
               />
@@ -200,9 +201,9 @@ export default function OverlayLayout({
           {['left', 'center', 'right'].map((align) => (
             <button
               key={align}
-              onClick={() => updateOverlayConfig(activeOverlayIndex, 'textAlign', align)}
+              onClick={() => setField('textAlign', align)}
               className={`p-1.5 rounded text-xs transition ${
-                (config.overlays[activeOverlayIndex].textAlign || 'center') === align
+                (ov.textAlign || 'center') === align
                   ? 'bg-indigo-600 text-white'
                   : 'bg-indigo-500/[0.05] text-gray-500 hover:bg-indigo-500/[0.08]'
               }`}
@@ -216,29 +217,29 @@ export default function OverlayLayout({
       <div className="mb-2">
         <div className="flex justify-between text-[10px] text-gray-500">
           <span>X Position</span>
-          <span>{config.overlays[activeOverlayIndex].positionX ?? 50}%</span>
+          <span>{ov.positionX ?? 50}%</span>
         </div>
         <input
           type="range"
           min="0"
           max="100"
           className="w-full h-1.5 bg-gray-600 rounded-lg"
-          value={config.overlays[activeOverlayIndex].positionX ?? 50}
-          onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'positionX', parseInt(e.target.value))}
+          value={ov.positionX ?? 50}
+          onChange={(e) => setField('positionX', parseInt(e.target.value))}
         />
       </div>
       <div>
         <div className="flex justify-between text-[10px] text-gray-500">
           <span>Y Position</span>
-          <span>{config.overlays[activeOverlayIndex].positionY}%</span>
+          <span>{ov.positionY}%</span>
         </div>
         <input
           type="range"
           min="0"
           max="100"
           className="w-full h-1.5 bg-gray-600 rounded-lg"
-          value={config.overlays[activeOverlayIndex].positionY}
-          onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'positionY', parseInt(e.target.value))}
+          value={ov.positionY}
+          onChange={(e) => setField('positionY', parseInt(e.target.value))}
         />
       </div>
     </div>

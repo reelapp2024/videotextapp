@@ -88,12 +88,14 @@ for (const [routePath, modulePath, featureKey] of heavyRoutes) {
 }
 
 const { useBullExport } = require('./services/bullExportConfig');
+const { useBullCaptions } = require('./services/bullCaptionConfig');
 
 app.get('/api/capabilities', (_req, res) => {
   res.json({
     serverless: !!process.env.VERCEL,
     exportRenderer: process.env.EXPORT_RENDERER || 'server',
     useBullExport: useBullExport(),
+    useBullCaptions: useBullCaptions(),
     features: loadedFeatures,
   });
 });

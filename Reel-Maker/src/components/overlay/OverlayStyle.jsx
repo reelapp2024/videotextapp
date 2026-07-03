@@ -1,4 +1,5 @@
 import React from 'react';
+import { useScopedOverlay } from './OverlayLineEditContext.jsx';
 
 function StyleMetricControl({
   label,
@@ -74,13 +75,14 @@ function StyleMetricControl({
 }
 
 export default function OverlayStyle({ activeOverlayIndex, config, updateOverlayConfig }) {
-  const ov = config.overlays[activeOverlayIndex]
+  const { ov, setField, lineLabel } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
   const isBox = ov.styleType === 'box'
 
   return (
     <div className="bg-indigo-500/[0.03] p-2.5 rounded-xl border border-indigo-500/[0.06]">
       <p className="text-[10px] text-gray-500 mb-2 font-medium">
-        STYLE {ov?.captionPresetsEnabled ? '(overrides caption preset)' : ''}
+        STYLE — {lineLabel}
+        {ov?.captionPresetsEnabled ? ' (overrides caption preset)' : ''}
       </p>
 
       <div className="grid grid-cols-2 gap-1 mb-2">
@@ -88,7 +90,7 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
           <button
             key={style}
             type="button"
-            onClick={() => updateOverlayConfig(activeOverlayIndex, 'styleType', style)}
+            onClick={() => setField('styleType', style)}
             className={`p-1.5 rounded text-xs transition ${
               ov.styleType === style
                 ? 'bg-purple-600 text-white'
@@ -107,7 +109,7 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
             <input
               type="color"
               value={ov.color}
-              onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'color', e.target.value)}
+              onChange={(e) => setField('color', e.target.value)}
               className="w-8 h-6 rounded bg-transparent border-none cursor-pointer"
             />
             <span className="text-[9px] text-gray-400 flex-1">{ov.color}</span>
@@ -122,14 +124,14 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
               <input
                 type="color"
                 value={ov.bgColor}
-                onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'bgColor', e.target.value)}
+                onChange={(e) => setField('bgColor', e.target.value)}
                 className="w-8 h-6 rounded bg-transparent border-none cursor-pointer"
               />
             ) : (
               <input
                 type="color"
                 value={ov.strokeColor}
-                onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'strokeColor', e.target.value)}
+                onChange={(e) => setField('strokeColor', e.target.value)}
                 className="w-8 h-6 rounded bg-transparent border-none cursor-pointer"
               />
             )}
@@ -141,11 +143,7 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
               className="flex-1 h-1.5 bg-gray-600 rounded"
               value={isBox ? ov.bgOpacity : ov.strokeOpacity || 1}
               onChange={(e) =>
-                updateOverlayConfig(
-                  activeOverlayIndex,
-                  isBox ? 'bgOpacity' : 'strokeOpacity',
-                  parseFloat(e.target.value)
-                )
+                setField(isBox ? 'bgOpacity' : 'strokeOpacity', parseFloat(e.target.value))
               }
             />
           </div>
@@ -165,7 +163,7 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
                 step="0.1"
                 className="flex-1 h-1.5 bg-gray-600 rounded"
                 value={ov.bgOpacity ?? 1}
-                onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'bgOpacity', parseFloat(e.target.value))}
+                onChange={(e) => setField('bgOpacity', parseFloat(e.target.value))}
               />
               <span className="text-[9px] w-8">{(ov.bgOpacity ?? 1).toFixed(1)}</span>
             </div>
@@ -175,10 +173,10 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
             label="Box Padding"
             percentLabel="padding"
             percentValue={ov.boxPaddingPercent ?? 40}
-            onPercentChange={(v) => updateOverlayConfig(activeOverlayIndex, 'boxPaddingPercent', v)}
+            onPercentChange={(v) => setField('boxPaddingPercent', v)}
             pxLabel="Manual"
             pxValue={ov.boxPaddingPx}
-            onPxChange={(v) => updateOverlayConfig(activeOverlayIndex, 'boxPaddingPx', v)}
+            onPxChange={(v) => setField('boxPaddingPx', v)}
             percentMin={0}
             percentMax={120}
             pxMax={300}
@@ -188,10 +186,10 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
             label="Box Corner Radius"
             percentLabel="radius"
             percentValue={ov.boxCornerRadiusPercent ?? 20}
-            onPercentChange={(v) => updateOverlayConfig(activeOverlayIndex, 'boxCornerRadiusPercent', v)}
+            onPercentChange={(v) => setField('boxCornerRadiusPercent', v)}
             pxLabel="Manual"
             pxValue={ov.boxCornerRadiusPx}
-            onPxChange={(v) => updateOverlayConfig(activeOverlayIndex, 'boxCornerRadiusPx', v)}
+            onPxChange={(v) => setField('boxCornerRadiusPx', v)}
             percentMin={0}
             percentMax={80}
             pxMax={200}
@@ -206,7 +204,7 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
                 max="10"
                 step="0.5"
                 value={ov.boxOffsetX ?? 0}
-                onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'boxOffsetX', parseFloat(e.target.value) || 0)}
+                onChange={(e) => setField('boxOffsetX', parseFloat(e.target.value) || 0)}
                 className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
               />
             </div>
@@ -218,7 +216,7 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
                 max="10"
                 step="0.5"
                 value={ov.boxOffsetY ?? 0}
-                onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'boxOffsetY', parseFloat(e.target.value) || 0)}
+                onChange={(e) => setField('boxOffsetY', parseFloat(e.target.value) || 0)}
                 className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
               />
             </div>
@@ -233,10 +231,10 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
             label="Stroke Size"
             percentLabel="stroke"
             percentValue={ov.strokeWidthPercent ?? 6}
-            onPercentChange={(v) => updateOverlayConfig(activeOverlayIndex, 'strokeWidthPercent', v)}
+            onPercentChange={(v) => setField('strokeWidthPercent', v)}
             pxLabel="Manual"
             pxValue={ov.strokeWidthPx}
-            onPxChange={(v) => updateOverlayConfig(activeOverlayIndex, 'strokeWidthPx', v)}
+            onPxChange={(v) => setField('strokeWidthPx', v)}
             percentMin={0}
             percentMax={40}
             percentStep={0.5}

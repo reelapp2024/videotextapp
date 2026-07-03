@@ -5,7 +5,11 @@ export default function PreviewAndResultsPanel({
   excelData,
   previewRowIndex,
   setPreviewRowIndex,
+  previewStageRef,
+  previewBgCanvasRef,
   previewCanvasRef,
+  previewVideoRef,
+  useLayeredPreview,
   estimatedExportDurationSec,
   exportFileEstimate,
   config,
@@ -27,6 +31,7 @@ export default function PreviewAndResultsPanel({
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
         <div
+          ref={previewStageRef}
           className="md:col-span-3 bg-black/90 rounded-xl border border-indigo-500/[0.1] overflow-hidden relative flex items-center justify-center group shadow-2xl shadow-indigo-950/40 ring-1 ring-indigo-500/[0.05]"
           style={{
             aspectRatio: (() => {
@@ -58,7 +63,23 @@ export default function PreviewAndResultsPanel({
               </select>
             </div>
           )}
-          <canvas ref={previewCanvasRef} className="max-w-full max-h-full w-full h-full object-contain" />
+          <canvas
+            ref={previewBgCanvasRef}
+            className={`absolute inset-0 max-w-full max-h-full w-full h-full object-contain pointer-events-none ${useLayeredPreview ? 'z-0' : 'hidden'}`}
+            aria-hidden="true"
+          />
+          <video
+            ref={previewVideoRef}
+            className={`absolute pointer-events-none object-cover ${useLayeredPreview ? 'z-[1]' : 'hidden'}`}
+            playsInline
+            muted
+            loop
+            crossOrigin="anonymous"
+          />
+          <canvas
+            ref={previewCanvasRef}
+            className={`max-w-full max-h-full w-full h-full object-contain ${useLayeredPreview ? 'relative z-[2]' : 'relative'}`}
+          />
 
           {estimatedExportDurationSec != null && (
             <div className="absolute bottom-3 left-2 text-[10px] text-indigo-200/90 bg-black/50 backdrop-blur-sm px-2 py-1 rounded pointer-events-none border border-indigo-500/20">
@@ -94,14 +115,14 @@ export default function PreviewAndResultsPanel({
               Image Preview
             </div>
           )}
-          {(videos.length > 0 || voiceFiles.length > 0 || musicFiles.length > 0) && (
-            <button
-              onClick={togglePreviewPlay}
-              className="absolute bottom-3 right-3 bg-indigo-600/20 backdrop-blur-md border border-indigo-500/20 p-2 rounded-xl hover:bg-indigo-600/30 transition shadow-lg shadow-indigo-950/30"
-            >
-              {isPreviewPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={togglePreviewPlay}
+            aria-label={isPreviewPlaying ? 'Pause preview' : 'Play preview'}
+            className="absolute bottom-3 right-3 z-20 bg-indigo-600/40 backdrop-blur-md border border-indigo-400/40 p-2.5 rounded-xl hover:bg-indigo-600/55 transition shadow-lg shadow-indigo-950/40 text-white"
+          >
+            {isPreviewPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          </button>
         </div>
 
         <div className="md:col-span-2 glass-card rounded-xl flex flex-col overflow-hidden max-h-[300px] md:max-h-full">

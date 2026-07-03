@@ -46,6 +46,8 @@ import {
   buildPreviewRowData,
   hasAnyCaptions,
   captionsReadyForVoice,
+  applyCaptionTimingToConfig,
+  getCaptionDurationSec,
 } from './utils/captionIntegration';
 import {
   resolveExportBitrates,
@@ -63,6 +65,8 @@ import {
 } from './pipeline/audioExtraction';
 import { mergeVideosInBatchesImpl } from './pipeline/videoMergeImpl';
 import { ExportTextLayoutCache } from './utils/exportTextLayoutCache.js';
+import { resolvePreviewCanvasSize } from './utils/previewCanvasSize.js';
+import { applyPreviewVideoLayerStyle } from './utils/previewVideoLayer.js';
 import {
   drawOverlaysCore,
   drawLogoCore,
@@ -169,7 +173,8 @@ const App = () => {
   const [musicBatchSize, setMusicBatchSize] = useState('');
   const [excelRowsPerVideo, setExcelRowsPerVideo] = useState('');
   const [excelFrameMode, setExcelFrameMode] = useState('colPerFrame');
-  const [estimatedContentDuration, setEstimatedContentDuration] = useState(null); // seconds, from preview video or image slideshow
+  const [estimatedContentDuration, setEstimatedContentDuration] = useState(null);
+  const [previewVoiceDurationSec, setPreviewVoiceDurationSec] = useState(null); // seconds, from preview video or image slideshow
 
   // Selection Mode: separate for video, audio, and images
   const [videoMode, setVideoMode] = useState('sequence');
@@ -528,11 +533,19 @@ const App = () => {
         customText: '',
         punctuationBreakMarks: [],
         customBreakText: '',
+        contentBreakLineSelection: 'all',
         contentTextSectionEnabled: false,
         contentPartDurations: [],
         contentPartHoldAfter: [],
         contentPartLineAnimate: [],
+        contentPartLineRevealMode: [],
+        contentPartLineAnimType: [],
+        contentPartLineAnimSpeed: [],
         contentPartSameFrame: [],
+        contentPartLineStyleOverrides: [],
+        contentLineDisplayDuration: 5,
+        contentLineHoldAfter: 0,
+        contentLineAnimate: false,
         contentLineAnimSpeed: 2,
         contentLineRevealMode: 'wordByWord',
         contentLineAnimType: 'fadeIn',
@@ -575,11 +588,19 @@ const App = () => {
         customText: '',
         punctuationBreakMarks: [],
         customBreakText: '',
+        contentBreakLineSelection: 'all',
         contentTextSectionEnabled: false,
         contentPartDurations: [],
         contentPartHoldAfter: [],
         contentPartLineAnimate: [],
+        contentPartLineRevealMode: [],
+        contentPartLineAnimType: [],
+        contentPartLineAnimSpeed: [],
         contentPartSameFrame: [],
+        contentPartLineStyleOverrides: [],
+        contentLineDisplayDuration: 5,
+        contentLineHoldAfter: 0,
+        contentLineAnimate: false,
         contentLineAnimSpeed: 2,
         contentLineRevealMode: 'wordByWord',
         contentLineAnimType: 'fadeIn',
@@ -590,7 +611,11 @@ const App = () => {
 
   // Refs
   const previewCanvasRef = useRef(null);
+  const previewBgCanvasRef = useRef(null);
+  const previewStageRef = useRef(null);
   const previewCanvasSizeRef = useRef({ width: 0, height: 0 });
+  const previewBgCanvasSizeRef = useRef({ width: 0, height: 0 });
+  const previewBgCacheRef = useRef({ key: '', static: false });
   const previewCtxRef = useRef(null);
   const previewTextLayoutCacheRef = useRef(null);
   const previewDrawCfgCacheRef = useRef({ key: '', cfg: null });
@@ -610,6 +635,8 @@ const App = () => {
   const voiceFolderInputRef = useRef(null);
   const musicFolderInputRef = useRef(null);
   const previewSimTimeRef = useRef(0);  // Cycling time for animation/kinetic preview when not playing
+  const previewContainerSizeRef = useRef({ w: 0, h: 0 });
+  const [previewLayoutTick, setPreviewLayoutTick] = useState(0);
   const [bgPreviewMediaTick, setBgPreviewMediaTick] = useState(0);
 
   const [extractedPalette, setExtractedPalette] = useState([]);
@@ -774,7 +801,12 @@ const App = () => {
       };
       
       vid.onloadeddata = () => {
-        vid.play().catch(() => {});
+        try {
+          vid.currentTime = 0;
+        } catch {
+          /* ignore */
+        }
+        vid.pause();
         setBgPreviewMediaTick((n) => n + 1);
       };
       
@@ -792,6 +824,64 @@ const App = () => {
       if (imageFiles.length === 0) setEstimatedContentDuration(null);
     }
   }, [videos, imageFiles.length]);
+
+  // Preload voice/music duration for preview timeline (audio drives length when longer than video).
+  useEffect(() => {
+    const list = voiceFiles?.length ? voiceFiles : musicFiles;
+    if (!list?.length) {
+      setPreviewVoiceDurationSec(null);
+      return undefined;
+    }
+    const idx = Math.min(previewVoiceIndex, list.length - 1);
+    const file = list[idx];
+    const audioEl = previewAudioRef.current;
+    if (!file || !audioEl) return undefined;
+    const url = URL.createObjectURL(file);
+    const onMeta = () => {
+      if (audioEl.duration && isFinite(audioEl.duration)) {
+        setPreviewVoiceDurationSec(audioEl.duration);
+      }
+    };
+    audioEl.addEventListener('loadedmetadata', onMeta);
+    audioEl.src = url;
+    audioEl.load();
+    return () => {
+      audioEl.removeEventListener('loadedmetadata', onMeta);
+      if (audioEl.src === url) {
+        audioEl.removeAttribute('src');
+        audioEl.load();
+      }
+      URL.revokeObjectURL(url);
+    };
+  }, [voiceFiles, musicFiles, previewVoiceIndex]);
+
+  // Keep preview video looping while audio/captions are still playing.
+  useEffect(() => {
+    const video = previewVideoRef.current;
+    if (!video || videos.length === 0) return undefined;
+    const onEnded = () => {
+      const audioEl = previewAudioRef.current;
+      const audioStillPlaying =
+        audioEl
+        && !audioEl.paused
+        && !audioEl.ended
+        && audioEl.duration
+        && isFinite(audioEl.duration)
+        && audioEl.currentTime < audioEl.duration - 0.05;
+      if (audioStillPlaying) {
+        try {
+          video.currentTime = 0;
+          video.play().catch(() => {});
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+      if (isPreviewPlaying) setIsPreviewPlaying(false);
+    };
+    video.addEventListener('ended', onEnded);
+    return () => video.removeEventListener('ended', onEnded);
+  }, [videos.length, isPreviewPlaying]);
 
   // Preview image for upload-tab images (no main video)
   useEffect(() => {
@@ -823,9 +913,19 @@ const App = () => {
   // Estimated export duration (content duration / export speed) for preview label
   const estimatedExportDurationSec = (() => {
     const speed = Math.max(0.25, Math.min(4, Number(config.video?.exportSpeed) || 1));
+    const pvIdx = voiceFiles.length > 0 ? Math.min(previewVoiceIndex, voiceFiles.length - 1) : 0;
+    const previewVoice = voiceFiles[pvIdx] || null;
+    const captionDur = getCaptionDurationSec(voiceCaptionMap, previewVoice, pvIdx);
     let contentSec = null;
     if (imageFiles.length > 0 && videos.length === 0) contentSec = imageFiles.length * imageSlideDurationSec;
-    else if (estimatedContentDuration != null && estimatedContentDuration > 0) contentSec = estimatedContentDuration;
+    else {
+      const mediaDur = Math.max(
+        estimatedContentDuration || 0,
+        previewVoiceDurationSec || 0,
+        captionDur || 0,
+      );
+      if (mediaDur > 0) contentSec = mediaDur;
+    }
     if (contentSec == null) return null;
     return { content: contentSec, final: contentSec / speed };
   })();
@@ -1100,11 +1200,13 @@ const App = () => {
     if (previewConfigRef.current !== config) {
       previewConfigRef.current = config;
       previewDrawCfgCacheRef.current = { key: '', cfg: null };
+      previewBgCacheRef.current = { key: '', static: false };
     }
     if (previewCaptionMapRef.current !== voiceCaptionMap) {
       previewCaptionMapRef.current = voiceCaptionMap;
       previewDrawCfgCacheRef.current = { key: '', cfg: null };
       previewRowDataCacheRef.current = { key: '', row: null };
+      previewBgCacheRef.current = { key: '', static: false };
     }
 
     const showUploadImages = imageFiles.length > 0 && videos.length === 0;
@@ -1120,58 +1222,72 @@ const App = () => {
       !settingsBgReady &&
       (bgType === 'image' || shouldApplyBackgroundEffects(bg, fx, { fallbackUploadImage: true }));
 
-    let width, height;
-    if (showUploadImages) {
-      const ratio = config.imageAspectRatio || config.video?.aspectRatio || '1080x1920';
-      const dims = getAspectRatioDimensions(ratio);
-      const scaleFactor = 400 / dims.height;
-      width = Math.round(dims.width * scaleFactor);
-      height = Math.round(dims.height * scaleFactor);
-    } else {
-      const dims = getEffectiveDimensions();
-      const scaleFactor = 400 / dims.height;
-      width = dims.width * scaleFactor;
-      height = dims.height * scaleFactor;
-    }
+    const layeredPlayback =
+      videos.length > 0
+      && isPreviewPlaying
+      && video
+      && video.readyState >= 2
+      && !showUploadImages;
 
-    if (
-      previewCanvasSizeRef.current.width !== width
-      || previewCanvasSizeRef.current.height !== height
-    ) {
-      canvas.width = width;
-      canvas.height = height;
-      previewCanvasSizeRef.current = { width, height };
-      previewCtxRef.current = canvas.getContext('2d');
-    }
-    const ctx = previewCtxRef.current || canvas.getContext('2d');
-    if (!previewCtxRef.current) previewCtxRef.current = ctx;
-    if (!previewTextLayoutCacheRef.current) {
-      previewTextLayoutCacheRef.current = new ExportTextLayoutCache();
-    }
-    previewTextLayoutCacheRef.current.installOnContext(ctx);
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    const stageEl = previewStageRef.current || canvas.parentElement;
+    const exportDims = showUploadImages
+      ? getAspectRatioDimensions(config.imageAspectRatio || config.video?.aspectRatio || '1080x1920')
+      : getEffectiveDimensions();
+    const { width, height } = resolvePreviewCanvasSize(exportDims, stageEl, {
+      playing: layeredPlayback,
+    });
+
+    const ensureCanvasCtx = (targetCanvas, sizeRef) => {
+      if (!targetCanvas) return null;
+      if (sizeRef.current.width !== width || sizeRef.current.height !== height) {
+        targetCanvas.width = width;
+        targetCanvas.height = height;
+        sizeRef.current = { width, height };
+        return targetCanvas.getContext('2d');
+      }
+      return targetCanvas.getContext('2d');
+    };
 
     let vTime = 0;
     let vDur = 1;
+    const pvIdxEarly = voiceFiles.length > 0 ? Math.min(previewVoiceIndex, voiceFiles.length - 1) : previewRowIndex;
+    const previewVoiceEarly = voiceFiles[pvIdxEarly] || null;
+    const captionDurSec = getCaptionDurationSec(voiceCaptionMap, previewVoiceEarly, pvIdxEarly);
     const audioPlaying = audioEl && !audioEl.paused && !audioEl.ended && audioEl.duration && isFinite(audioEl.duration);
     const videoPlaying = video && !video.paused && !video.ended && video.readyState >= 2 && video.duration && isFinite(video.duration);
-    if (videoPlaying) {
-      vTime = video.currentTime;
-      vDur = Math.max(video.duration, audioPlaying ? audioEl.duration : 0, 1);
-    } else if (audioPlaying) {
-      vDur = Math.max(audioEl.duration, 1);
+    const voiceDurHint = Math.max(
+      previewVoiceDurationSec || 0,
+      captionDurSec || 0,
+      audioEl?.duration && isFinite(audioEl.duration) ? audioEl.duration : 0,
+    );
+
+    if (audioPlaying) {
       vTime = audioEl.currentTime;
+      vDur = Math.max(audioEl.duration, voiceDurHint, video?.duration || 0, 1);
+      if (video && video.readyState >= 2 && video.duration > 0) {
+        const loopT = vTime % video.duration;
+        if (Math.abs(video.currentTime - loopT) > 0.12) {
+          try { video.currentTime = loopT; } catch { /* ignore seek errors */ }
+        }
+        if (video.paused && isPreviewPlaying) video.play().catch(() => {});
+      }
+    } else if (videoPlaying) {
+      vTime = video.currentTime;
+      vDur = Math.max(video.duration, voiceDurHint, 1);
     } else if (video && video.duration && isFinite(video.duration)) {
-      vDur = Math.max(video.duration, 1);
+      vDur = Math.max(video.duration, voiceDurHint, 1);
       vTime = video.currentTime || 0;
-    } else if (voiceFiles.length > 0 && previewAudioRef.current?.duration) {
-      vDur = Math.max(previewAudioRef.current.duration, 1);
+    } else if (voiceFiles.length > 0 && (previewVoiceDurationSec || previewAudioRef.current?.duration)) {
+      vDur = Math.max(previewVoiceDurationSec || previewAudioRef.current?.duration || captionDurSec || 0, 1);
       vTime = previewSimTimeRef.current % vDur;
       if (isPreviewPlaying) previewSimTimeRef.current = (previewSimTimeRef.current + 1 / 60) % vDur;
     } else if (musicFiles.length > 0 && previewAudioRef.current?.duration) {
       vDur = Math.max(previewAudioRef.current.duration, 1);
       vTime = previewSimTimeRef.current % vDur;
+      if (isPreviewPlaying) previewSimTimeRef.current = (previewSimTimeRef.current + 1 / 60) % vDur;
+    } else if (captionDurSec > 0) {
+      vDur = Math.max(captionDurSec, 1);
+      vTime = isPreviewPlaying ? previewSimTimeRef.current % vDur : 0;
       if (isPreviewPlaying) previewSimTimeRef.current = (previewSimTimeRef.current + 1 / 60) % vDur;
     } else {
       const estContent = estimatedExportDurationSec?.content;
@@ -1196,38 +1312,13 @@ const App = () => {
 
     if (bgExtras.video?.duration && isFinite(bgExtras.video.duration) && (audioPlaying || videoPlaying)) {
       const target = vTime % bgExtras.video.duration;
-      if (Math.abs(bgExtras.video.currentTime - target) > 0.12) {
+      if (Math.abs(bgExtras.video.currentTime - target) > 0.25) {
         try {
           bgExtras.video.currentTime = target;
         } catch {
           /* ignore seek errors */
         }
       }
-    }
-
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, width, height);
-    drawBackground(ctx, width, height, bg, bgExtras, vTime, vDur, null, fxOpts);
-
-    if (drawSeparateUploadLayer) {
-      drawPreviewUploadImage(ctx, previewImg, width, height);
-    } else if (showUploadImages && uploadImgReady && !useUploadAsBgTexture && !settingsBgReady) {
-      drawPreviewUploadImage(ctx, previewImg, width, height);
-    }
-
-    if (!showUploadImages || !uploadImgReady) {
-      ctx.save();
-      ctx.globalAlpha = config.video?.opacity ?? 1;
-      if (video && video.readyState >= 2) {
-        drawVideoContain(
-          ctx,
-          video,
-          width,
-          height,
-          config.video?.zoomScale ?? 1,
-        );
-      }
-      ctx.restore();
     }
 
     const pvIdx = voiceFiles.length > 0 ? Math.min(previewVoiceIndex, voiceFiles.length - 1) : previewRowIndex;
@@ -1262,28 +1353,169 @@ const App = () => {
       ...drawCfg,
       _textLayoutCache: previewTextLayoutCacheRef.current,
     };
-    drawOverlays(ctx, width, height, currentRow, vTime, vDur, drawCfg);
-    drawLogo(ctx, width, height);
-  }, [config, config.background, config.backgroundEffects, bgPreviewMediaTick, excelData, previewRowIndex, previewVoiceIndex, voiceCaptionMap, voiceFiles, imageFiles.length, videos.length, musicFiles.length, drawOverlays, drawBackground, drawBackgroundBase, drawPreviewUploadImage, logoEnabled, logoSize, logoPosition, logoOpacity, logoPadding, excelFrameMode, excelRowsPerVideo, isPreviewPlaying, getEffectiveDimensions, estimatedExportDurationSec]);
 
-  // Live preview: rAF while playing for smooth sync with video/audio
-  useEffect(() => {
-    const hasVideo = videos.length > 0;
-    const hasMedia = hasVideo || imageFiles.length > 0;
+    if (layeredPlayback) {
+      const bgCanvas = previewBgCanvasRef.current;
+      const bgCtx = ensureCanvasCtx(bgCanvas, previewBgCanvasSizeRef);
+      const bgCacheKey = `${width}x${height}:${bgType}:${drawSeparateUploadLayer}`;
+      const bgVideoActive = bgType === 'video' && bgExtras.video;
+      const bgNeedsRedraw =
+        !bgCtx
+        || bgVideoActive
+        || !previewBgCacheRef.current.static
+        || previewBgCacheRef.current.key !== bgCacheKey;
 
-    if (isPreviewPlaying) {
-      let frameId;
-      const animate = () => {
-        redrawPreview();
-        frameId = requestAnimationFrame(animate);
-      };
-      frameId = requestAnimationFrame(animate);
-      return () => cancelAnimationFrame(frameId);
+      if (bgCtx && bgNeedsRedraw) {
+        bgCtx.fillStyle = '#000000';
+        bgCtx.fillRect(0, 0, width, height);
+        const bgForDraw =
+          fxOpts?.fallbackUploadImage && bgExtras.image?.complete
+            ? { ...bg, type: 'image' }
+            : bg;
+        drawBackgroundBase(bgCtx, width, height, bgForDraw, bgExtras);
+        if (drawSeparateUploadLayer) {
+          drawPreviewUploadImage(bgCtx, previewImg, width, height);
+        } else if (showUploadImages && uploadImgReady && !useUploadAsBgTexture && !settingsBgReady) {
+          drawPreviewUploadImage(bgCtx, previewImg, width, height);
+        }
+        previewBgCacheRef.current = { key: bgCacheKey, static: !bgVideoActive };
+      }
+
+      applyPreviewVideoLayerStyle(
+        video,
+        stageEl,
+        config.video?.zoomScale ?? 1,
+        config.video?.opacity ?? 1,
+      );
+
+      const overlayCtx = ensureCanvasCtx(canvas, previewCanvasSizeRef);
+      if (!overlayCtx) return;
+      previewCtxRef.current = overlayCtx;
+      if (!previewTextLayoutCacheRef.current) {
+        previewTextLayoutCacheRef.current = new ExportTextLayoutCache();
+      }
+      previewTextLayoutCacheRef.current.installOnContext(overlayCtx);
+      overlayCtx.clearRect(0, 0, width, height);
+      overlayCtx.imageSmoothingEnabled = true;
+      overlayCtx.imageSmoothingQuality = 'medium';
+      drawOverlays(overlayCtx, width, height, currentRow, vTime, vDur, drawCfg);
+      drawLogo(overlayCtx, width, height);
+      return;
     }
 
-    redrawPreview();
-    return undefined;
-  }, [videos.length, imageFiles.length, isPreviewPlaying, config.overlays, config.logoEnabled, voiceCaptionMap, redrawPreview]);
+    previewBgCacheRef.current = { key: '', static: false };
+    const ctx = ensureCanvasCtx(canvas, previewCanvasSizeRef);
+    if (!ctx) return;
+    previewCtxRef.current = ctx;
+    if (!previewTextLayoutCacheRef.current) {
+      previewTextLayoutCacheRef.current = new ExportTextLayoutCache();
+    }
+    previewTextLayoutCacheRef.current.installOnContext(ctx);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, width, height);
+    drawBackground(ctx, width, height, bg, bgExtras, vTime, vDur, null, fxOpts);
+
+    if (drawSeparateUploadLayer) {
+      drawPreviewUploadImage(ctx, previewImg, width, height);
+    } else if (showUploadImages && uploadImgReady && !useUploadAsBgTexture && !settingsBgReady) {
+      drawPreviewUploadImage(ctx, previewImg, width, height);
+    }
+
+    if (!showUploadImages || !uploadImgReady) {
+      ctx.save();
+      ctx.globalAlpha = config.video?.opacity ?? 1;
+      if (video && video.readyState >= 2) {
+        drawVideoContain(
+          ctx,
+          video,
+          width,
+          height,
+          config.video?.zoomScale ?? 1,
+        );
+      }
+      ctx.restore();
+    }
+
+    drawOverlays(ctx, width, height, currentRow, vTime, vDur, drawCfg);
+    drawLogo(ctx, width, height);
+  }, [config, config.background, config.backgroundEffects, bgPreviewMediaTick, previewLayoutTick, excelData, previewRowIndex, previewVoiceIndex, voiceCaptionMap, voiceFiles, imageFiles.length, videos.length, musicFiles.length, drawOverlays, drawBackground, drawBackgroundBase, drawPreviewUploadImage, logoEnabled, logoSize, logoPosition, logoOpacity, logoPadding, excelFrameMode, excelRowsPerVideo, isPreviewPlaying, getEffectiveDimensions, estimatedExportDurationSec, previewVoiceDurationSec]);
+
+  // Re-measure preview panel when layout changes (window resize, tab switch).
+  useEffect(() => {
+    if (!user && !api.isLoggedIn()) return undefined;
+
+    let cancelled = false;
+    let ro = null;
+
+    const attach = () => {
+      if (cancelled) return;
+      const canvas = previewCanvasRef.current;
+      const container = canvas?.parentElement;
+      if (!container) {
+        requestAnimationFrame(attach);
+        return;
+      }
+
+      const measure = () => {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        const prev = previewContainerSizeRef.current;
+        if (Math.abs(w - prev.w) > 2 || Math.abs(h - prev.h) > 2) {
+          previewContainerSizeRef.current = { w, h };
+          setPreviewLayoutTick((n) => n + 1);
+        }
+      };
+
+      measure();
+      ro = new ResizeObserver(measure);
+      ro.observe(container);
+    };
+
+    attach();
+    return () => {
+      cancelled = true;
+      ro?.disconnect();
+    };
+  }, [user]);
+
+  // Live preview: sync overlay redraw to video frames when possible.
+  useEffect(() => {
+    if (!isPreviewPlaying) {
+      previewBgCacheRef.current = { key: '', static: false };
+      redrawPreview();
+      return undefined;
+    }
+
+    let active = true;
+    const video = previewVideoRef.current;
+    const useVideoFrameCallback =
+      videos.length > 0
+      && video
+      && typeof video.requestVideoFrameCallback === 'function';
+
+    const tick = () => {
+      if (!active) return;
+      redrawPreview();
+      if (useVideoFrameCallback) {
+        video.requestVideoFrameCallback(tick);
+      } else {
+        requestAnimationFrame(tick);
+      }
+    };
+
+    if (useVideoFrameCallback) {
+      video.requestVideoFrameCallback(tick);
+    } else {
+      requestAnimationFrame(tick);
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [videos.length, imageFiles.length, isPreviewPlaying, previewLayoutTick, config.overlays, config.logoEnabled, voiceCaptionMap, redrawPreview]);
 
   useEffect(() => {
     if (voiceFiles.length > 0 && previewRowIndex < voiceFiles.length) {
@@ -1297,25 +1529,29 @@ const App = () => {
 
     if (hasVideo) {
       if (video.paused) {
-        // If voice/music exists, play it too and let it drive the timeline.
         const pv = voiceFiles.length > 0 ? Math.min(previewVoiceIndex, voiceFiles.length - 1) : 0;
         const file = voiceFiles[pv] || voiceFiles[0] || musicFiles[0];
         const audioEl = previewAudioRef.current;
+        previewSimTimeRef.current = 0;
+        try { video.currentTime = 0; } catch (_) {}
         if (file && audioEl) {
           if (audioEl.src) try { URL.revokeObjectURL(audioEl.src); } catch (_) {}
           audioEl.src = URL.createObjectURL(file);
           audioEl.volume = config.audio?.volume ?? 0.5;
+          audioEl.currentTime = 0;
           audioEl.onended = () => {
             try { video.pause(); } catch (_) {}
             setIsPreviewPlaying(false);
           };
-          audioEl.play().catch(() => {});
         }
-        // Loop video when audio longer (or unknown yet); safe to always loop during preview play.
         video.loop = true;
-        video.play().then(() => {
-          setIsPreviewPlaying(true);
-        });
+        video.muted = true;
+        const startAudio = file && audioEl
+          ? audioEl.play().catch(() => {})
+          : Promise.resolve();
+        Promise.all([startAudio, video.play()])
+          .then(() => setIsPreviewPlaying(true))
+          .catch(() => setIsPreviewPlaying(false));
       } else {
         video.pause();
         // Stop preview audio if playing
@@ -1330,8 +1566,8 @@ const App = () => {
         cancelAnimationFrame(requestRef.current);
       }
     } else if (voiceFiles.length > 0 || musicFiles.length > 0) {
-      // No video: play voice/music for preview
-      const file = voiceFiles[0] || musicFiles[0];
+      const pv = voiceFiles.length > 0 ? Math.min(previewVoiceIndex, voiceFiles.length - 1) : 0;
+      const file = voiceFiles[pv] || voiceFiles[0] || musicFiles[0];
       const audioEl = previewAudioRef.current;
       if (file && audioEl) {
         if (isPreviewPlaying) {
@@ -1341,15 +1577,19 @@ const App = () => {
           audioEl.src = '';
           setIsPreviewPlaying(false);
         } else {
+          previewSimTimeRef.current = 0;
           if (audioEl.src) try { URL.revokeObjectURL(audioEl.src); } catch(_) {}
           audioEl.src = URL.createObjectURL(file);
           audioEl.volume = config.audio?.volume ?? 0.5;
+          audioEl.currentTime = 0;
           audioEl.onended = () => setIsPreviewPlaying(false);
           audioEl.play().then(() => {
             setIsPreviewPlaying(true);
           });
         }
       }
+    } else {
+      setIsPreviewPlaying((playing) => !playing);
     }
   };
 
@@ -1535,8 +1775,13 @@ const App = () => {
         textAlign: 'center', letterSpacing: 0, lineHeight: 1.4, shadowEnabled: i !== 0,
         shadowColor: '#000000', shadowBlur: 4, shadowOffsetX: 2, shadowOffsetY: 2,
         textTransform: 'none', animation: 'none', customText: '', punctuationBreakMarks: [],
-        customBreakText: '', contentTextSectionEnabled: false, contentPartDurations: [],
-        contentPartHoldAfter: [], contentPartLineAnimate: [], contentPartSameFrame: [],
+        customBreakText: '', contentBreakLineSelection: 'all', contentTextSectionEnabled: false, contentPartDurations: [],
+        contentPartHoldAfter: [], contentPartLineAnimate: [], contentPartLineRevealMode: [], contentPartLineAnimType: [], contentPartLineAnimSpeed: [], contentPartSameFrame: [],
+        contentPartLineStyleOverrides: [],
+        contentLineDisplayDuration: 5,
+        contentLineHoldAfter: 0,
+        contentLineAnimate: false,
+        contentPartLineStyleOverrides: [], contentLineDisplayDuration: 5, contentLineHoldAfter: 0, contentLineAnimate: false,
         contentLineAnimSpeed: 2, contentLineRevealMode: 'wordByWord', contentLineAnimType: 'fadeIn'
       });
     }
@@ -1591,6 +1836,15 @@ const App = () => {
     setConfig(prev => {
       const newOverlays = [...prev.overlays];
       newOverlays[index] = { ...newOverlays[index], [key]: value };
+      return { ...prev, overlays: newOverlays };
+    });
+  };
+
+  const patchOverlayConfig = (index, patch) => {
+    if (!patch || typeof patch !== 'object') return;
+    setConfig((prev) => {
+      const newOverlays = [...prev.overlays];
+      newOverlays[index] = { ...newOverlays[index], ...patch };
       return { ...prev, overlays: newOverlays };
     });
   };
@@ -2830,7 +3084,11 @@ const App = () => {
             excelData={excelData}
             previewRowIndex={previewRowIndex}
             setPreviewRowIndex={setPreviewRowIndex}
+            previewStageRef={previewStageRef}
+            previewBgCanvasRef={previewBgCanvasRef}
             previewCanvasRef={previewCanvasRef}
+            previewVideoRef={previewVideoRef}
+            useLayeredPreview={videos.length > 0 && isPreviewPlaying}
             estimatedExportDurationSec={estimatedExportDurationSec}
             exportFileEstimate={exportFileEstimate}
             config={config}
@@ -2873,6 +3131,7 @@ const App = () => {
               activeOverlayIndex={activeOverlayIndex}
               setActiveOverlayIndex={setActiveOverlayIndex}
               updateOverlayConfig={updateOverlayConfig}
+              patchOverlayConfig={patchOverlayConfig}
               applyOverlayPreset={applyOverlayPreset}
               excelData={excelData}
               excelFrameMode={excelFrameMode}
@@ -2912,6 +3171,9 @@ const App = () => {
               DOODLE_ANIMATION_PRESETS={DOODLE_ANIMATION_PRESETS}
               previewRowIndex={previewRowIndex}
               captionPreviewWords={captionPreviewWords}
+              voiceCaptionMap={voiceCaptionMap}
+              voiceFiles={voiceFiles}
+              previewVoiceIndex={previewVoiceIndex}
             />
 
           </div>
@@ -2946,7 +3208,6 @@ const App = () => {
         {/* Hidden elements */}
         <div className="hidden">
           <video ref={extractionVideoRef} playsInline crossOrigin="anonymous" />
-          <video ref={previewVideoRef} playsInline muted loop crossOrigin="anonymous" />
           <audio ref={previewAudioRef} />
         </div>
       </div>

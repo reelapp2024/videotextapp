@@ -1,4 +1,6 @@
 import React from 'react';
+import { useScopedOverlay, useOverlayLineScope } from './OverlayLineEditContext.jsx';
+import { buildGlobalLineSettingsPatch } from '../../utils/contentLineSettings.js';
 
 const QUICK_STYLE_PRESETS = [
   { name: 'Clean', bg: '#000000', color: '#FFFFFF', style: 'box', shadow: false },
@@ -11,22 +13,35 @@ const QUICK_STYLE_PRESETS = [
   { name: 'Glow', bg: '#000000', color: '#FFFFFF', style: 'stroke', shadow: true, shadowColor: '#FFFFFF' },
 ];
 
-export default function OverlayQuickStylePresets({ activeOverlayIndex, updateOverlayConfig }) {
+export default function OverlayQuickStylePresets({ activeOverlayIndex, config, updateOverlayConfig }) {
+  const scope = useOverlayLineScope();
+  const { setField, patchFields, lineLabel } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
+
+  const applyQuick = (preset) => {
+    const fields = {
+      bgColor: preset.bg,
+      color: preset.color,
+      styleType: preset.style,
+      shadowEnabled: preset.shadow,
+    };
+    if (preset.shadowColor) fields.shadowColor = preset.shadowColor;
+    if (preset.style === 'stroke') fields.strokeColor = preset.bg;
+    if (scope?.isGlobal) {
+      patchFields(buildGlobalLineSettingsPatch(scope.baseOverlay, fields, scope.lineCount));
+    } else {
+      Object.entries(fields).forEach(([key, value]) => setField(key, value));
+    }
+  };
+
   return (
     <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-2 rounded border border-purple-700/30">
-      <p className="text-[10px] text-gray-400 mb-2 font-medium">QUICK PRESETS</p>
+      <p className="text-[10px] text-gray-400 mb-2 font-medium">QUICK PRESETS — {lineLabel}</p>
       <div className="grid grid-cols-4 gap-1">
         {QUICK_STYLE_PRESETS.map((preset) => (
           <button
             key={preset.name}
-            onClick={() => {
-              updateOverlayConfig(activeOverlayIndex, 'bgColor', preset.bg);
-              updateOverlayConfig(activeOverlayIndex, 'color', preset.color);
-              updateOverlayConfig(activeOverlayIndex, 'styleType', preset.style);
-              updateOverlayConfig(activeOverlayIndex, 'shadowEnabled', preset.shadow);
-              if (preset.shadowColor) updateOverlayConfig(activeOverlayIndex, 'shadowColor', preset.shadowColor);
-              if (preset.style === 'stroke') updateOverlayConfig(activeOverlayIndex, 'strokeColor', preset.bg);
-            }}
+            type="button"
+            onClick={() => applyQuick(preset)}
             className="p-1 rounded text-[9px] bg-gray-700 hover:bg-gray-600 text-gray-300 transition"
             style={{
               background: preset.bg === '#000000' ? '#333' : preset.bg,

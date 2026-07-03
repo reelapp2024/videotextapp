@@ -36,6 +36,20 @@ export function getCaptionEntry(voiceCaptionMap, voiceFile, voiceIndex = 0) {
   return voiceCaptionMap.byIndex?.[voiceIndex] ?? null
 }
 
+/** Total caption timeline length in seconds (last segment/word end). */
+export function getCaptionDurationSec(voiceCaptionMap, voiceFile, voiceIndex = 0) {
+  const entry = getCaptionEntry(voiceCaptionMap, voiceFile, voiceIndex)
+  if (!entry?.segments?.length) return 0
+  let max = 0
+  for (const seg of entry.segments) {
+    if ((seg.end ?? 0) > max) max = seg.end ?? 0
+    for (const w of seg.words || []) {
+      if ((w.end ?? 0) > max) max = w.end ?? 0
+    }
+  }
+  return max
+}
+
 export function captionsReadyForVoice(voiceCaptionMap, voiceFile, voiceIndex) {
   return Boolean(getCaptionEntry(voiceCaptionMap, voiceFile, voiceIndex)?.segments?.length)
 }
@@ -92,7 +106,6 @@ export function applyCaptionTimingToConfig(cfg, segments) {
       if (ov.captionTextPresetId && ov.captionPresetsEnabled) return ov
       return {
         ...ov,
-        contentTextSectionEnabled: true,
         contentPartDurations: durations,
         contentPartHoldAfter: durations.map(() => 0),
       }

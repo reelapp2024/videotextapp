@@ -1,4 +1,5 @@
 import React from 'react';
+import { useScopedOverlay } from './OverlayLineEditContext.jsx';
 
 export default function OverlayIconsElementsGraphics({
   activeOverlayIndex,
@@ -12,25 +13,26 @@ export default function OverlayIconsElementsGraphics({
   ICON_POSITION_PRESETS,
   ICON_ANIMATION_PRESETS,
 }) {
+  const { ov, setField, lineLabel } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
   return (
     <div className="bg-indigo-500/[0.03] p-2.5 rounded-xl border border-indigo-500/[0.06]">
       <div className="flex justify-between items-center mb-2">
         <p className="text-[10px] text-gray-500 font-medium">ICONS / ELEMENTS / GRAPHICS</p>
         <button
-          onClick={() => updateOverlayConfig(activeOverlayIndex, 'iconSectionEnabled', !(config.overlays[activeOverlayIndex].iconSectionEnabled ?? false))}
-          className={`text-[9px] px-2 py-1 rounded ${(config.overlays[activeOverlayIndex].iconSectionEnabled ?? false) ? 'bg-green-600 text-white' : 'bg-gray-600 text-gray-400'}`}
+          onClick={() => setField('iconSectionEnabled', !(ov.iconSectionEnabled ?? false))}
+          className={`text-[9px] px-2 py-1 rounded ${(ov.iconSectionEnabled ?? false) ? 'bg-green-600 text-white' : 'bg-gray-600 text-gray-400'}`}
         >
-          {(config.overlays[activeOverlayIndex].iconSectionEnabled ?? false) ? 'ON' : 'OFF'}
+          {(ov.iconSectionEnabled ?? false) ? 'ON' : 'OFF'}
         </button>
       </div>
-      {(config.overlays[activeOverlayIndex].iconSectionEnabled ?? false) && (
+      {(ov.iconSectionEnabled ?? false) && (
         <div className="space-y-2">
           <div className="flex gap-1">
             {[{ id: 'icons', label: 'Icons' }, { id: 'elements', label: 'Elements' }, { id: 'graphics', label: 'Graphics' }].map((t) => (
               <button
                 key={t.id}
-                onClick={() => updateOverlayConfig(activeOverlayIndex, 'iconSourceType', t.id)}
-                className={`flex-1 text-[9px] py-1.5 rounded font-medium transition ${(config.overlays[activeOverlayIndex].iconSourceType || 'icons') === t.id ? 'bg-indigo-600 text-white' : 'bg-indigo-500/[0.05] text-gray-500 hover:bg-indigo-500/[0.08]'}`}
+                onClick={() => setField('iconSourceType', t.id)}
+                className={`flex-1 text-[9px] py-1.5 rounded font-medium transition ${(ov.iconSourceType || 'icons') === t.id ? 'bg-indigo-600 text-white' : 'bg-indigo-500/[0.05] text-gray-500 hover:bg-indigo-500/[0.08]'}`}
               >
                 {t.label}
               </button>
@@ -40,8 +42,8 @@ export default function OverlayIconsElementsGraphics({
           <div>
             <label className="text-[9px] text-gray-500 block mb-1">Display Logic</label>
             <select
-              value={config.overlays[activeOverlayIndex].iconLogic || 'none'}
-              onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'iconLogic', e.target.value)}
+              value={ov.iconLogic || 'none'}
+              onChange={(e) => setField('iconLogic', e.target.value)}
               className="w-full bg-gray-700 rounded text-[10px] p-1.5 border-none"
             >
               <option value="none">None</option>
@@ -51,13 +53,13 @@ export default function OverlayIconsElementsGraphics({
             </select>
           </div>
 
-          {(config.overlays[activeOverlayIndex].iconSourceType || 'icons') === 'icons' && (
+          {(ov.iconSourceType || 'icons') === 'icons' && (
             <div>
               <label className="text-[9px] text-gray-500 block mb-1">Intent (auto-detect from Excel)</label>
               <div className="flex gap-1">
                 <select
-                  value={config.overlays[activeOverlayIndex].iconIntent || 'auto'}
-                  onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'iconIntent', e.target.value)}
+                  value={ov.iconIntent || 'auto'}
+                  onChange={(e) => setField('iconIntent', e.target.value)}
                   className="flex-1 bg-gray-700 rounded text-[10px] p-1.5 border-none"
                 >
                   <option value="auto">Auto-detect</option>
@@ -66,14 +68,14 @@ export default function OverlayIconsElementsGraphics({
                   ))}
                 </select>
               </div>
-              {config.overlays[activeOverlayIndex].iconIntent && config.overlays[activeOverlayIndex].iconIntent !== 'auto' && ICON_LIBRARY[config.overlays[activeOverlayIndex].iconIntent] && (
+              {ov.iconIntent && ov.iconIntent !== 'auto' && ICON_LIBRARY[ov.iconIntent] && (
                 <div className="mt-1 flex flex-wrap gap-0.5 max-h-16 overflow-y-auto bg-gray-800/50 p-1 rounded">
-                  {ICON_LIBRARY[config.overlays[activeOverlayIndex].iconIntent].slice(0, 30).map((ic, ii) => (
+                  {ICON_LIBRARY[ov.iconIntent].slice(0, 30).map((ic, ii) => (
                     <span
                       key={ii}
                       className="text-sm cursor-pointer hover:bg-gray-600 rounded p-0.5"
                       title={ic}
-                      onClick={() => updateOverlayConfig(activeOverlayIndex, 'iconCustomChar', ic)}
+                      onClick={() => setField('iconCustomChar', ic)}
                     >
                       {ic}
                     </span>
@@ -83,12 +85,12 @@ export default function OverlayIconsElementsGraphics({
             </div>
           )}
 
-          {config.overlays[activeOverlayIndex].iconSourceType === 'elements' && (
+          {ov.iconSourceType === 'elements' && (
             <div>
               <label className="text-[9px] text-gray-500 block mb-1">Element Category</label>
               <select
-                value={config.overlays[activeOverlayIndex].elementCategory || 'arrows_3d'}
-                onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'elementCategory', e.target.value)}
+                value={ov.elementCategory || 'arrows_3d'}
+                onChange={(e) => setField('elementCategory', e.target.value)}
                 className="w-full bg-gray-700 rounded text-[10px] p-1.5 border-none"
               >
                 {Object.keys(ELEMENT_LIBRARY).map((k) => (
@@ -96,12 +98,12 @@ export default function OverlayIconsElementsGraphics({
                 ))}
               </select>
               <div className="mt-1 flex flex-wrap gap-0.5 max-h-20 overflow-y-auto bg-gray-800/50 p-1 rounded">
-                {(ELEMENT_LIBRARY[config.overlays[activeOverlayIndex].elementCategory || 'arrows_3d'] || []).map((el, ei) => (
+                {(ELEMENT_LIBRARY[ov.elementCategory || 'arrows_3d'] || []).map((el, ei) => (
                   <span
                     key={ei}
                     className="text-sm cursor-pointer hover:bg-gray-600 rounded px-1 py-0.5 font-mono"
                     title={el}
-                    onClick={() => updateOverlayConfig(activeOverlayIndex, 'iconCustomChar', el)}
+                    onClick={() => setField('iconCustomChar', el)}
                   >
                     {el}
                   </span>
@@ -110,12 +112,12 @@ export default function OverlayIconsElementsGraphics({
             </div>
           )}
 
-          {config.overlays[activeOverlayIndex].iconSourceType === 'graphics' && (
+          {ov.iconSourceType === 'graphics' && (
             <div>
               <label className="text-[9px] text-gray-500 block mb-1">Graphic Category</label>
               <select
-                value={config.overlays[activeOverlayIndex].graphicCategory || 'badges_3d'}
-                onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'graphicCategory', e.target.value)}
+                value={ov.graphicCategory || 'badges_3d'}
+                onChange={(e) => setField('graphicCategory', e.target.value)}
                 className="w-full bg-gray-700 rounded text-[10px] p-1.5 border-none"
               >
                 {Object.keys(GRAPHIC_LIBRARY).map((k) => (
@@ -123,7 +125,7 @@ export default function OverlayIconsElementsGraphics({
                 ))}
               </select>
               <div className="mt-1 flex flex-wrap gap-0.5 max-h-20 overflow-y-auto bg-gray-800/50 p-1 rounded">
-                {(GRAPHIC_LIBRARY[config.overlays[activeOverlayIndex].graphicCategory || 'badges_3d'] || []).map((gr, gi) => (
+                {(GRAPHIC_LIBRARY[ov.graphicCategory || 'badges_3d'] || []).map((gr, gi) => (
                   <span
                     key={gi}
                     className="text-xs cursor-pointer hover:bg-gray-600 rounded px-1 py-0.5 font-mono text-gray-300"
@@ -131,7 +133,7 @@ export default function OverlayIconsElementsGraphics({
                     onClick={() => {
                       const chars = [...gr];
                       const picked = chars.length <= 3 ? gr : chars.slice(0, 3).join('');
-                      updateOverlayConfig(activeOverlayIndex, 'iconCustomChar', picked);
+                      setField('iconCustomChar', picked);
                     }}
                   >
                     {gr}
@@ -141,12 +143,12 @@ export default function OverlayIconsElementsGraphics({
             </div>
           )}
 
-          {config.overlays[activeOverlayIndex].iconCustomChar && (
+          {ov.iconCustomChar && (
             <div className="flex items-center gap-1 bg-gray-800/50 p-1.5 rounded">
-              <span className="text-sm">{config.overlays[activeOverlayIndex].iconCustomChar}</span>
+              <span className="text-sm">{ov.iconCustomChar}</span>
               <span className="text-[9px] text-gray-500 flex-1">Selected</span>
               <button
-                onClick={() => updateOverlayConfig(activeOverlayIndex, 'iconCustomChar', '')}
+                onClick={() => setField('iconCustomChar', '')}
                 className="text-[9px] text-red-400 hover:text-red-300 px-1"
               >
                 Clear
@@ -162,17 +164,17 @@ export default function OverlayIconsElementsGraphics({
                 min="0.5"
                 max="3"
                 step="0.1"
-                value={config.overlays[activeOverlayIndex].iconSizeScale ?? 1}
-                onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'iconSizeScale', parseFloat(e.target.value))}
+                value={ov.iconSizeScale ?? 1}
+                onChange={(e) => setField('iconSizeScale', parseFloat(e.target.value))}
                 className="w-full h-1.5 accent-blue-500"
               />
-              <span className="text-[8px] text-gray-600">{(config.overlays[activeOverlayIndex].iconSizeScale ?? 1).toFixed(1)}x</span>
+              <span className="text-[8px] text-gray-600">{(ov.iconSizeScale ?? 1).toFixed(1)}x</span>
             </div>
             <div>
               <label className="text-[9px] text-gray-500 block mb-0.5">Position</label>
               <select
-                value={config.overlays[activeOverlayIndex].iconPosition || 'beforeWord'}
-                onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'iconPosition', e.target.value)}
+                value={ov.iconPosition || 'beforeWord'}
+                onChange={(e) => setField('iconPosition', e.target.value)}
                 className="w-full bg-gray-700 rounded text-[9px] p-1 border-none"
               >
                 {ICON_POSITION_PRESETS.map((p) => (
@@ -187,8 +189,8 @@ export default function OverlayIconsElementsGraphics({
                 min="0"
                 max="5"
                 step="0.1"
-                value={config.overlays[activeOverlayIndex].iconShowDelay ?? 0}
-                onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'iconShowDelay', parseFloat(e.target.value) || 0)}
+                value={ov.iconShowDelay ?? 0}
+                onChange={(e) => setField('iconShowDelay', parseFloat(e.target.value) || 0)}
                 className="w-full bg-gray-700 rounded text-[9px] p-1 border-none"
               />
             </div>
@@ -199,8 +201,8 @@ export default function OverlayIconsElementsGraphics({
                 min="0"
                 max="10"
                 step="0.1"
-                value={config.overlays[activeOverlayIndex].iconDuration ?? 0}
-                onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'iconDuration', parseFloat(e.target.value) || 0)}
+                value={ov.iconDuration ?? 0}
+                onChange={(e) => setField('iconDuration', parseFloat(e.target.value) || 0)}
                 className="w-full bg-gray-700 rounded text-[9px] p-1 border-none"
               />
               <span className="text-[8px] text-gray-600">0 = always</span>
@@ -210,8 +212,8 @@ export default function OverlayIconsElementsGraphics({
           <div>
             <label className="text-[9px] text-gray-500 block mb-0.5">Animation</label>
             <select
-              value={config.overlays[activeOverlayIndex].iconAnimation || 'none'}
-              onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'iconAnimation', e.target.value)}
+              value={ov.iconAnimation || 'none'}
+              onChange={(e) => setField('iconAnimation', e.target.value)}
               className="w-full bg-gray-700 rounded text-[10px] p-1.5 border-none"
             >
               {ICON_ANIMATION_PRESETS.map((a) => (
@@ -220,7 +222,7 @@ export default function OverlayIconsElementsGraphics({
             </select>
           </div>
 
-          {(config.overlays[activeOverlayIndex].iconPosition === 'aboveWord' || config.overlays[activeOverlayIndex].iconPosition === 'belowWord') && (
+          {(ov.iconPosition === 'aboveWord' || ov.iconPosition === 'belowWord') && (
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-[9px] text-gray-500 block mb-0.5">X Offset</label>
@@ -229,8 +231,8 @@ export default function OverlayIconsElementsGraphics({
                   min="-50"
                   max="50"
                   step="1"
-                  value={config.overlays[activeOverlayIndex].iconOffsetX ?? 0}
-                  onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'iconOffsetX', parseInt(e.target.value))}
+                  value={ov.iconOffsetX ?? 0}
+                  onChange={(e) => setField('iconOffsetX', parseInt(e.target.value))}
                   className="w-full h-1.5 accent-blue-500"
                 />
               </div>
@@ -241,8 +243,8 @@ export default function OverlayIconsElementsGraphics({
                   min="-50"
                   max="50"
                   step="1"
-                  value={config.overlays[activeOverlayIndex].iconOffsetY ?? 0}
-                  onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'iconOffsetY', parseInt(e.target.value))}
+                  value={ov.iconOffsetY ?? 0}
+                  onChange={(e) => setField('iconOffsetY', parseInt(e.target.value))}
                   className="w-full h-1.5 accent-blue-500"
                 />
               </div>

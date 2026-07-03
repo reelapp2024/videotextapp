@@ -18,6 +18,7 @@ export default function SettingsOverlayGrid({
   activeOverlayIndex,
   setActiveOverlayIndex,
   updateOverlayConfig,
+  patchOverlayConfig,
   applyOverlayPreset,
 
   excelData,
@@ -58,6 +59,9 @@ export default function SettingsOverlayGrid({
   DOODLE_ANIMATION_PRESETS,
   previewRowIndex,
   captionPreviewWords,
+  voiceCaptionMap,
+  voiceFiles,
+  previewVoiceIndex,
 }) {
   if (!(activeTab === 'settings' || activeTab === 'overlay')) return null;
 
@@ -88,6 +92,7 @@ export default function SettingsOverlayGrid({
             activeOverlayIndex={activeOverlayIndex}
             config={config}
             updateOverlayConfig={updateOverlayConfig}
+            patchOverlayConfig={patchOverlayConfig}
             applyOverlayPreset={applyOverlayPreset}
             updateGlobalConfig={updateGlobalConfig}
             excelData={excelData}
@@ -128,7 +133,12 @@ export default function SettingsOverlayGrid({
             DOODLE_ANIMATION_PRESETS={DOODLE_ANIMATION_PRESETS}
             previewRowIndex={previewRowIndex}
             captionPreviewWords={captionPreviewWords}
-          />
+            voiceCaptionMap={voiceCaptionMap}
+            voiceFiles={voiceFiles}
+        previewVoiceIndex={previewVoiceIndex}
+        LINE_ANIM_MODES={LINE_ANIM_MODES}
+        LINE_ANIM_EFFECTS={LINE_ANIM_EFFECTS}
+      />
         </OverlayEditorPanel>
       )}
     </div>

@@ -1,4 +1,6 @@
 import React from 'react';
+import { useScopedOverlay, useOverlayLineScope } from './OverlayLineEditContext.jsx';
+import { buildGlobalLineSettingsPatch } from '../../utils/contentLineSettings.js';
 
 export default function OverlayFontSettings({
   activeOverlayIndex,
@@ -7,22 +9,32 @@ export default function OverlayFontSettings({
   FONT_PRESETS,
   FONTS,
 }) {
+  const scope = useOverlayLineScope();
+  const { ov, setField, patchFields, lineLabel } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
+
+  const applyFontPreset = (pid) => {
+    const preset = FONT_PRESETS.find((p) => p.id === pid);
+    const fields = { fontPreset: pid };
+    if (preset?.font) fields.fontFamily = preset.font;
+    if (preset?.weight) fields.fontWeight = preset.weight;
+    if (scope?.isGlobal) {
+      patchFields(buildGlobalLineSettingsPatch(scope.baseOverlay, fields, scope.lineCount));
+    } else {
+      Object.entries(fields).forEach(([key, value]) => setField(key, value));
+    }
+  };
+
   return (
     <div className="bg-indigo-500/[0.03] p-2.5 rounded-xl border border-indigo-500/[0.06]">
       <p className="text-[10px] text-gray-500 mb-2 font-medium">
-        FONT {config.overlays[activeOverlayIndex]?.captionPresetsEnabled ? '(overrides caption preset)' : '(Preset applies; custom overrides)'}
+        FONT — {lineLabel}
+        {ov?.captionPresetsEnabled ? ' (overrides caption preset)' : ''}
       </p>
       <div className="mb-2">
         <label className="text-[9px] text-gray-500">Preset</label>
         <select
-          value={config.overlays[activeOverlayIndex].fontPreset || 'default'}
-          onChange={(e) => {
-            const pid = e.target.value;
-            updateOverlayConfig(activeOverlayIndex, 'fontPreset', pid);
-            const preset = FONT_PRESETS.find((p) => p.id === pid);
-            if (preset?.font) updateOverlayConfig(activeOverlayIndex, 'fontFamily', preset.font);
-            if (preset?.weight) updateOverlayConfig(activeOverlayIndex, 'fontWeight', preset.weight);
-          }}
+          value={ov.fontPreset || 'default'}
+          onChange={(e) => applyFontPreset(e.target.value)}
           className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
         >
           {FONT_PRESETS.filter((p) => p.font).map((p) => (
@@ -34,8 +46,8 @@ export default function OverlayFontSettings({
         <div>
           <label className="text-[10px] text-gray-500">Font Family</label>
           <select
-            value={config.overlays[activeOverlayIndex].fontFamily}
-            onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'fontFamily', e.target.value)}
+            value={ov.fontFamily}
+            onChange={(e) => setField('fontFamily', e.target.value)}
             className="w-full bg-gray-700 rounded text-xs p-1.5 border-none"
           >
             {FONTS.map((f) => (
@@ -46,8 +58,8 @@ export default function OverlayFontSettings({
         <div>
           <label className="text-[10px] text-gray-500">Weight</label>
           <select
-            value={config.overlays[activeOverlayIndex].fontWeight || 'bold'}
-            onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'fontWeight', e.target.value)}
+            value={ov.fontWeight || 'bold'}
+            onChange={(e) => setField('fontWeight', e.target.value)}
             className="w-full bg-gray-700 rounded text-xs p-1.5 border-none"
           >
             <option value="normal">Normal</option>
@@ -63,16 +75,16 @@ export default function OverlayFontSettings({
             min="1"
             max="20"
             step="0.5"
-            value={config.overlays[activeOverlayIndex].fontSize}
-            onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'fontSize', parseFloat(e.target.value))}
+            value={ov.fontSize}
+            onChange={(e) => setField('fontSize', parseFloat(e.target.value))}
             className="w-full bg-gray-700 rounded text-xs p-1.5 border-none"
           />
         </div>
         <div>
           <label className="text-[10px] text-gray-500">Transform</label>
           <select
-            value={config.overlays[activeOverlayIndex].textTransform || 'none'}
-            onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'textTransform', e.target.value)}
+            value={ov.textTransform || 'none'}
+            onChange={(e) => setField('textTransform', e.target.value)}
             className="w-full bg-gray-700 rounded text-xs p-1.5 border-none"
           >
             <option value="none">Normal</option>

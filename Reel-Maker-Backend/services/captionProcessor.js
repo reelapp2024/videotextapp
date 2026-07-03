@@ -31,6 +31,7 @@ __export(captionProcessor_exports, {
   markFirstEditorReady: () => markFirstEditorReady,
   runRenderPipeline: () => runRenderPipeline,
   runTranscriptionPipeline: () => runTranscriptionPipeline,
+  transcribeOneTrack: () => transcribeOneTrack,
   zipRenderedOutputs: () => zipRenderedOutputs
 });
 module.exports = __toCommonJS(captionProcessor_exports);
@@ -70,44 +71,46 @@ async function incrementTranscribed(captionJobId) {
     );
   }
 }
+async function transcribeOneTrack(captionJobId, trackId, model, language) {
+  const track = await import_CaptionTrack.default.findById(trackId);
+  if (!track) throw new Error(`Caption track not found: ${trackId}`);
+  if (track.status === "ready" || track.status === "done") return;
+  const shouldCountCompletion = track.status !== "error";
+  try {
+    await import_CaptionTrack.default.findByIdAndUpdate(track._id, { status: "transcribing" });
+    const result = await (0, import_fasterWhisperService.transcribeWithFasterWhisper)(track.audioPath, { model, language });
+    await import_CaptionTrack.default.findByIdAndUpdate(track._id, {
+      status: "ready",
+      segments: result.segments,
+      language: result.language,
+      duration: result.duration,
+      error: null
+    });
+    await markFirstEditorReady(captionJobId, String(track._id));
+    if (shouldCountCompletion) await incrementTranscribed(captionJobId);
+  } catch (e) {
+    await import_CaptionTrack.default.findByIdAndUpdate(track._id, {
+      status: "error",
+      error: e.message
+    });
+    if (shouldCountCompletion) await incrementTranscribed(captionJobId);
+    throw e;
+  }
+}
 async function runTranscriptionPipeline(captionJobId, model, language) {
   const tracks = await import_CaptionTrack.default.find({ captionJobId }).sort({ trackIndex: 1 });
-  const parallel = Math.min(
-    2,
-    Math.max(1, parseInt(process.env.CAPTION_CPU_PARALLEL || "1", 10))
-  );
+  const parallel = Math.max(1, parseInt(process.env.CAPTION_CPU_PARALLEL || "1", 10));
   await import_CaptionJob.default.findOneAndUpdate(
     { jobId: captionJobId },
     { status: "transcribing", totalTracks: tracks.length }
   );
-  const transcribeOne = async (track) => {
-    try {
-      await import_CaptionTrack.default.findByIdAndUpdate(track._id, { status: "transcribing" });
-      const result = await (0, import_fasterWhisperService.transcribeWithFasterWhisper)(track.audioPath, { model, language });
-      await import_CaptionTrack.default.findByIdAndUpdate(track._id, {
-        status: "ready",
-        segments: result.segments,
-        language: result.language,
-        duration: result.duration,
-        error: null
-      });
-      await markFirstEditorReady(captionJobId, String(track._id));
-      await incrementTranscribed(captionJobId);
-    } catch (e) {
-      await import_CaptionTrack.default.findByIdAndUpdate(track._id, {
-        status: "error",
-        error: e.message
-      });
-      await incrementTranscribed(captionJobId);
-    }
-  };
-  if (tracks.length > 0) await transcribeOne(tracks[0]);
-  const rest = tracks.slice(1);
+  const ordered = [...tracks].sort((a, b) => a.trackIndex - b.trackIndex);
+  if (ordered.length === 0) return;
   let idx = 0;
-  const workers = Array.from({ length: parallel }, async () => {
-    while (idx < rest.length) {
+  const workers = Array.from({ length: Math.min(parallel, ordered.length) }, async () => {
+    while (idx < ordered.length) {
       const i = idx++;
-      await transcribeOne(rest[i]);
+      await transcribeOneTrack(captionJobId, String(ordered[i]._id), model, language).catch(() => {});
     }
   });
   await Promise.all(workers);
@@ -174,5 +177,6 @@ async function runRenderPipeline(captionJobId, style) {
   markFirstEditorReady,
   runRenderPipeline,
   runTranscriptionPipeline,
+  transcribeOneTrack,
   zipRenderedOutputs
 });

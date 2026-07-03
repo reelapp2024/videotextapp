@@ -6,6 +6,7 @@ const CaptionTrack = require('../models/CaptionTrack');
 const CaptionStyleTemplate = require('../models/CaptionStyleTemplate');
 const { DEFAULT_CAPTION_STYLE } = require('../constants/caption');
 const { runTranscriptionPipeline, runRenderPipeline } = require('../services/captionProcessor');
+const { tryEnqueueCaptionBatch } = require('../services/captionQueueService');
 const { captionUpload, captionJobsDir } = require('../middleware/upload');
 
 function trackDto(t) {
@@ -71,18 +72,26 @@ module.exports = {
           audioPath: path.join(jobDir, af.filename),
           videoPath: videoFiles[i] ? path.join(jobDir, videoFiles[i].filename) : null,
         }));
-        await CaptionTrack.insertMany(tracks);
+        const insertedTracks = await CaptionTrack.insertMany(tracks);
 
-        res.status(202).json({ jobId: captionJobId, totalTracks: tracks.length });
+        res.status(202).json({ jobId: captionJobId, totalTracks: insertedTracks.length });
 
-        setImmediate(() => {
-          runTranscriptionPipeline(captionJobId, whisperModel, language).catch(async (e) => {
-            await CaptionJob.findOneAndUpdate(
-              { jobId: captionJobId },
-              { status: 'error', error: e.message },
-            );
+        const startInProcess = () => {
+          setImmediate(() => {
+            runTranscriptionPipeline(captionJobId, whisperModel, language).catch(async (e) => {
+              await CaptionJob.findOneAndUpdate(
+                { jobId: captionJobId },
+                { status: 'error', error: e.message },
+              );
+            });
           });
-        });
+        };
+
+        tryEnqueueCaptionBatch(captionJobId, insertedTracks, whisperModel, language)
+          .then((enqueued) => {
+            if (!enqueued) startInProcess();
+          })
+          .catch(() => startInProcess());
       } catch (e) {
         res.status(500).json({ error: e.message });
       }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useScopedOverlay } from './OverlayLineEditContext.jsx';
 
 export default function OverlayColorGradient({
   activeOverlayIndex,
@@ -10,6 +11,7 @@ export default function OverlayColorGradient({
   extractedPalette = [],
   extractPaletteFromMedia,
 }) {
+  const { ov, setField, lineLabel } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
   return (
     <div className="bg-indigo-500/[0.03] p-2.5 rounded-xl border border-indigo-500/[0.06]">
       <p className="text-[10px] text-gray-500 mb-2 font-medium">COLOR & GRADIENT</p>
@@ -17,30 +19,30 @@ export default function OverlayColorGradient({
         <span className="text-[9px] text-gray-500">Gradient</span>
         <button
           onClick={() => {
-            const next = !(config.overlays[activeOverlayIndex].gradientEnabled ?? false);
-            updateOverlayConfig(activeOverlayIndex, 'gradientEnabled', next);
-            if (next && !(config.overlays[activeOverlayIndex].gradientColors?.length)) {
-              updateOverlayConfig(activeOverlayIndex, 'gradientColors', ['#FF6B6B', '#FFE66D']);
-              updateOverlayConfig(activeOverlayIndex, 'gradientPreset', 'sunset');
+            const next = !(ov.gradientEnabled ?? false);
+            setField('gradientEnabled', next);
+            if (next && !(ov.gradientColors?.length)) {
+              setField('gradientColors', ['#FF6B6B', '#FFE66D']);
+              setField('gradientPreset', 'sunset');
             }
           }}
-          className={`text-[9px] px-2 py-1 rounded ${(config.overlays[activeOverlayIndex].gradientEnabled ?? false) ? 'bg-purple-600 text-white' : 'bg-gray-600 text-gray-400'}`}
+          className={`text-[9px] px-2 py-1 rounded ${(ov.gradientEnabled ?? false) ? 'bg-purple-600 text-white' : 'bg-gray-600 text-gray-400'}`}
         >
-          {(config.overlays[activeOverlayIndex].gradientEnabled ?? false) ? 'ON' : 'OFF'}
+          {(ov.gradientEnabled ?? false) ? 'ON' : 'OFF'}
         </button>
       </div>
-      {(config.overlays[activeOverlayIndex].gradientEnabled ?? false) ? (
+      {(ov.gradientEnabled ?? false) ? (
         <div className="space-y-2 mb-2">
           <label className="text-[9px] text-gray-500">Gradient Preset (30+)</label>
           <select
-            value={config.overlays[activeOverlayIndex].gradientPreset || 'sunset'}
+            value={ov.gradientPreset || 'sunset'}
             onChange={(e) => {
               const gid = e.target.value;
-              updateOverlayConfig(activeOverlayIndex, 'gradientPreset', gid || null);
+              setField('gradientPreset', gid || null);
               const g = GRADIENT_PRESETS.find((p) => p.id === gid);
-              if (g?.colors) updateOverlayConfig(activeOverlayIndex, 'gradientColors', g.colors);
-              else if (!config.overlays[activeOverlayIndex].gradientColors?.length)
-                updateOverlayConfig(activeOverlayIndex, 'gradientColors', ['#FFFFFF', '#CCCCCC']);
+              if (g?.colors) setField('gradientColors', g.colors);
+              else if (!ov.gradientColors?.length)
+                setField('gradientColors', ['#FFFFFF', '#CCCCCC']);
             }}
             className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
           >
@@ -49,15 +51,15 @@ export default function OverlayColorGradient({
             ))}
           </select>
           <div className="flex flex-wrap gap-1">
-            {(config.overlays[activeOverlayIndex].gradientColors || ['#FFFFFF', '#CCCCCC']).map((c, i) => (
+            {(ov.gradientColors || ['#FFFFFF', '#CCCCCC']).map((c, i) => (
               <div key={i} className="flex items-center gap-1">
                 <input
                   type="color"
                   value={c}
                   onChange={(e) => {
-                    const arr = [...(config.overlays[activeOverlayIndex].gradientColors || ['#FFFFFF', '#CCCCCC'])];
+                    const arr = [...(ov.gradientColors || ['#FFFFFF', '#CCCCCC'])];
                     arr[i] = e.target.value;
-                    updateOverlayConfig(activeOverlayIndex, 'gradientColors', arr);
+                    setField('gradientColors', arr);
                   }}
                   className="h-6 w-8 rounded cursor-pointer border border-gray-600"
                 />
@@ -70,12 +72,12 @@ export default function OverlayColorGradient({
           <div>
             <label className="text-[9px] text-gray-500">Color Preset (30+)</label>
             <select
-              value={config.overlays[activeOverlayIndex].colorPreset || 'white'}
+              value={ov.colorPreset || 'white'}
               onChange={(e) => {
                 const cid = e.target.value;
-                updateOverlayConfig(activeOverlayIndex, 'colorPreset', cid);
+                setField('colorPreset', cid);
                 const preset = COLOR_PRESETS.find((p) => p.id === cid);
-                if (preset?.color) updateOverlayConfig(activeOverlayIndex, 'color', preset.color);
+                if (preset?.color) setField('color', preset.color);
               }}
               className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
             >
@@ -91,7 +93,7 @@ export default function OverlayColorGradient({
                 {extractedPalette.map((color) => (
                   <button
                     key={color}
-                    onClick={() => updateOverlayConfig(activeOverlayIndex, 'color', color)}
+                    onClick={() => setField('color', color)}
                     className="w-5 h-5 rounded-full border border-gray-600 hover:scale-110 transition-transform"
                     style={{ backgroundColor: color }}
                     title={color}
@@ -109,8 +111,8 @@ export default function OverlayColorGradient({
           <div>
             <label className="text-[9px] text-gray-500">Color Logic</label>
             <select
-              value={config.overlays[activeOverlayIndex].colorLogic || 'none'}
-              onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'colorLogic', e.target.value)}
+              value={ov.colorLogic || 'none'}
+              onChange={(e) => setField('colorLogic', e.target.value)}
               className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
             >
               {COLOR_LOGIC_PRESETS.map((c) => (
@@ -122,14 +124,14 @@ export default function OverlayColorGradient({
             <label className="text-[9px] text-gray-500">Color</label>
             <input
               type="color"
-              value={config.overlays[activeOverlayIndex].color || '#ffffff'}
-              onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'color', e.target.value)}
+              value={ov.color || '#ffffff'}
+              onChange={(e) => setField('color', e.target.value)}
               className="h-7 w-10 rounded cursor-pointer border border-gray-600"
             />
             <input
               type="text"
-              value={config.overlays[activeOverlayIndex].color || '#ffffff'}
-              onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'color', e.target.value)}
+              value={ov.color || '#ffffff'}
+              onChange={(e) => setField('color', e.target.value)}
               className="flex-1 bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
             />
           </div>

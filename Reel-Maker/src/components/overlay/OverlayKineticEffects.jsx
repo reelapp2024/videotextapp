@@ -1,4 +1,5 @@
 import React from 'react';
+import { useScopedOverlay } from './OverlayLineEditContext.jsx';
 import { KINETIC_LOGIC_ALL } from '../../textStylePresets.js';
 
 export default function OverlayKineticEffects({
@@ -7,6 +8,7 @@ export default function OverlayKineticEffects({
   updateOverlayConfig,
   KINETIC_EFFECTS,
 }) {
+  const { ov, setField, lineLabel } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
   return (
     <div className="bg-indigo-500/[0.03] p-2.5 rounded-xl border border-indigo-500/[0.06]">
       <p className="text-[10px] text-gray-500 mb-2 font-medium">KINETIC EFFECTS</p>
@@ -14,8 +16,8 @@ export default function OverlayKineticEffects({
         <div>
           <label className="text-[9px] text-gray-500">Effect</label>
           <select
-            value={config.overlays[activeOverlayIndex].kineticEffect || 'none'}
-            onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'kineticEffect', e.target.value)}
+            value={ov.kineticEffect || 'none'}
+            onChange={(e) => setField('kineticEffect', e.target.value)}
             className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
           >
             {KINETIC_EFFECTS.map((k) => (
@@ -26,8 +28,8 @@ export default function OverlayKineticEffects({
         <div>
           <label className="text-[9px] text-gray-500">Logic</label>
           <select
-            value={config.overlays[activeOverlayIndex].kineticLogic || 'oneWord'}
-            onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'kineticLogic', e.target.value)}
+            value={ov.kineticLogic || 'oneWord'}
+            onChange={(e) => setField('kineticLogic', e.target.value)}
             className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
           >
             {KINETIC_LOGIC_ALL.map((k) => (
@@ -43,11 +45,11 @@ export default function OverlayKineticEffects({
               min="0.5"
               max="2"
               step="0.1"
-              value={config.overlays[activeOverlayIndex].popScale ?? 1}
-              onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'popScale', parseFloat(e.target.value))}
+              value={ov.popScale ?? 1}
+              onChange={(e) => setField('popScale', parseFloat(e.target.value))}
               className="flex-1 h-1.5 bg-gray-600 rounded"
             />
-            <span className="text-[10px] w-8">{(config.overlays[activeOverlayIndex].popScale ?? 1).toFixed(1)}</span>
+            <span className="text-[10px] w-8">{(ov.popScale ?? 1).toFixed(1)}</span>
           </div>
         </div>
         <div className="col-span-2 grid grid-cols-2 gap-2 mt-1 pt-2 border-t border-gray-700/30">
@@ -57,8 +59,8 @@ export default function OverlayKineticEffects({
               type="number"
               step="0.1"
               min="0"
-              value={config.overlays[activeOverlayIndex].kineticStartTime ?? 0}
-              onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'kineticStartTime', parseFloat(e.target.value))}
+              value={ov.kineticStartTime ?? 0}
+              onChange={(e) => setField('kineticStartTime', parseFloat(e.target.value))}
               className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
             />
           </div>
@@ -68,8 +70,8 @@ export default function OverlayKineticEffects({
               type="number"
               step="0.1"
               min="0.1"
-              value={config.overlays[activeOverlayIndex].kineticDuration ?? 1}
-              onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'kineticDuration', parseFloat(e.target.value))}
+              value={ov.kineticDuration ?? 1}
+              onChange={(e) => setField('kineticDuration', parseFloat(e.target.value))}
               className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
             />
           </div>
@@ -77,8 +79,8 @@ export default function OverlayKineticEffects({
             <input
               type="checkbox"
               id="kineticLoop"
-              checked={config.overlays[activeOverlayIndex].kineticLoop ?? false}
-              onChange={(e) => updateOverlayConfig(activeOverlayIndex, 'kineticLoop', e.target.checked)}
+              checked={ov.kineticLoop ?? false}
+              onChange={(e) => setField('kineticLoop', e.target.checked)}
               className="w-3 h-3"
             />
             <label htmlFor="kineticLoop" className="text-[9px] text-gray-500 cursor-pointer">Loop Effect</label>

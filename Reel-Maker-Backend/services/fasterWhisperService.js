@@ -176,10 +176,27 @@ async function transcribeWithFasterWhisper(audioPath, options = {}) {
   if (!fs.existsSync(audioPath)) throw new Error(`Audio not found: ${audioPath}`);
   if (!fs.existsSync(SCRIPT_PATH)) throw new Error('transcribe_faster_whisper.py missing on server');
 
-  const python = resolvePythonCommand();
   const model = options.model || process.env.WHISPER_MODEL || 'base';
   const language = options.language || process.env.WHISPER_LANGUAGE || 'auto';
   const outJson = path.join(path.dirname(audioPath), `whisper-${uuidv4()}.json`);
+
+  const { usePersistentWhisper, startWhisperServerPool, getWhisperServerPool } = require('./whisperServerPool');
+
+  if (usePersistentWhisper()) {
+    try {
+      await startWhisperServerPool();
+      const resultPath = await getWhisperServerPool().transcribe(audioPath, {
+        model,
+        language,
+        outJson,
+      });
+      return parseWhisperJson(resultPath);
+    } catch (err) {
+      logWhisper('persistent pool failed — falling back to one-shot', err.message);
+    }
+  }
+
+  const python = resolvePythonCommand();
   const timeoutMs = Math.max(
     180000,
     parseInt(process.env.WHISPER_TIMEOUT_MS || '1200000', 10) || 1200000,
@@ -191,6 +208,10 @@ async function transcribeWithFasterWhisper(audioPath, options = {}) {
     timeoutMs,
   );
 
+  return parseWhisperJson(outJson);
+}
+
+function parseWhisperJson(outJson) {
   const raw = JSON.parse(fs.readFileSync(outJson, 'utf-8'));
   try {
     fs.unlinkSync(outJson);

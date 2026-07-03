@@ -52,7 +52,11 @@ function getLastRedisError() {
 
 async function closeRedisConnections() {
   const { closeExportQueue } = require('./exportQueue');
+  const { closeCaptionQueue } = require('./captionQueue');
+  const { stopWhisperServerPool } = require('../services/whisperServerPool');
   await closeExportQueue();
+  await closeCaptionQueue();
+  await stopWhisperServerPool();
 }
 
 module.exports = {

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { CAPTION_TEXT_PRESET_CATEGORIES } from '../../presets/captionTextPresets.js'
+import { useOverlayLineScope } from './OverlayLineEditContext.jsx'
 
 function PresetSwatch({ preset }) {
   const p = preset.patch
@@ -26,6 +27,7 @@ export default function OverlayCaptionPresets({
   applyOverlayPreset,
   updateOverlayConfig,
 }) {
+  const scope = useOverlayLineScope()
   const [openCat, setOpenCat] = useState('word-focus')
   const [filter, setFilter] = useState('')
   const overlay = config.overlays[activeOverlayIndex] || {}
@@ -95,8 +97,13 @@ export default function OverlayCaptionPresets({
                       key={preset.id}
                       type="button"
                       onClick={() => {
-                        updateOverlayConfig(activeOverlayIndex, 'captionPresetsEnabled', true)
-                        applyOverlayPreset(activeOverlayIndex, preset.patch)
+                        if (scope) {
+                          scope.setField('captionPresetsEnabled', true)
+                          scope.applyScopedPreset(preset.patch)
+                        } else {
+                          updateOverlayConfig(activeOverlayIndex, 'captionPresetsEnabled', true)
+                          applyOverlayPreset(activeOverlayIndex, preset.patch)
+                        }
                       }}
                       className={`flex items-center gap-1.5 px-1.5 py-1 rounded text-left text-[9px] transition border ${
                         selected

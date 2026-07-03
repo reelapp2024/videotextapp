@@ -1,14 +1,31 @@
 const app = require('./app');
 const { connectMongo } = require('./config/db');
 const { useBullExport } = require('./services/bullExportConfig');
+const { useBullCaptions } = require('./services/bullCaptionConfig');
 const { startEmbeddedExportWorker } = require('./services/exportWorkerBootstrap');
+const { startEmbeddedCaptionWorker } = require('./services/captionWorkerBootstrap');
 const { getRedisUrl } = require('./queues/connection');
+const { startWhisperServerPool } = require('./services/whisperServerPool');
 
 const PORT = process.env.PORT || 3000;
 
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/healthz`);
+
+  connectMongo().catch((err) => {
+    console.warn('[server] Mongo connect warning:', err.message);
+  });
+
+  startWhisperServerPool()
+    .then((ok) => {
+      if (ok) {
+        console.log('[whisper-pool] Model pre-loaded — Generate captions will be faster on first click');
+      }
+    })
+    .catch((err) => {
+      console.warn('[whisper-pool] pre-load failed:', err.message);
+    });
 
   if (useBullExport() && process.env.EMBED_EXPORT_WORKER !== 'false') {
     console.log(`[export-queue] Bull enabled — Redis ${getRedisUrl()}`);
@@ -24,6 +41,22 @@ const server = app.listen(PORT, () => {
       });
   } else {
     console.log('[export-queue] Bull disabled (USE_BULL_EXPORT=false) — in-process export only');
+  }
+
+  if (useBullCaptions() && process.env.EMBED_CAPTION_WORKER !== 'false') {
+    console.log(`[caption-queue] Bull enabled — Redis ${getRedisUrl()}`);
+    connectMongo()
+      .then(() => startEmbeddedCaptionWorker())
+      .then((worker) => {
+        if (worker) {
+          console.log('[caption-queue] Embedded caption worker started (set EMBED_CAPTION_WORKER=false to disable)');
+        }
+      })
+      .catch((err) => {
+        console.warn('[caption-queue] Embedded worker failed to start:', err.message);
+      });
+  } else {
+    console.log('[caption-queue] Bull disabled (USE_BULL_CAPTIONS=false) — in-process captions only');
   }
 });
 

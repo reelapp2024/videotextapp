@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import api from '../api.js'
-import { syncVoiceCaptionMap } from '../utils/captionIntegration.js'
+import { syncVoiceCaptionMap, applyCaptionTimingToConfig } from '../utils/captionIntegration.js'
 
 export function useCaptions({
   setConfig,
@@ -86,16 +86,24 @@ export function useCaptions({
       setVoiceCaptionMap(map)
       const ready = (data?.tracks || []).filter((t) => t.status === 'ready' || t.status === 'done').length
       if (ready > 0) {
-        setConfig((c) => ({
-          ...c,
-          textSource: 'captions',
-          captionSync: {
-            ...(c.captionSync || {}),
-            enabled: true,
-            granularity: c.captionSync?.granularity || 'line',
-            columnIndex: c.captionSync?.columnIndex ?? 0,
-          },
-        }))
+        const firstReady = (data?.tracks || []).find((t) => t.segments?.length)
+        setConfig((c) => {
+          let next = {
+            ...c,
+            textSource: 'captions',
+            captionSync: {
+              ...(c.captionSync || {}),
+              enabled: true,
+              granularity: c.captionSync?.granularity || 'line',
+              columnIndex: c.captionSync?.columnIndex ?? 0,
+              segments: firstReady?.segments || c.captionSync?.segments,
+            },
+          }
+          if (firstReady?.segments?.length) {
+            next = applyCaptionTimingToConfig(next, firstReady.segments)
+          }
+          return next
+        })
       }
       return map
     },
@@ -159,7 +167,7 @@ export function useCaptions({
           setError(e.message)
           stopPolling()
         }
-      }, 1500)
+      }, 800)
     },
     [refreshJob, stopPolling]
   )

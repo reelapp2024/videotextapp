@@ -44,13 +44,16 @@ def main():
         cpu_threads=cpu_threads,
     )
 
+    beam_size = int(os.environ.get("WHISPER_BEAM_SIZE", "5"))
+    best_of = int(os.environ.get("WHISPER_BEST_OF", str(beam_size)))
+
     segments_iter, info = model.transcribe(
         audio_path,
         language=language,
         word_timestamps=True,
         vad_filter=True,
-        beam_size=1,
-        best_of=1,
+        beam_size=beam_size,
+        best_of=best_of,
         temperature=0.0,
         initial_prompt=os.environ.get("WHISPER_PROMPT", DEFAULT_PROMPT),
         condition_on_previous_text=True,

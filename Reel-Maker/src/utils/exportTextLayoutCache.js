@@ -36,8 +36,12 @@ export class ExportTextLayoutCache {
   }
 
   installOnContext(ctx) {
+    if (!ctx) return () => {};
+    if (ctx.__rmMeasureTextOriginal) return () => {};
+
     const cache = this;
     const original = ctx.measureText.bind(ctx);
+    ctx.__rmMeasureTextOriginal = original;
     const patched = function measureTextCached(text) {
       const font = ctx.font || '';
       const key = cache._measureKey(text, font);
@@ -49,9 +53,14 @@ export class ExportTextLayoutCache {
       cache._measureCache.set(key, m.width);
       return m;
     };
+    ctx.__rmMeasureTextPatched = patched;
     ctx.measureText = patched;
     return () => {
-      ctx.measureText = original;
+      if (ctx.__rmMeasureTextOriginal) {
+        ctx.measureText = ctx.__rmMeasureTextOriginal;
+      }
+      delete ctx.__rmMeasureTextOriginal;
+      delete ctx.__rmMeasureTextPatched;
     };
   }
 
