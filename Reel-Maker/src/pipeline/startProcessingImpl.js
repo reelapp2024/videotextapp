@@ -34,15 +34,21 @@ function buildVideoFormData(ctx) {
     voiceCaptionMap,
     excelData,
     detectedSourceFps,
+    excelRowsPerVideo,
+    excelFrameMode,
   } = ctx;
   const fd = new FormData();
   (videos || []).forEach((v) => fd.append('videos', v instanceof File ? v : (v.file || v)));
   (imageFiles || []).forEach((f) => fd.append('images', f instanceof File ? f : (f.file || f)));
   (voiceFiles || []).forEach((v) => fd.append('voices', v instanceof File ? v : (v.file || v)));
-  (musicFiles || []).forEach((v) => fd.append('music', v instanceof File ? v : (v.file || v)));
+  (musicFiles || []).forEach((m) => fd.append('music', m instanceof File ? m : (m.file || m)));
   const capVoice = voiceFiles?.[0] || null;
   const mergedConfig = withResolvedServerFps(
-    buildServerExportConfig(config, capVoice, voiceCaptionMap, 0),
+    {
+      ...buildServerExportConfig(config, capVoice, voiceCaptionMap, 0),
+      excelRowsPerVideo: excelRowsPerVideo ?? config.excelRowsPerVideo ?? '',
+      excelFrameMode: excelFrameMode ?? config.excelFrameMode ?? 'colPerFrame',
+    },
     detectedSourceFps,
   );
   const exportConfig = withCaptionExportPayload(

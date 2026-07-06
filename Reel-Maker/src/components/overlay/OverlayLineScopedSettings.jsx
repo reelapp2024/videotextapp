@@ -9,13 +9,13 @@ export default function OverlayLineScopedSettings({
   if (!scope) return null;
 
   const {
-    overlay: ov,
-    setField,
     getField,
+    setField,
     isGlobal,
     lineIndex,
     lineLabel,
     breakParts,
+    lineSelection,
   } = scope;
 
   if (breakParts.length === 0) {
@@ -28,13 +28,13 @@ export default function OverlayLineScopedSettings({
     );
   }
 
-  const activeReveal = getField('contentLineRevealMode', 'wordByWord');
-  const activeAnimType = getField('contentLineAnimType', 'fadeIn');
-  const activeAnimSpeed = getField('contentLineAnimSpeed', 2);
-  const activeDuration = getField('contentPartDuration', 5);
-  const activeHold = getField('contentPartHold', 0);
-  const activeLineAnim = getField('contentPartLineAnimate', false);
-  const activeSameFrame = getField('contentPartSameFrame', false);
+  const activeReveal = String(getField('contentLineRevealMode', 'wordByWord'));
+  const activeAnimType = String(getField('contentLineAnimType', 'fadeIn'));
+  const activeAnimSpeed = Number(getField('contentLineAnimSpeed', 2)) || 2;
+  const activeDuration = Number(getField('contentPartDuration', 5)) || 5;
+  const activeHold = Number(getField('contentPartHold', 0)) || 0;
+  const activeLineAnim = Boolean(getField('contentPartLineAnimate', false));
+  const activeSameFrame = Boolean(getField('contentPartSameFrame', false));
 
   const speedUnit = activeReveal === 'characterByChar'
     ? 'chars'
@@ -45,9 +45,13 @@ export default function OverlayLineScopedSettings({
         : 'words';
 
   const previewLine = !isGlobal && lineIndex != null ? breakParts[lineIndex] : null;
+  const scopeKey = `line-scoped-${lineSelection}`;
 
   return (
-    <div className="bg-indigo-500/[0.03] p-2.5 rounded-xl border border-indigo-500/[0.06] -mt-2 space-y-2">
+    <div
+      key={scopeKey}
+      className="bg-indigo-500/[0.03] p-2.5 rounded-xl border border-indigo-500/[0.06] -mt-2 space-y-2"
+    >
       <p className="text-[9px] text-cyan-400/90 font-medium">
         Editing: <span className="text-cyan-200">{lineLabel}</span>
         {isGlobal ? ' — changes apply to every line unless a line has its own override' : ' — only this line'}
@@ -62,7 +66,7 @@ export default function OverlayLineScopedSettings({
         <div>
           <span className="text-[9px] text-gray-500 block mb-0.5">Reveal (kaise dikhega):</span>
           <select
-            value={activeReveal}
+            value={LINE_ANIM_MODES.some((m) => m.id === activeReveal) ? activeReveal : 'wordByWord'}
             onChange={(e) => setField('contentLineRevealMode', e.target.value)}
             className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1 text-gray-300"
           >
@@ -101,7 +105,7 @@ export default function OverlayLineScopedSettings({
         <label className="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
-            checked={Boolean(activeLineAnim)}
+            checked={activeLineAnim}
             onChange={(e) => setField('contentPartLineAnimate', e.target.checked)}
             className="w-3 h-3"
           />
@@ -141,7 +145,7 @@ export default function OverlayLineScopedSettings({
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              checked={Boolean(activeSameFrame)}
+              checked={activeSameFrame}
               onChange={(e) => setField('contentPartSameFrame', e.target.checked)}
               className="w-3 h-3"
             />

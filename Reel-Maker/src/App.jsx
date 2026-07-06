@@ -48,7 +48,10 @@ import {
   captionsReadyForVoice,
   applyCaptionTimingToConfig,
   getCaptionDurationSec,
+  getCaptionEntry,
 } from './utils/captionIntegration';
+import { computeContentBreakParts, getContentSampleText } from './utils/contentBreakParts.js';
+import { computeLineEditPreviewTime } from './utils/contentLineSettings.js';
 import {
   resolveExportBitrates,
   resolveExportFps,
@@ -67,6 +70,12 @@ import { mergeVideosInBatchesImpl } from './pipeline/videoMergeImpl';
 import { ExportTextLayoutCache } from './utils/exportTextLayoutCache.js';
 import { resolvePreviewCanvasSize } from './utils/previewCanvasSize.js';
 import { applyPreviewVideoLayerStyle } from './utils/previewVideoLayer.js';
+import {
+  resolvePreviewVideoIndex,
+  resolvePreviewImageIndex,
+  getPreviewVideoNavState,
+  getPreviewImageNavState,
+} from './utils/previewBulkNav.js';
 import {
   drawOverlaysCore,
   drawLogoCore,
@@ -134,6 +143,8 @@ const App = () => {
   const [excelData, setExcelData] = useState([]);
   const [previewRowIndex, setPreviewRowIndex] = useState(0); // which Excel row to show in preview (default: row with most columns that have text)
   const [previewVoiceIndex, setPreviewVoiceIndex] = useState(0);
+  const [previewVideoIndex, setPreviewVideoIndex] = useState(0);
+  const [previewImageIndex, setPreviewImageIndex] = useState(0);
   const [voiceCaptionMap, setVoiceCaptionMap] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -779,11 +790,20 @@ const App = () => {
     if (voices.length > 0) setTtsSpeaker(voices[0].id);
   }, [backendVoices, ttsSpeaker]);
 
-  // Preview video setup - SIMPLIFIED for smooth playback
+  // Preview video setup - supports bulk upload navigation
   useEffect(() => {
+    const videoIdx = resolvePreviewVideoIndex({
+      videos,
+      previewRowIndex,
+      previewVideoIndex,
+      excelData,
+      videoMode,
+    });
     if (videos.length > 0 && previewVideoRef.current) {
       const vid = previewVideoRef.current;
-      const url = URL.createObjectURL(videos[0]);
+      const file = videos[videoIdx];
+      if (!file) return undefined;
+      const url = URL.createObjectURL(file);
       vid.src = url;
       vid.loop = true;
       vid.muted = true;
@@ -796,7 +816,6 @@ const App = () => {
         if (vid.duration != null && isFinite(vid.duration)) {
           setEstimatedContentDuration(vid.duration);
         }
-        // Default to 30 FPS - server will detect actual FPS
         setDetectedSourceFps(30);
       };
       
@@ -807,6 +826,7 @@ const App = () => {
           /* ignore */
         }
         vid.pause();
+        setIsPreviewPlaying(false);
         setBgPreviewMediaTick((n) => n + 1);
       };
       
@@ -823,7 +843,7 @@ const App = () => {
       setDetectedVideoDims(null);
       if (imageFiles.length === 0) setEstimatedContentDuration(null);
     }
-  }, [videos, imageFiles.length]);
+  }, [videos, previewVideoIndex, previewRowIndex, excelData, videoMode, imageFiles.length]);
 
   // Preload voice/music duration for preview timeline (audio drives length when longer than video).
   useEffect(() => {
@@ -886,10 +906,17 @@ const App = () => {
   // Preview image for upload-tab images (no main video)
   useEffect(() => {
     const useUploadImages = imageFiles.length > 0 && videos.length === 0;
-    if (useUploadImages && imageFiles[0]) {
+    const imageIdx = resolvePreviewImageIndex({
+      imageFiles,
+      previewRowIndex,
+      previewImageIndex,
+      excelData,
+      imageMode,
+    });
+    if (useUploadImages && imageFiles[imageIdx]) {
       const img = document.createElement('img');
       img.crossOrigin = 'anonymous';
-      const url = URL.createObjectURL(imageFiles[0]);
+      const url = URL.createObjectURL(imageFiles[imageIdx]);
       img.onload = () => {
         previewImageRef.current = img;
         setBgPreviewMediaTick((n) => n + 1);
@@ -901,7 +928,67 @@ const App = () => {
       };
     }
     previewImageRef.current = null;
-  }, [imageFiles, videos.length]);
+  }, [imageFiles, videos.length, previewImageIndex, previewRowIndex, excelData, imageMode]);
+
+  const previewVideoNav = getPreviewVideoNavState({
+    videos,
+    excelData,
+    videoMode,
+    previewRowIndex,
+    previewVideoIndex,
+  });
+
+  const previewImageNav = getPreviewImageNavState({
+    imageFiles,
+    excelData,
+    imageMode,
+    previewRowIndex,
+    previewImageIndex,
+  });
+
+  const goPreviewVideoPrev = useCallback(() => {
+    if (videos.length <= 1) return;
+    if (excelData.length > 0 && videoMode === 'sequence') {
+      setPreviewRowIndex((i) => Math.max(0, i - 1));
+      return;
+    }
+    setPreviewVideoIndex((i) => Math.max(0, i - 1));
+  }, [videos.length, excelData.length, videoMode]);
+
+  const goPreviewVideoNext = useCallback(() => {
+    if (videos.length <= 1) return;
+    if (excelData.length > 0 && videoMode === 'sequence') {
+      setPreviewRowIndex((i) => Math.min(excelData.length - 1, i + 1));
+      return;
+    }
+    setPreviewVideoIndex((i) => Math.min(videos.length - 1, i + 1));
+  }, [videos.length, excelData.length, videoMode]);
+
+  const goPreviewImagePrev = useCallback(() => {
+    if (imageFiles.length <= 1) return;
+    if (excelData.length > 0 && imageMode === 'sequence') {
+      setPreviewRowIndex((i) => Math.max(0, i - 1));
+      return;
+    }
+    setPreviewImageIndex((i) => Math.max(0, i - 1));
+  }, [imageFiles.length, excelData.length, imageMode]);
+
+  const goPreviewImageNext = useCallback(() => {
+    if (imageFiles.length <= 1) return;
+    if (excelData.length > 0 && imageMode === 'sequence') {
+      setPreviewRowIndex((i) => Math.min(excelData.length - 1, i + 1));
+      return;
+    }
+    setPreviewImageIndex((i) => Math.min(imageFiles.length - 1, i + 1));
+  }, [imageFiles.length, excelData.length, imageMode]);
+
+  useEffect(() => {
+    setPreviewVideoIndex((i) => Math.min(i, Math.max(0, videos.length - 1)));
+  }, [videos.length]);
+
+  useEffect(() => {
+    setPreviewImageIndex((i) => Math.min(i, Math.max(0, imageFiles.length - 1)));
+  }, [imageFiles.length]);
 
   const formatTime = (ms) => {
     if (!ms || ms < 0) return "--:--";
@@ -1197,6 +1284,8 @@ const App = () => {
     const previewImg = previewImageRef.current;
     if (!canvas) return;
 
+    let previewEditLineIdx = null;
+
     if (previewConfigRef.current !== config) {
       previewConfigRef.current = config;
       previewDrawCfgCacheRef.current = { key: '', cfg: null };
@@ -1302,6 +1391,32 @@ const App = () => {
       }
     }
 
+    if (!isPreviewPlaying) {
+      const editOv = config.overlays?.[activeOverlayIndex];
+      if (editOv?.contentTextSectionEnabled) {
+        const sel = editOv.contentBreakLineSelection;
+        if (sel && sel !== 'all') {
+          const lineIdx = Number(sel) - 1;
+          if (lineIdx >= 0) {
+            previewEditLineIdx = lineIdx;
+            const capEntry = getCaptionEntry(voiceCaptionMap, previewVoiceEarly, pvIdxEarly);
+            const captionSegments = capEntry?.segments || [];
+            const sampleText = getContentSampleText({
+              excelData,
+              overlay: editOv,
+              captionSegments,
+            });
+            const breakParts = computeContentBreakParts(editOv, sampleText, { captionSegments });
+            const pinnedTime = computeLineEditPreviewTime(editOv, lineIdx, breakParts, captionSegments);
+            if (pinnedTime != null && Number.isFinite(pinnedTime)) {
+              vTime = pinnedTime;
+              vDur = Math.max(vDur, pinnedTime + 0.5, 1);
+            }
+          }
+        }
+      }
+    }
+
     const bgExtras = {
       image: useUploadAsBgTexture ? previewImg : settingsBgReady ? settingsBgImg : null,
       video: bgType === 'video' ? backgroundVideoRef.current : null,
@@ -1352,6 +1467,13 @@ const App = () => {
     drawCfg = {
       ...drawCfg,
       _textLayoutCache: previewTextLayoutCacheRef.current,
+      overlays: (drawCfg.overlays || []).map((ov, i) => {
+        const { _previewEditLineIndex, ...rest } = ov;
+        if (previewEditLineIdx != null && i === activeOverlayIndex) {
+          return { ...rest, _previewEditLineIndex: previewEditLineIdx };
+        }
+        return rest;
+      }),
     };
 
     if (layeredPlayback) {
@@ -1441,7 +1563,7 @@ const App = () => {
 
     drawOverlays(ctx, width, height, currentRow, vTime, vDur, drawCfg);
     drawLogo(ctx, width, height);
-  }, [config, config.background, config.backgroundEffects, bgPreviewMediaTick, previewLayoutTick, excelData, previewRowIndex, previewVoiceIndex, voiceCaptionMap, voiceFiles, imageFiles.length, videos.length, musicFiles.length, drawOverlays, drawBackground, drawBackgroundBase, drawPreviewUploadImage, logoEnabled, logoSize, logoPosition, logoOpacity, logoPadding, excelFrameMode, excelRowsPerVideo, isPreviewPlaying, getEffectiveDimensions, estimatedExportDurationSec, previewVoiceDurationSec]);
+  }, [config, config.background, config.backgroundEffects, bgPreviewMediaTick, previewLayoutTick, excelData, previewRowIndex, previewVoiceIndex, previewVideoIndex, previewImageIndex, voiceCaptionMap, voiceFiles, imageFiles.length, videos.length, musicFiles.length, drawOverlays, drawBackground, drawBackgroundBase, drawPreviewUploadImage, logoEnabled, logoSize, logoPosition, logoOpacity, logoPadding, excelFrameMode, excelRowsPerVideo, isPreviewPlaying, getEffectiveDimensions, estimatedExportDurationSec, previewVoiceDurationSec, activeOverlayIndex]);
 
   // Re-measure preview panel when layout changes (window resize, tab switch).
   useEffect(() => {
@@ -1515,7 +1637,7 @@ const App = () => {
     return () => {
       active = false;
     };
-  }, [videos.length, imageFiles.length, isPreviewPlaying, previewLayoutTick, config.overlays, config.logoEnabled, voiceCaptionMap, redrawPreview]);
+  }, [videos.length, imageFiles.length, isPreviewPlaying, previewLayoutTick, config.overlays, config.logoEnabled, voiceCaptionMap, redrawPreview, activeOverlayIndex]);
 
   useEffect(() => {
     if (voiceFiles.length > 0 && previewRowIndex < voiceFiles.length) {
@@ -1840,11 +1962,13 @@ const App = () => {
     });
   };
 
-  const patchOverlayConfig = (index, patch) => {
-    if (!patch || typeof patch !== 'object') return;
+  const patchOverlayConfig = (index, patchOrFn) => {
     setConfig((prev) => {
       const newOverlays = [...prev.overlays];
-      newOverlays[index] = { ...newOverlays[index], ...patch };
+      const current = newOverlays[index] || {};
+      const patch = typeof patchOrFn === 'function' ? patchOrFn(current) : patchOrFn;
+      if (!patch || typeof patch !== 'object') return prev;
+      newOverlays[index] = { ...current, ...patch };
       return { ...prev, overlays: newOverlays };
     });
   };
@@ -2245,6 +2369,8 @@ const App = () => {
     detectedSourceFps,
     imageCombineMode,
     imageSlideDurationSec,
+    excelRowsPerVideo,
+    excelFrameMode,
     api,
     tryBackendProcessing,
     setLogs,
@@ -3076,47 +3202,6 @@ const App = () => {
               setImageMode={setImageMode}
             />
 
-          </div>
-
-          {/* CENTER/RIGHT: Preview & Results */}
-          <div className="lg:col-span-8 xl:col-span-9 space-y-3">
-          <PreviewAndResultsPanel
-            excelData={excelData}
-            previewRowIndex={previewRowIndex}
-            setPreviewRowIndex={setPreviewRowIndex}
-            previewStageRef={previewStageRef}
-            previewBgCanvasRef={previewBgCanvasRef}
-            previewCanvasRef={previewCanvasRef}
-            previewVideoRef={previewVideoRef}
-            useLayeredPreview={videos.length > 0 && isPreviewPlaying}
-            estimatedExportDurationSec={estimatedExportDurationSec}
-            exportFileEstimate={exportFileEstimate}
-            config={config}
-            imageFiles={imageFiles}
-            videos={videos}
-            voiceFiles={voiceFiles}
-            musicFiles={musicFiles}
-            togglePreviewPlay={togglePreviewPlay}
-            isPreviewPlaying={isPreviewPlaying}
-            getAspectRatioDimensions={getAspectRatioDimensions}
-            getEffectiveDimensions={getEffectiveDimensions}
-            processedVideos={processedVideos}
-            finished={finished}
-            serverProcessing={serverProcessing}
-            serverJobMeta={serverJobMeta}
-            downloadAllZip={downloadAllZip}
-            downloadSingleVideo={downloadSingleVideo}
-          />
-
-            <GeneratedAudiosPanel
-              generatedAudios={generatedAudios}
-              isGenerating={serverProcessing && serverJobType === 'tts'}
-              addAllGeneratedToVoiceLibrary={addAllGeneratedToVoiceLibrary}
-              downloadAllTTSAudios={downloadAllTTSAudios}
-              addGeneratedAudioToVoiceLibrary={addGeneratedAudioToVoiceLibrary}
-              downloadSingleAudio={downloadSingleAudio}
-            />
-
             <SettingsOverlayGrid
               activeTab={activeTab}
               config={config}
@@ -3174,6 +3259,60 @@ const App = () => {
               voiceCaptionMap={voiceCaptionMap}
               voiceFiles={voiceFiles}
               previewVoiceIndex={previewVoiceIndex}
+            />
+
+          </div>
+
+          {/* CENTER/RIGHT: Preview & Results */}
+          <div className="lg:col-span-8 xl:col-span-9 space-y-3">
+          <PreviewAndResultsPanel
+            excelData={excelData}
+            previewRowIndex={previewRowIndex}
+            setPreviewRowIndex={setPreviewRowIndex}
+            previewVideoNav={previewVideoNav}
+            onPreviewVideoPrev={goPreviewVideoPrev}
+            onPreviewVideoNext={goPreviewVideoNext}
+            previewImageNav={previewImageNav}
+            onPreviewImagePrev={goPreviewImagePrev}
+            onPreviewImageNext={goPreviewImageNext}
+            effectivePreviewVideoIndex={resolvePreviewVideoIndex({
+              videos,
+              previewRowIndex,
+              previewVideoIndex,
+              excelData,
+              videoMode,
+            })}
+            previewStageRef={previewStageRef}
+            previewBgCanvasRef={previewBgCanvasRef}
+            previewCanvasRef={previewCanvasRef}
+            previewVideoRef={previewVideoRef}
+            useLayeredPreview={videos.length > 0 && isPreviewPlaying}
+            estimatedExportDurationSec={estimatedExportDurationSec}
+            exportFileEstimate={exportFileEstimate}
+            config={config}
+            imageFiles={imageFiles}
+            videos={videos}
+            voiceFiles={voiceFiles}
+            musicFiles={musicFiles}
+            togglePreviewPlay={togglePreviewPlay}
+            isPreviewPlaying={isPreviewPlaying}
+            getAspectRatioDimensions={getAspectRatioDimensions}
+            getEffectiveDimensions={getEffectiveDimensions}
+            processedVideos={processedVideos}
+            finished={finished}
+            serverProcessing={serverProcessing}
+            serverJobMeta={serverJobMeta}
+            downloadAllZip={downloadAllZip}
+            downloadSingleVideo={downloadSingleVideo}
+          />
+
+            <GeneratedAudiosPanel
+              generatedAudios={generatedAudios}
+              isGenerating={serverProcessing && serverJobType === 'tts'}
+              addAllGeneratedToVoiceLibrary={addAllGeneratedToVoiceLibrary}
+              downloadAllTTSAudios={downloadAllTTSAudios}
+              addGeneratedAudioToVoiceLibrary={addGeneratedAudioToVoiceLibrary}
+              downloadSingleAudio={downloadSingleAudio}
             />
 
           </div>

@@ -178,7 +178,7 @@ export function useServerJobPolling(params) {
       try {
         const d = await api.getVideoJobStatus(serverJobId);
         const progress = d.progress || 0;
-        const sig = `${d.status}|${progress}|${d.completedItems ?? ''}|${(d.outputFiles || []).length}`;
+        const sig = `${d.status}|${progress}|${d.completedItems ?? ''}|${d.totalItems ?? ''}|${(d.outputFiles || []).length}`;
         if (sig !== lastPollSigRef.current) {
           lastPollSigRef.current = sig;
           setServerProgress(progress);
@@ -198,6 +198,14 @@ export function useServerJobPolling(params) {
             completedItems: d.completedItems,
             isDone: false,
           });
+          const total = d.totalItems || 0;
+          const completed = d.completedItems ?? 0;
+          if (total > 1) {
+            const current = Math.min(completed + 1, total);
+            setLogs(`Exporting video ${current}/${total} — ${progress}%`);
+          } else if (total === 1 && progress > 0 && progress < 100) {
+            setLogs(`Exporting video — ${progress}%`);
+          }
         }
 
         if (d.status === 'done') {

@@ -71,6 +71,7 @@ export default function OverlayEditorContents({
   return (
     <>
       <OverlayLineEditProvider
+        key={`line-edit-${activeOverlayIndex}-${config.overlays?.[activeOverlayIndex]?.contentBreakLineSelection ?? 'all'}`}
         activeOverlayIndex={activeOverlayIndex}
         config={config}
         patchOverlayConfig={patchOverlayConfig}
@@ -95,10 +96,6 @@ export default function OverlayEditorContents({
         activeOverlayIndex={activeOverlayIndex}
         config={config}
         updateOverlayConfig={updateOverlayConfig}
-        excelData={excelData}
-        voiceCaptionMap={voiceCaptionMap}
-        voiceFiles={voiceFiles}
-        previewVoiceIndex={previewVoiceIndex}
       />
 
       <OverlayLineScopedSettings

@@ -9,15 +9,22 @@ export default function OverlayAnimationFont({
   ANIMATION_LOGIC_PRESETS,
   FONT_LOGIC_PRESETS,
 }) {
-  const { ov, setField, lineLabel } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
+  const { setField, getField, lineLabel, lineSelection } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
+  const animationPreset = getField('animationPreset', 'none');
+  const animationLogic = getField('animationLogic', 'default');
+  const animationStartTime = getField('animationStartTime', 0);
+  const animationDuration = getField('animationDuration', 1);
+  const animationLoop = Boolean(getField('animationLoop', false));
+  const fontChangeLogic = getField('fontChangeLogic', 'none');
+
   return (
-    <div className="bg-indigo-500/[0.03] p-2.5 rounded-xl border border-indigo-500/[0.06]">
+    <div key={`anim-font-${lineSelection}`} className="bg-indigo-500/[0.03] p-2.5 rounded-xl border border-indigo-500/[0.06]">
       <p className="text-[10px] text-gray-500 mb-2 font-medium">ANIMATION & FONT</p>
       <div className="grid grid-cols-2 gap-2 mb-2">
         <div>
           <label className="text-[9px] text-gray-500">Animation</label>
           <select
-            value={ov.animationPreset || 'none'}
+            value={animationPreset}
             onChange={(e) => setField('animationPreset', e.target.value)}
             className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
           >
@@ -29,7 +36,7 @@ export default function OverlayAnimationFont({
         <div>
           <label className="text-[9px] text-gray-500">Animation Logic</label>
           <select
-            value={ov.animationLogic || 'default'}
+            value={animationLogic}
             onChange={(e) => setField('animationLogic', e.target.value)}
             className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
           >
@@ -45,7 +52,7 @@ export default function OverlayAnimationFont({
               type="number"
               step="0.1"
               min="0"
-              value={ov.animationStartTime ?? 0}
+              value={animationStartTime}
               onChange={(e) => setField('animationStartTime', parseFloat(e.target.value))}
               className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
             />
@@ -56,7 +63,7 @@ export default function OverlayAnimationFont({
               type="number"
               step="0.1"
               min="0.1"
-              value={ov.animationDuration ?? 1}
+              value={animationDuration}
               onChange={(e) => setField('animationDuration', parseFloat(e.target.value))}
               className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
             />
@@ -65,7 +72,7 @@ export default function OverlayAnimationFont({
             <input
               type="checkbox"
               id="animLoop"
-              checked={ov.animationLoop ?? false}
+              checked={animationLoop}
               onChange={(e) => setField('animationLoop', e.target.checked)}
               className="w-3 h-3"
             />
@@ -75,7 +82,7 @@ export default function OverlayAnimationFont({
         <div className="col-span-2">
           <label className="text-[9px] text-gray-500">Font Logic (50 options)</label>
           <select
-            value={ov.fontChangeLogic || 'none'}
+            value={fontChangeLogic}
             onChange={(e) => setField('fontChangeLogic', e.target.value)}
             className="w-full bg-[#080b16] border border-indigo-500/[0.1] rounded-lg text-[10px] p-1"
           >

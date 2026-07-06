@@ -194,7 +194,14 @@ export default function RunControlsPanel({
           </div>
           {(serverJobType === 'video' || serverJobType === 'slideshow') && serverJobMeta?.total > 0 && (
             <p className="text-[10px] text-emerald-300/60 text-center font-mono">
-              {serverJobMeta.completed}/{serverJobMeta.total} video ready — panel mein download karo
+              {serverJobMeta.total > 1 ? (
+                <>
+                  Video {Math.min(serverJobMeta.completed + (serverProgress < 100 ? 1 : 0), serverJobMeta.total)} of{' '}
+                  {serverJobMeta.total} — {serverJobMeta.completed} done
+                </>
+              ) : (
+                <>1 video — {serverProgress}%</>
+              )}
             </p>
           )}
           <p className="text-[10px] text-gray-500 text-center">

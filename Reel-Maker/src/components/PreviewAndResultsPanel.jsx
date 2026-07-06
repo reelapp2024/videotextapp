@@ -1,10 +1,50 @@
 import React from 'react';
-import { Download, Eye, Film, FolderArchive, Image, List, Loader2, Pause, Play, Video } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Eye, Film, FolderArchive, Image, List, Loader2, Pause, Play, Video } from 'lucide-react';
+
+function PreviewBulkNav({ nav, onPrev, onNext, positionClass = 'top-2 right-2' }) {
+  if (!nav || nav.total <= 1) return null;
+  const atStart = nav.current <= 0;
+  const atEnd = nav.current >= nav.total - 1;
+  return (
+    <div
+      className={`absolute ${positionClass} z-10 flex items-center gap-0.5 bg-black/75 backdrop-blur-sm border border-indigo-500/30 rounded-lg px-1 py-0.5 shadow-lg shadow-black/40`}
+    >
+      <button
+        type="button"
+        onClick={onPrev}
+        disabled={atStart}
+        aria-label={`Previous ${nav.label.toLowerCase()}`}
+        className="p-1 rounded-md text-gray-300 hover:bg-indigo-500/20 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
+      >
+        <ChevronLeft className="w-3.5 h-3.5" />
+      </button>
+      <span className="text-[10px] text-gray-200 font-medium tabular-nums px-1 min-w-[4.5rem] text-center">
+        {nav.label} {nav.current + 1}/{nav.total}
+      </span>
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={atEnd}
+        aria-label={`Next ${nav.label.toLowerCase()}`}
+        className="p-1 rounded-md text-gray-300 hover:bg-indigo-500/20 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
+      >
+        <ChevronRight className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
 
 export default function PreviewAndResultsPanel({
   excelData,
   previewRowIndex,
   setPreviewRowIndex,
+  previewVideoNav,
+  onPreviewVideoPrev,
+  onPreviewVideoNext,
+  previewImageNav,
+  onPreviewImagePrev,
+  onPreviewImageNext,
+  effectivePreviewVideoIndex,
   previewStageRef,
   previewBgCanvasRef,
   previewCanvasRef,
@@ -47,12 +87,12 @@ export default function PreviewAndResultsPanel({
           }}
         >
           {excelData.length > 0 && (
-            <div className="absolute top-2 left-2 right-2 z-10 flex items-center gap-2">
+            <div className="absolute top-2 left-2 z-10 flex items-center gap-2 max-w-[calc(100%-8rem)]">
               <label className="text-[10px] text-gray-400 shrink-0">Preview row:</label>
               <select
                 value={Math.min(previewRowIndex, excelData.length - 1)}
                 onChange={(e) => setPreviewRowIndex(parseInt(e.target.value, 10))}
-                className="bg-black/70 border border-indigo-500/30 rounded-lg text-[10px] text-gray-300 px-2 py-1 focus:border-indigo-500/50 focus:outline-none"
+                className="bg-black/70 border border-indigo-500/30 rounded-lg text-[10px] text-gray-300 px-2 py-1 focus:border-indigo-500/50 focus:outline-none min-w-0 flex-1"
               >
                 {excelData.map((row, ri) => (
                   <option key={ri} value={ri}>
@@ -61,6 +101,27 @@ export default function PreviewAndResultsPanel({
                   </option>
                 ))}
               </select>
+            </div>
+          )}
+          <PreviewBulkNav
+            nav={previewVideoNav}
+            onPrev={onPreviewVideoPrev}
+            onNext={onPreviewVideoNext}
+            positionClass="top-2 right-2"
+          />
+          {imageFiles.length > 0 && videos.length === 0 && voiceFiles.length === 0 && musicFiles.length === 0 && (
+            <PreviewBulkNav
+              nav={previewImageNav}
+              onPrev={onPreviewImagePrev}
+              onNext={onPreviewImageNext}
+              positionClass={previewVideoNav ? 'top-10 right-2' : 'top-2 right-2'}
+            />
+          )}
+          {videos.length > 1 && effectivePreviewVideoIndex != null && (
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+              <span className="text-[9px] text-indigo-200/70 bg-black/50 backdrop-blur-sm px-2 py-0.5 rounded-full border border-indigo-500/20 truncate max-w-[12rem] block">
+                {videos[effectivePreviewVideoIndex]?.name || `Video ${effectivePreviewVideoIndex + 1}`}
+              </span>
             </div>
           )}
           <canvas
@@ -113,6 +174,7 @@ export default function PreviewAndResultsPanel({
           {imageFiles.length > 0 && videos.length === 0 && voiceFiles.length === 0 && musicFiles.length === 0 && (
             <div className="absolute top-2 left-2 text-[10px] text-pink-300/80 bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded-lg pointer-events-none border border-indigo-500/[0.08]">
               Image Preview
+              {previewImageNav && previewImageNav.total > 1 ? ` · ${previewImageNav.current + 1}/${previewImageNav.total}` : ''}
             </div>
           )}
           <button

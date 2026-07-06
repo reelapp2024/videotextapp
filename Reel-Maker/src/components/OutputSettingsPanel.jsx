@@ -13,7 +13,7 @@ export default function OutputSettingsPanel({
   BACKGROUND_PATTERN_PRESETS,
 }) {
   return (
-    <div className="glass-card p-3 sm:p-4 rounded-xl space-y-3 h-full">
+    <div className="glass-card p-3 sm:p-4 rounded-xl space-y-3 w-full min-w-0">
       <h3 className="text-xs sm:text-sm font-bold text-gray-300 flex items-center gap-2 border-b border-indigo-500/[0.08] pb-2">
         <Sliders className="w-4 h-4" /> Output Settings
       </h3>

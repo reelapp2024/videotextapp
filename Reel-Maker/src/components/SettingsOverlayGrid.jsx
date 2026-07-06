@@ -66,7 +66,7 @@ export default function SettingsOverlayGrid({
   if (!(activeTab === 'settings' || activeTab === 'overlay')) return null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="space-y-3 w-full min-w-0">
       {activeTab === 'settings' && (
         <OutputSettingsPanel
           config={config}
@@ -135,10 +135,8 @@ export default function SettingsOverlayGrid({
             captionPreviewWords={captionPreviewWords}
             voiceCaptionMap={voiceCaptionMap}
             voiceFiles={voiceFiles}
-        previewVoiceIndex={previewVoiceIndex}
-        LINE_ANIM_MODES={LINE_ANIM_MODES}
-        LINE_ANIM_EFFECTS={LINE_ANIM_EFFECTS}
-      />
+            previewVoiceIndex={previewVoiceIndex}
+          />
         </OverlayEditorPanel>
       )}
     </div>

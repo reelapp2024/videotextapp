@@ -228,3 +228,134 @@ export function resolveOverlayForLineEdit(overlay, lineIndex, lineCount = 0) {
     contentLineAnimate: getLineScopedValue(overlay, lineIndex, 'contentPartLineAnimate', false),
   };
 }
+
+/** Build same-frame groups as drawOverlaysCore (raw break parts → display parts). */
+export function buildContentPartGroups(breakParts, sameFrameArr = []) {
+  const groups = [];
+  (breakParts || []).forEach((p, i) => {
+    if (i > 0 && sameFrameArr[i]) {
+      groups[groups.length - 1].parts.push(p);
+      groups[groups.length - 1].indices.push(i);
+    } else {
+      groups.push({ parts: [p], indices: [i] });
+    }
+  });
+  return groups.map((g) => ({ ...g, text: g.parts.join('\n') }));
+}
+
+export function rawLineIndexToGroupIndex(groups, rawLineIndex) {
+  if (!groups?.length) return 0;
+  for (let g = 0; g < groups.length; g++) {
+    if (groups[g].indices.includes(rawLineIndex)) return g;
+  }
+  return Math.min(Math.max(0, rawLineIndex), groups.length - 1);
+}
+
+/** Pick a time safely inside [start, end) — never past a short segment into the next line. */
+function timeInsideActiveWindow(start, end, hold = 0) {
+  const s = Number(start) || 0;
+  const e = Number(end);
+  const h = Math.max(0, Number(hold) || 0);
+  if (e > s) {
+    const span = e - s;
+    const t = s + Math.min(span * 0.35, Math.max(span - 0.002, span * 0.08));
+    return Math.min(t, e - 0.001);
+  }
+  if (h > 0) return s + h * 0.25;
+  return s;
+}
+
+/** Duration (seconds) for one content-break part — mirrors drawOverlaysCore timing. */
+function resolvePartDurationSec(overlay, partText, partIndex, durations, lineAnim) {
+  const defaultSec = overlay.contentLineDisplayDuration ?? 5;
+  let d = (durations[partIndex] != null && durations[partIndex] >= 0.1 && durations[partIndex] <= 20)
+    ? Number(durations[partIndex])
+    : defaultSec;
+
+  const animOn = lineAnim[partIndex] !== undefined
+    ? lineAnim[partIndex]
+    : overlay.contentLineAnimate ?? false;
+
+  if (animOn) {
+    const mode = overlay.contentPartLineRevealMode?.[partIndex] || overlay.contentLineRevealMode || 'wordByWord';
+    const animSpeed = Math.max(
+      0.1,
+      overlay.contentPartLineAnimSpeed?.[partIndex] ?? overlay.contentLineAnimSpeed ?? 2,
+    );
+    const text = String(partText || '');
+    const wordCount = text.split(/\s+/).filter(Boolean).length;
+    const lineCount = Math.max(1, Math.ceil(wordCount / (overlay.wordsPerLine || 4)));
+    let minTimeForAnim;
+    if (mode === 'characterByChar') minTimeForAnim = text.length / animSpeed;
+    else if (mode === 'lineByLine') minTimeForAnim = lineCount / animSpeed;
+    else if (mode === 'frameByFrame') minTimeForAnim = 1 / animSpeed;
+    else minTimeForAnim = wordCount / animSpeed;
+    d = Math.max(d, minTimeForAnim);
+  }
+  return d;
+}
+
+/**
+ * Preview time (seconds) to show a specific content-break line while editing.
+ * Mirrors drawOverlaysCore grouping + caption/duration windows.
+ * @param {object} overlay
+ * @param {number} rawLineIndex 0-based break part index
+ * @param {string[]} breakParts
+ * @param {Array<{ start?: number, end?: number }>} [captionSegments]
+ * @returns {number|null}
+ */
+export function computeLineEditPreviewTime(overlay, rawLineIndex, breakParts, captionSegments) {
+  if (!overlay || rawLineIndex == null || rawLineIndex < 0 || !breakParts?.length) return null;
+
+  const groups = buildContentPartGroups(breakParts, overlay.contentPartSameFrame || []);
+  const groupIndex = rawLineIndexToGroupIndex(groups, rawLineIndex);
+  const contentParts = groups.map((g) => g.text);
+  const groupHoldAfter = groups.map((g) => {
+    const li = g.indices[g.indices.length - 1];
+    return overlay.contentPartHoldAfter?.[li];
+  });
+
+  if (captionSegments?.length) {
+    if (contentParts.length === captionSegments.length) {
+      const seg = captionSegments[groupIndex];
+      if (seg) {
+        return timeInsideActiveWindow(
+          seg.start,
+          seg.end,
+          groupHoldAfter[groupIndex] ?? overlay.contentLineHoldAfter ?? 0,
+        );
+      }
+    }
+
+    const totalStart = Number(captionSegments[0].start ?? 0);
+    const totalEnd = Number(captionSegments[captionSegments.length - 1].end ?? totalStart);
+    const span = Math.max(0.05, totalEnd - totalStart);
+    const weights = contentParts.map((p) => Math.max(1, String(p).trim().length));
+    const sum = weights.reduce((a, b) => a + b, 0);
+    let cursor = totalStart;
+    for (let i = 0; i < contentParts.length; i++) {
+      const slice = (weights[i] / sum) * span;
+      const end = cursor + slice;
+      const hold = Number(groupHoldAfter[i] ?? 0);
+      if (i === groupIndex) {
+        return timeInsideActiveWindow(cursor, end, hold);
+      }
+      cursor = end + hold;
+    }
+  }
+
+  const holdAfter = overlay.contentPartHoldAfter || [];
+  const lineAnim = overlay.contentPartLineAnimate || [];
+  let cumul = 0;
+  for (let i = 0; i < contentParts.length; i++) {
+    const fi = groups[i].indices[0];
+    const d = resolvePartDurationSec(overlay, contentParts[i], fi, overlay.contentPartDurations || [], lineAnim);
+    const h = Number(groupHoldAfter[i] ?? holdAfter[fi] ?? overlay.contentLineHoldAfter ?? 0);
+    if (i === groupIndex) {
+      const span = Math.max(d, 0.05);
+      return cumul + Math.min(span * 0.35, Math.max(span - 0.002, span * 0.08));
+    }
+    cumul += d + h;
+  }
+  return null;
+}

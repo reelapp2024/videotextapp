@@ -14,7 +14,8 @@ export function useVideoPipeline(params) {
     detectedSourceFps,
     imageCombineMode,
     imageSlideDurationSec,
-    api,
+    excelRowsPerVideo,
+    excelFrameMode,
     tryBackendProcessing,
     setLogs,
   } = params;
@@ -32,6 +33,8 @@ export function useVideoPipeline(params) {
       detectedSourceFps,
       imageCombineMode,
       imageSlideDurationSec,
+      excelRowsPerVideo,
+      excelFrameMode,
       tryBackendProcessing,
       setLogs,
     });
@@ -47,6 +50,8 @@ export function useVideoPipeline(params) {
     detectedSourceFps,
     imageCombineMode,
     imageSlideDurationSec,
+    excelRowsPerVideo,
+    excelFrameMode,
     tryBackendProcessing,
     setLogs,
   ]);

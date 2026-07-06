@@ -23,8 +23,12 @@ export function useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig
       setField: scope.setField,
       patchFields: scope.patchFields,
       applyScopedPreset: scope.applyScopedPreset,
+      getField: scope.getField,
       lineLabel: scope.lineLabel,
+      lineIndex: scope.lineIndex,
       isGlobal: scope.isGlobal,
+      lineSelection: scope.lineSelection,
+      setLineSelection: scope.setLineSelection,
     };
   }
   return {
@@ -35,8 +39,17 @@ export function useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig
         updateOverlayConfig(activeOverlayIndex, key, value);
       });
     },
+    applyScopedPreset: (patch) => {
+      Object.entries(patch || {}).forEach(([key, value]) => {
+        updateOverlayConfig(activeOverlayIndex, key, value);
+      });
+    },
+    getField: (key, fallback) => config.overlays[activeOverlayIndex]?.[key] ?? fallback,
     lineLabel: 'All lines',
     isGlobal: true,
+    lineIndex: null,
+    lineSelection: 'all',
+    setLineSelection: () => {},
   };
 }
 
@@ -51,7 +64,7 @@ export function OverlayLineEditProvider({
   children,
 }) {
   const overlay = config?.overlays?.[activeOverlayIndex];
-  const { breakParts } = useContentBreakParts({
+  const { breakParts, captionSegments, usingCaptions } = useContentBreakParts({
     overlay,
     excelData,
     voiceCaptionMap,
@@ -67,7 +80,7 @@ export function OverlayLineEditProvider({
     ? 'all'
     : storedLineSelection === 'all'
       || (Number(storedLineSelection) >= 1 && Number(storedLineSelection) <= lineCount)
-      ? storedLineSelection
+      ? String(storedLineSelection)
       : 'all';
 
   const lineIndex = lineSelection === 'all' ? null : Math.max(0, Number(lineSelection) - 1);
@@ -78,32 +91,37 @@ export function OverlayLineEditProvider({
     [overlay, lineIndex, lineCount],
   );
 
+  const setLineSelection = useCallback((value) => {
+    patchOverlayConfig(activeOverlayIndex, { contentBreakLineSelection: String(value) });
+  }, [patchOverlayConfig, activeOverlayIndex]);
+
   const setField = useCallback((key, value) => {
-    if (!overlay) return;
-    const patch = isGlobal
-      ? buildGlobalLineSettingPatch(overlay, key, value, lineCount)
-      : buildLineSettingPatch(overlay, lineIndex, key, value, lineCount);
-    patchOverlayConfig(activeOverlayIndex, patch);
-  }, [overlay, isGlobal, lineIndex, lineCount, patchOverlayConfig, activeOverlayIndex]);
+    patchOverlayConfig(activeOverlayIndex, (current) => {
+      if (!current) return {};
+      return isGlobal
+        ? buildGlobalLineSettingPatch(current, key, value, lineCount)
+        : buildLineSettingPatch(current, lineIndex, key, value, lineCount);
+    });
+  }, [isGlobal, lineIndex, lineCount, patchOverlayConfig, activeOverlayIndex]);
 
   const patchFields = useCallback((patch) => {
+    if (!patch || typeof patch !== 'object') return;
     patchOverlayConfig(activeOverlayIndex, patch);
   }, [patchOverlayConfig, activeOverlayIndex]);
 
   const applyScopedPreset = useCallback((presetPatch) => {
-    if (!overlay || !presetPatch || typeof presetPatch !== 'object') return;
-    if (isGlobal) {
-      patchOverlayConfig(
-        activeOverlayIndex,
-        buildGlobalLineSettingsPatch(overlay, presetPatch, lineCount),
-      );
-      return;
-    }
-    const overrides = [...(overlay.contentPartLineStyleOverrides || [])];
-    while (overrides.length <= lineIndex) overrides.push(undefined);
-    overrides[lineIndex] = { ...(overrides[lineIndex] || {}), ...presetPatch };
-    patchOverlayConfig(activeOverlayIndex, { contentPartLineStyleOverrides: overrides });
-  }, [overlay, isGlobal, lineIndex, lineCount, patchOverlayConfig, activeOverlayIndex]);
+    if (!presetPatch || typeof presetPatch !== 'object') return;
+    patchOverlayConfig(activeOverlayIndex, (current) => {
+      if (!current) return {};
+      if (isGlobal) {
+        return buildGlobalLineSettingsPatch(current, presetPatch, lineCount);
+      }
+      const overrides = [...(current.contentPartLineStyleOverrides || [])];
+      while (overrides.length <= lineIndex) overrides.push(undefined);
+      overrides[lineIndex] = { ...(overrides[lineIndex] || {}), ...presetPatch };
+      return { contentPartLineStyleOverrides: overrides };
+    });
+  }, [isGlobal, lineIndex, lineCount, patchOverlayConfig, activeOverlayIndex]);
 
   const getField = useCallback((key, fallback) => {
     return getLineScopedValue(overlay, lineIndex, key, fallback);
@@ -116,6 +134,8 @@ export function OverlayLineEditProvider({
     isGlobal,
     lineCount,
     breakParts,
+    captionSegments,
+    usingCaptions,
     hasBreakRules,
     lineSelection,
     lineLabel: isGlobal ? 'All lines' : `Line ${lineIndex + 1}`,
@@ -123,6 +143,7 @@ export function OverlayLineEditProvider({
     patchFields,
     getField,
     applyScopedPreset,
+    setLineSelection,
   }), [
     resolvedOverlay,
     overlay,
@@ -130,12 +151,15 @@ export function OverlayLineEditProvider({
     isGlobal,
     lineCount,
     breakParts,
+    captionSegments,
+    usingCaptions,
     hasBreakRules,
     lineSelection,
     setField,
     patchFields,
     getField,
     applyScopedPreset,
+    setLineSelection,
   ]);
 
   return (

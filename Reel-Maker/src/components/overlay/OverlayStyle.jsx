@@ -75,11 +75,17 @@ function StyleMetricControl({
 }
 
 export default function OverlayStyle({ activeOverlayIndex, config, updateOverlayConfig }) {
-  const { ov, setField, lineLabel } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
-  const isBox = ov.styleType === 'box'
+  const { ov, setField, getField, lineLabel, lineSelection } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
+  const styleType = getField('styleType', ov?.styleType || 'box');
+  const isBox = styleType === 'box';
+  const color = getField('color', ov?.color || '#ffffff');
+  const bgColor = getField('bgColor', ov?.bgColor || '#000000');
+  const strokeColor = getField('strokeColor', ov?.strokeColor || '#000000');
+  const bgOpacity = getField('bgOpacity', ov?.bgOpacity ?? 1);
+  const strokeOpacity = getField('strokeOpacity', ov?.strokeOpacity ?? 1);
 
   return (
-    <div className="bg-indigo-500/[0.03] p-2.5 rounded-xl border border-indigo-500/[0.06]">
+    <div key={`style-${lineSelection}`} className="bg-indigo-500/[0.03] p-2.5 rounded-xl border border-indigo-500/[0.06]">
       <p className="text-[10px] text-gray-500 mb-2 font-medium">
         STYLE — {lineLabel}
         {ov?.captionPresetsEnabled ? ' (overrides caption preset)' : ''}
@@ -92,7 +98,7 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
             type="button"
             onClick={() => setField('styleType', style)}
             className={`p-1.5 rounded text-xs transition ${
-              ov.styleType === style
+              styleType === style
                 ? 'bg-purple-600 text-white'
                 : 'bg-indigo-500/[0.05] text-gray-500 hover:bg-indigo-500/[0.08]'
             }`}
@@ -108,11 +114,11 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
           <div className="flex items-center gap-1 bg-gray-700 rounded p-1">
             <input
               type="color"
-              value={ov.color}
+              value={color}
               onChange={(e) => setField('color', e.target.value)}
               className="w-8 h-6 rounded bg-transparent border-none cursor-pointer"
             />
-            <span className="text-[9px] text-gray-400 flex-1">{ov.color}</span>
+            <span className="text-[9px] text-gray-400 flex-1">{color}</span>
           </div>
         </div>
         <div>
@@ -123,14 +129,14 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
             {isBox ? (
               <input
                 type="color"
-                value={ov.bgColor}
+                value={bgColor}
                 onChange={(e) => setField('bgColor', e.target.value)}
                 className="w-8 h-6 rounded bg-transparent border-none cursor-pointer"
               />
             ) : (
               <input
                 type="color"
-                value={ov.strokeColor}
+                value={strokeColor}
                 onChange={(e) => setField('strokeColor', e.target.value)}
                 className="w-8 h-6 rounded bg-transparent border-none cursor-pointer"
               />
@@ -141,7 +147,7 @@ export default function OverlayStyle({ activeOverlayIndex, config, updateOverlay
               max="1"
               step="0.1"
               className="flex-1 h-1.5 bg-gray-600 rounded"
-              value={isBox ? ov.bgOpacity : ov.strokeOpacity || 1}
+              value={isBox ? bgOpacity : strokeOpacity}
               onChange={(e) =>
                 setField(isBox ? 'bgOpacity' : 'strokeOpacity', parseFloat(e.target.value))
               }
