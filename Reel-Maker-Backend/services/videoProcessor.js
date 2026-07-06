@@ -53,6 +53,7 @@ var import_exportSegments = require("../utils/exportSegments");
 var import_exportRendererConfig = require("./exportRendererConfig");
 var import_serverExportRow = require("./serverExportRow");
 var import_exportFormat = require("./exportFormat");
+var import_exportJobPlanning = require("../utils/exportJobPlanning");
 import_fluent_ffmpeg.default.setFfmpegPath(import_ffmpeg.default.path);
 import_fluent_ffmpeg.default.setFfprobePath(import_ffprobe.default.path);
 const ffprobeAsync = (0, import_util.promisify)(import_fluent_ffmpeg.default.ffprobe);
@@ -227,13 +228,29 @@ async function processVideoJob(jobId, files, excelData, config, onProgress, jobM
   if (videoPaths.length === 0 && voicePaths.length === 0 && imagePaths.length === 0 && !settingsBgImage && !settingsBgVideo) {
     throw new Error("No valid video, image, or voice files found");
   }
-  const rows = useCaptionExport ? Math.max(captionExport.tracks?.length || 0, voicePaths.length, videoPaths.length > 1 ? videoPaths.length : 0, 1) : Math.max(excelData?.length || 1, 1);
+  const rows = (0, import_exportJobPlanning.resolveExportJobCount)({
+    excelData,
+    config,
+    useCaptionExport,
+    captionExport,
+    voiceCount: voicePaths.length,
+    videoCount: videoPaths.length
+  });
+  console.log(`[export] job count: ${rows} (excel rows=${excelData?.length || 0}, captionExport=${useCaptionExport})`);
+  const bulkExcel = (excelData?.length || 0) > 1;
   const exportFmt = (0, import_exportFormat.resolveExportFormat)(config);
   const outFileRe = (0, import_exportFormat.outputFilePattern)(exportFmt.ext);
-  const syncOutputs = async (completed2, progress) => {
+  const syncOutputs = async (completed2, progress, activeRow = null, rowProgress = null) => {
     const outNames2 = import_fs.default.readdirSync(outDir).filter((f) => outFileRe.test(f)).sort();
     const outputFiles2 = outNames2.map((f) => `/uploads/processed/${jobId}/${f}`);
-    await onProgress({ progress, completed: completed2, total: rows, outputFiles: outputFiles2 });
+    await onProgress({
+      progress,
+      completed: completed2,
+      total: rows,
+      outputFiles: outputFiles2,
+      activeRow,
+      rowProgress
+    });
   };
   await syncOutputs(0, 1);
   let completed = 0;
@@ -244,20 +261,27 @@ async function processVideoJob(jobId, files, excelData, config, onProgress, jobM
     const uploadImagePath = imagePaths.length > 0 ? imagePaths[i % imagePaths.length] : null;
     const voicePath = voicePaths.length > 0 ? voicePaths[i % voicePaths.length] : null;
     const musicPath = musicPaths.length > 0 ? musicPaths[i % musicPaths.length] : null;
-    const row = excelData[i] || [];
+    const row = (0, import_exportJobPlanning.buildExportRowData)(excelData, i, config);
+    const segmentExcelRow = (0, import_exportJobPlanning.buildSegmentExcelRow)(excelData, i, config);
     const outputPath = import_path.default.join(outDir, (0, import_exportFormat.buildOutputFilename)(i, exportFmt.ext));
     const voiceTrackIdx = voicePaths.length > 0 ? i % voicePaths.length : 0;
     const track = useCaptionExport ? captionExport?.tracks?.[voiceTrackIdx] || captionExport?.tracks?.[0] : null;
+    const whisperSegments = (0, import_exportJobPlanning.resolveWhisperSegmentsForJob)({
+      jobIndex: i,
+      bulkExcel,
+      voiceCount: voicePaths.length,
+      track
+    });
     let segments = (0, import_exportSegments.resolveTrackSegments)({
-      segments: track?.segments,
-      excelRow: row,
+      segments: whisperSegments,
+      excelRow: segmentExcelRow,
       config,
       fallbackDuration: 60
     });
     if (!segments.length && config?.captionSync?.segments?.length) {
       segments = (0, import_exportSegments.resolveTrackSegments)({
         segments: config.captionSync.segments,
-        excelRow: row,
+        excelRow: segmentExcelRow,
         config,
         fallbackDuration: 60
       });
@@ -294,12 +318,13 @@ async function processVideoJob(jobId, files, excelData, config, onProgress, jobM
       retryCount,
       isCancelled: () => (0, import_jobCancellation.isJobCancelledAsync)(jobId),
       onFrameProgress: async (p) => {
-        await syncOutputs(completed, p.progress);
+        const overall = Math.min(89, Math.round(((completed + p.progress / 100) / rows) * 90));
+        await syncOutputs(completed, overall, i, p.progress);
       },
     }).then(async (rowMetrics) => {
       lastExportMetrics = rowMetrics;
       completed++;
-      await syncOutputs(completed, Math.round(completed / rows * 90));
+      await syncOutputs(completed, Math.round(completed / rows * 90), null, 100);
     });
   });
   await runParallel(tasks, useCaptionExport ? CAPTION_EXPORT_PARALLEL : PARALLEL_JOBS);
