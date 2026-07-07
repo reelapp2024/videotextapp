@@ -68,6 +68,7 @@ import {
 } from './pipeline/audioExtraction';
 import { mergeVideosInBatchesImpl } from './pipeline/videoMergeImpl';
 import { ExportTextLayoutCache } from './utils/exportTextLayoutCache.js';
+import { buildExportVideoSlots } from './utils/exportVideoSlots.js';
 import { resolvePreviewCanvasSize } from './utils/previewCanvasSize.js';
 import { applyPreviewVideoLayerStyle } from './utils/previewVideoLayer.js';
 import {
@@ -319,7 +320,7 @@ const App = () => {
   const [serverProcessing, setServerProcessing] = useState(false);
   const [serverJobId, setServerJobId] = useState(null);
   const [serverProgress, setServerProgress] = useState(0);
-  const [serverJobMeta, setServerJobMeta] = useState({ total: 0, completed: 0 });
+  const [serverJobMeta, setServerJobMeta] = useState({ total: 0, completed: 0, slots: [] });
   const [serverJobType, setServerJobType] = useState('video');
   const [backendCapabilities, setBackendCapabilities] = useState(null);
   useEffect(() => {
@@ -461,7 +462,7 @@ const App = () => {
     autoDownload: true,
     // Server FFmpeg export is always preferred when the project can use it.
     serverProcessingEnabled: true,
-    parallelJobs: 1,
+    parallelJobs: 2,
     video: applyExportPresetToVideo({
       opacity: 1,
       zoomScale: 1,
@@ -2371,9 +2372,15 @@ const App = () => {
     imageSlideDurationSec,
     excelRowsPerVideo,
     excelFrameMode,
+    previewRowIndex,
+    previewVoiceIndex,
+    videoMode,
+    audioMode,
+    imageMode,
     api,
     tryBackendProcessing,
     setLogs,
+    setServerJobMeta,
   });
 
   useServerJobPolling({
@@ -2402,7 +2409,7 @@ const App = () => {
       setServerJobId(null);
       setServerProgress(0);
       setEstimatedTime(null);
-      setServerJobMeta({ total: 0, completed: 0 });
+      setServerJobMeta({ total: 0, completed: 0, slots: [] });
       setLogs('Video generation stopped.');
       return;
     }
@@ -2437,7 +2444,7 @@ const App = () => {
     setServerProcessing(false);
     setServerJobId(null);
     setServerProgress(0);
-    setServerJobMeta({ total: 0, completed: 0 });
+    setServerJobMeta({ total: 0, completed: 0, slots: [] });
     setLogs('Reset â€” nayi video generate kar sakte ho.');
   }, [
     serverJobId,
@@ -2455,7 +2462,7 @@ const App = () => {
     setServerProgress,
   ]);
 
-  async function tryBackendProcessing(type, buildFormData) {
+  async function tryBackendProcessing(type, buildFormData, plannedTotal = 0) {
     const featureMap = { video: 'video', slideshow: 'video', image: 'image_generate', audio_extract: 'audio_extract', thumbnail: 'thumbnails', merge: 'video_merge' };
     const featureKey = featureMap[type];
 
@@ -2483,10 +2490,29 @@ const App = () => {
       setServerJobId(jobId);
       setServerProcessing(true);
       setServerProgress(0);
-      setServerJobMeta({ total: 0, completed: 0 });
+      setServerJobMeta({
+        total: plannedTotal || 0,
+        completed: 0,
+        exportStartedAt: Date.now(),
+        exportDurationMs: null,
+        elapsedMs: 0,
+        slots:
+          plannedTotal > 0
+            ? buildExportVideoSlots({
+                total: plannedTotal,
+                completed: 0,
+              })
+            : [],
+      });
       setEstimatedTime(null);
       setServerJobType(type);
-      setLogs('Export queued on server...');
+      setLogs(
+        plannedTotal > 1
+          ? `Export queued — ${plannedTotal} videos…`
+          : plannedTotal === 1
+            ? 'Export queued — 1 video…'
+            : 'Export queued on server...',
+      );
       return true;
     } catch (e) {
       const msg = e?.message || String(e);
@@ -3122,12 +3148,15 @@ const App = () => {
               imageFiles={imageFiles}
               excelData={excelData}
               voiceFiles={voiceFiles}
+              imageSlideDurationSec={imageSlideDurationSec}
+              videoMode={videoMode}
+              audioMode={audioMode}
+              imageMode={imageMode}
               processing={processing}
               finished={finished}
               logs={logs}
               progress={progress}
               estimatedTime={estimatedTime}
-              parallelProgress={parallelProgress}
               zipFolderName={zipFolderName}
               setZipFolderName={setZipFolderName}
               serverProcessing={serverProcessing}
@@ -3141,8 +3170,6 @@ const App = () => {
               handleResetRun={handleResetRun}
               isPaused={isPaused}
               processedVideos={processedVideos}
-              downloadSingleVideo={downloadSingleVideo}
-              downloadAllZip={downloadAllZip}
             />
 
             <ProjectsPanel

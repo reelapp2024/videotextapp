@@ -1,9 +1,16 @@
 import {
   hasAnyCaptions,
   buildServerExportConfig,
+  resolvePreviewVoiceFile,
 } from '../utils/captionIntegration.js';
 import { buildCaptionExportPayload } from '../utils/serverCaptionExport.js';
 import { applyResolvedExportFps } from '../utils/exportSettings.js';
+import {
+  planVideoExportCount,
+  resolvePreviewReferenceRowIndex,
+} from '../utils/exportJobPlanning.js';
+import { buildExportVideoSlots } from '../utils/exportVideoSlots.js';
+import { buildExportMediaPairing } from '../utils/mediaPairing.js';
 
 function withResolvedServerFps(baseConfig, detectedSourceFps) {
   return {
@@ -36,18 +43,49 @@ function buildVideoFormData(ctx) {
     detectedSourceFps,
     excelRowsPerVideo,
     excelFrameMode,
+    previewRowIndex = 0,
+    previewVoiceIndex = 0,
+    videoMode = 'sequence',
+    audioMode = 'sequence',
+    imageMode = 'sequence',
   } = ctx;
   const fd = new FormData();
   (videos || []).forEach((v) => fd.append('videos', v instanceof File ? v : (v.file || v)));
   (imageFiles || []).forEach((f) => fd.append('images', f instanceof File ? f : (f.file || f)));
   (voiceFiles || []).forEach((v) => fd.append('voices', v instanceof File ? v : (v.file || v)));
   (musicFiles || []).forEach((m) => fd.append('music', m instanceof File ? m : (m.file || m)));
-  const capVoice = voiceFiles?.[0] || null;
+  const previewVoice = resolvePreviewVoiceFile(voiceFiles, previewVoiceIndex);
+  const referenceRowIndex = excelData?.length
+    ? (previewRowIndex ?? resolvePreviewReferenceRowIndex(excelData))
+    : 0;
+  const plannedVideos = planVideoExportCount({
+    excelData,
+    config,
+    voiceFiles,
+    voiceCaptionMap,
+    videos,
+    imageFiles,
+  });
+  const exportMediaPairing = buildExportMediaPairing({
+    outputRows: plannedVideos,
+    videoMode,
+    audioMode,
+    imageMode,
+    videoCount: videos.length,
+    voiceCount: voiceFiles.length,
+    imageCount: imageFiles.length,
+    musicCount: musicFiles.length,
+  });
   const mergedConfig = withResolvedServerFps(
     {
-      ...buildServerExportConfig(config, capVoice, voiceCaptionMap, 0),
+      ...buildServerExportConfig(config, previewVoice, voiceCaptionMap, previewVoiceIndex),
       excelRowsPerVideo: excelRowsPerVideo ?? config.excelRowsPerVideo ?? '',
       excelFrameMode: excelFrameMode ?? config.excelFrameMode ?? 'colPerFrame',
+      previewReferenceRowIndex: referenceRowIndex,
+      videoMode,
+      audioMode,
+      imageMode,
+      exportMediaPairing,
     },
     detectedSourceFps,
   );
@@ -79,6 +117,12 @@ export async function startProcessingImpl(ctx) {
     imageSlideDurationSec,
     tryBackendProcessing,
     setLogs,
+    setServerJobMeta,
+    previewRowIndex,
+    previewVoiceIndex,
+    videoMode = 'sequence',
+    audioMode = 'sequence',
+    imageMode = 'sequence',
   } = ctx;
 
   const hasAudio = voiceFiles.length > 0 || musicFiles.length > 0;
@@ -111,8 +155,34 @@ export async function startProcessingImpl(ctx) {
   }
 
   if (hasVideos || hasAudio || hasImages) {
-    const ok = await tryBackendProcessing('video', () => buildVideoFormData(ctx));
-    if (ok) return;
+    const plannedVideos = planVideoExportCount({
+      excelData,
+      config,
+      voiceFiles,
+      voiceCaptionMap,
+      videos,
+      imageFiles,
+    });
+    setServerJobMeta?.({
+      total: plannedVideos,
+      completed: 0,
+      exportStartedAt: Date.now(),
+      exportDurationMs: null,
+      elapsedMs: 0,
+      slots: buildExportVideoSlots({
+        total: plannedVideos,
+        completed: 0,
+      }),
+    });
+    const ok = await tryBackendProcessing('video', () => buildVideoFormData(ctx), plannedVideos);
+    if (ok) {
+      setLogs(
+        plannedVideos > 1
+          ? `Bulk export started — ${plannedVideos} videos (styles from preview row apply to all).`
+          : 'Export started — 1 video.',
+      );
+      return;
+    }
     setLogs('Server export failed. Ensure backend is running (npm start) and you are logged in.');
   }
 }

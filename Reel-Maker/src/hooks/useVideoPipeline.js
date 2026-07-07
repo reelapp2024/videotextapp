@@ -16,8 +16,14 @@ export function useVideoPipeline(params) {
     imageSlideDurationSec,
     excelRowsPerVideo,
     excelFrameMode,
+    previewRowIndex,
+    previewVoiceIndex,
+    videoMode = 'sequence',
+    audioMode = 'sequence',
+    imageMode = 'sequence',
     tryBackendProcessing,
     setLogs,
+    setServerJobMeta,
   } = params;
 
   const startProcessing = useCallback(async () => {
@@ -35,8 +41,14 @@ export function useVideoPipeline(params) {
       imageSlideDurationSec,
       excelRowsPerVideo,
       excelFrameMode,
+      previewRowIndex,
+      previewVoiceIndex,
+      videoMode,
+      audioMode,
+      imageMode,
       tryBackendProcessing,
       setLogs,
+      setServerJobMeta,
     });
   }, [
     libsLoaded,
@@ -52,8 +64,14 @@ export function useVideoPipeline(params) {
     imageSlideDurationSec,
     excelRowsPerVideo,
     excelFrameMode,
+    previewRowIndex,
+    previewVoiceIndex,
+    videoMode,
+    audioMode,
+    imageMode,
     tryBackendProcessing,
     setLogs,
+    setServerJobMeta,
   ]);
 
   const startImageProcessing = useCallback(async () => {

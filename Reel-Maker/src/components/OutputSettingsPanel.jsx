@@ -20,31 +20,8 @@ export default function OutputSettingsPanel({
 
       <p className="text-[9px] text-indigo-300/70 bg-indigo-500/10 border border-indigo-500/15 rounded-lg px-2 py-1.5">
         Video export (resolution, FPS, quality, download) is on the <strong>Export</strong> tab in the top nav.
+        Parallel export workers are configured on the server via <code className="text-indigo-200">EXPORT_WORKER_CONCURRENCY</code> in backend .env (default 4).
       </p>
-
-      {/* PARALLEL PROCESSING — batch size also on Export tab */}
-      <div className="bg-gray-900/50 p-2 rounded border border-gray-700/50">
-        <div className="flex justify-between items-center mb-1">
-          <span className="text-xs text-gray-300 font-semibold">Parallel Processing</span>
-          <span className="text-[10px] bg-indigo-600/30 text-indigo-300 px-1.5 py-0.5 rounded">
-            {config.parallelJobs} video{config.parallelJobs > 1 ? 's' : ''} at once
-          </span>
-        </div>
-        <input
-          type="range"
-          min="1"
-          max={Math.min(8, navigator.hardwareConcurrency || 4)}
-          step="1"
-          value={config.parallelJobs}
-          onChange={(e) => updateGlobalConfig('parallelJobs', '', parseInt(e.target.value))}
-          className="w-full h-1.5 accent-blue-500"
-        />
-        <div className="flex justify-between text-[9px] text-gray-500 mt-0.5">
-          <span>1 (Safe)</span>
-          <span>{Math.min(8, navigator.hardwareConcurrency || 4)} (Fast)</span>
-        </div>
-        <p className="text-[9px] text-gray-600 mt-1">More parallel = faster batch, but uses more RAM. Reduce if browser lags.</p>
-      </div>
 
       {/* ASPECT RATIO */}
       <div className="bg-gray-900/50 p-2 rounded border border-gray-700/50">

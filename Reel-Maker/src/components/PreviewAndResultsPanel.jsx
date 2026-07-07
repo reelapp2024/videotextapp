@@ -1,5 +1,6 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Download, Eye, Film, FolderArchive, Image, List, Loader2, Pause, Play, Video } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, Eye, Film, FolderArchive, Image, List, Loader2, Pause, Play, Check } from 'lucide-react';
+import { buildExportVideoSlots } from '../utils/exportVideoSlots';
 
 function PreviewBulkNav({ nav, onPrev, onNext, positionClass = 'top-2 right-2' }) {
   if (!nav || nav.total <= 1) return null;
@@ -68,6 +69,16 @@ export default function PreviewAndResultsPanel({
   downloadAllZip,
   downloadSingleVideo,
 }) {
+  const resultSlots =
+    serverJobMeta?.slots?.length > 0
+      ? serverJobMeta.slots
+      : buildExportVideoSlots({
+          total: processedVideos.length,
+          completed: processedVideos.length,
+          outputFiles: processedVideos.map((v) => v.url),
+        });
+  const readySlots = resultSlots.filter((s) => s.status === 'ready' && s.url);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
         <div
@@ -195,11 +206,11 @@ export default function PreviewAndResultsPanel({
               ) : (
                 <List className="w-3.5 h-3.5 text-indigo-400" />
               )}
-              {serverProcessing ? 'Videos' : 'Done'}
-              {' '}({processedVideos.length}
+              {serverProcessing ? 'Exporting' : 'Downloads'}
+              {' '}({readySlots.length}
               {serverProcessing && serverJobMeta?.total > 0 ? ` / ${serverJobMeta.total}` : ''})
             </h3>
-            {(finished || processedVideos.length > 0) && (
+            {readySlots.length > 1 && !serverProcessing && (
               <button
                 onClick={downloadAllZip}
                 className="text-[10px] sm:text-xs bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 px-2.5 py-1 rounded-lg flex gap-1 items-center transition border border-emerald-500/15"
@@ -209,38 +220,38 @@ export default function PreviewAndResultsPanel({
             )}
           </div>
           <div className="h-[200px] sm:h-[250px] lg:h-[300px] overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
-            {processedVideos.length === 0 && (
+            {readySlots.length === 0 && (
               <div className="text-gray-600 text-[10px] text-center mt-8 flex flex-col items-center gap-2">
                 {serverProcessing ? (
                   <>
                     <Loader2 className="w-8 h-8 opacity-40 animate-spin text-emerald-400" />
-                    <span>Pehli video ready hote hi yahan dikhegi…</span>
+                    <span>Completed videos will appear here for download…</span>
                   </>
                 ) : (
                   <>
                     <Film className="w-8 h-8 opacity-20" />
-                    <span>Processed videos appear here</span>
+                    <span>Exported videos ready to download appear here</span>
                   </>
                 )}
               </div>
             )}
-            {processedVideos.map((vid) => {
-              const isImage = /\.(png|jpg|jpeg|webp)$/i.test(vid.name || '');
+            {readySlots.map((slot) => {
+              const isImage = /\.(png|jpg|jpeg|webp)$/i.test(slot.name || '');
               return (
                 <div
-                  key={vid.id}
+                  key={slot.index ?? slot.url ?? slot.name}
                   className="bg-indigo-500/[0.03] border border-indigo-500/[0.06] p-1.5 sm:p-2 rounded-lg flex justify-between items-center gap-2 hover:bg-indigo-500/[0.06] transition"
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     {isImage ? (
                       <Image className="w-3 h-3 text-pink-400 flex-shrink-0" />
                     ) : (
-                      <Video className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                      <Check className="w-3 h-3 text-emerald-400 flex-shrink-0" />
                     )}
-                    <span className="text-[10px] sm:text-xs truncate text-gray-300">{vid.name}</span>
+                    <span className="text-[10px] sm:text-xs truncate text-gray-300 block">{slot.name}</span>
                   </div>
                   <button
-                    onClick={() => downloadSingleVideo(vid.url, vid.name)}
+                    onClick={() => downloadSingleVideo(slot.url, slot.name)}
                     className="bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 p-1 sm:p-1.5 rounded-lg transition flex-shrink-0 border border-blue-500/15"
                   >
                     <Download className="w-3 h-3" />

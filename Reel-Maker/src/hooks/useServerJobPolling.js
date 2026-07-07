@@ -1,4 +1,6 @@
 import { useEffect, useRef } from 'react';
+import { buildExportVideoSlots } from '../utils/exportVideoSlots';
+import { formatDurationMs } from '../utils/formatExportTime';
 
 function ttsSortKey(name) {
   const m = String(name || '').match(/tts_(\d+)\.mp3/i);
@@ -83,9 +85,8 @@ export function useServerJobPolling(params) {
     knownVideoFilesRef.current = new Set();
     jobStartRef.current = Date.now();
     lastPollSigRef.current = '';
-    setServerJobMeta?.({ total: 0, completed: 0 });
     setEstimatedTime?.(null);
-  }, [serverJobId, setEstimatedTime, setServerJobMeta]);
+  }, [serverJobId, setEstimatedTime]);
 
   useEffect(() => {
     if (!serverJobId) return;
@@ -140,10 +141,9 @@ export function useServerJobPolling(params) {
       }
     };
 
-    const mergeVideoOutputs = (outputFiles, { totalItems, completedItems, isDone }) => {
+    const mergeVideoOutputs = (outputFiles, { totalItems, completedItems, rowProgress, parallelJobs, isDone, elapsedMs, exportDurationMs }) => {
       const mp4Files = (outputFiles || []).filter((f) => /\.mp4$/i.test(String(f)));
       const fresh = mp4Files.filter((f) => !knownVideoFilesRef.current.has(f));
-      if (fresh.length === 0 && !isDone) return 0;
 
       for (const f of fresh) knownVideoFilesRef.current.add(f);
 
@@ -161,24 +161,46 @@ export function useServerJobPolling(params) {
 
       const count = knownVideoFilesRef.current.size;
       const total = totalItems || mp4Files.length || count;
-      setServerJobMeta?.({ total, completed: completedItems ?? count });
+      const completed = completedItems ?? count;
+      const slots = buildExportVideoSlots({
+        total,
+        completed,
+        outputFiles: mp4Files,
+        rowProgress: rowProgress || {},
+        parallelJobs: parallelJobs ?? 4,
+        toUrl,
+      });
+      setServerJobMeta?.((prev) => ({
+        ...prev,
+        total,
+        completed,
+        slots,
+        parallelJobs: parallelJobs ?? 4,
+        ...(elapsedMs != null ? { elapsedMs } : {}),
+        ...(exportDurationMs != null ? { exportDurationMs } : {}),
+      }));
 
       if (isDone) {
-        setLogs(`Done! ${count} video(s) ready — download from panel.`);
+        const durLabel = exportDurationMs != null ? formatDurationMs(exportDurationMs) : null;
+        setLogs(
+          durLabel
+            ? `Done! ${count} video(s) exported in ${durLabel} — download from right panel.`
+            : `Done! ${count} video(s) ready — download from right panel.`,
+        );
       } else if (newEntries.length > 0) {
-        setLogs(`Video ${count}/${total} ready — download kar sakte ho, baaki generate ho rahi hai…`);
+        setLogs(`Video ${count}/${total} ready — others still processing…`);
       }
       return newEntries.length;
     };
 
     const isVideoJob = serverJobType === 'video' || serverJobType === 'slideshow';
-    const pollMs = serverJobType === 'tts' ? 1000 : isVideoJob ? 2500 : 2000;
+    const pollMs = serverJobType === 'tts' ? 1000 : isVideoJob ? 800 : 2000;
 
     const tick = async () => {
       try {
         const d = await api.getVideoJobStatus(serverJobId);
         const progress = d.progress || 0;
-        const sig = `${d.status}|${progress}|${d.completedItems ?? ''}|${d.totalItems ?? ''}|${(d.outputFiles || []).length}`;
+        const sig = `${d.status}|${progress}|${d.completedItems ?? ''}|${d.totalItems ?? ''}|${(d.outputFiles || []).length}|${JSON.stringify(d.rowProgress || {})}`;
         if (sig !== lastPollSigRef.current) {
           lastPollSigRef.current = sig;
           setServerProgress(progress);
@@ -192,17 +214,25 @@ export function useServerJobPolling(params) {
           });
         }
 
-        if (isVideoJob && d.status === 'processing') {
+        if (isVideoJob && (d.status === 'processing' || d.status === 'queued')) {
+          const elapsedMs = Date.now() - jobStartRef.current;
           mergeVideoOutputs(d.outputFiles, {
             totalItems: d.totalItems,
             completedItems: d.completedItems,
+            rowProgress: d.rowProgress,
+            parallelJobs: d.parallelJobs,
+            elapsedMs,
+            exportDurationMs: d.exportDurationMs ?? undefined,
             isDone: false,
           });
           const total = d.totalItems || 0;
           const completed = d.completedItems ?? 0;
+          const parallel = d.parallelJobs ?? 4;
           if (total > 1) {
-            const current = Math.min(completed + 1, total);
-            setLogs(`Exporting video ${current}/${total} — ${progress}%`);
+            const inFlight = Math.min(parallel, Math.max(0, total - completed));
+            setLogs(
+              `Exporting ${inFlight} video(s) in parallel — ${completed}/${total} done — ${progress}% overall`,
+            );
           } else if (total === 1 && progress > 0 && progress < 100) {
             setLogs(`Exporting video — ${progress}%`);
           }
@@ -234,12 +264,17 @@ export function useServerJobPolling(params) {
             setFinished(true);
             setLogs(`Done! ${imgs.length} images generated.${d.resultUrl ? ' Download "images.zip" for bulk.' : ''}`);
           } else if (isVideoJob) {
+            const finalDurationMs = d.exportDurationMs ?? (Date.now() - jobStartRef.current);
             const outCount = mergeVideoOutputs(d.outputFiles || (d.resultUrl ? [d.resultUrl] : []), {
               totalItems: d.totalItems,
               completedItems: d.completedItems,
+              rowProgress: d.rowProgress,
+              parallelJobs: d.parallelJobs,
+              exportDurationMs: finalDurationMs,
+              elapsedMs: finalDurationMs,
               isDone: true,
             });
-            if ((d.outputFiles?.length > 0 || d.resultUrl) && outCount !== 0) {
+            if (d.outputFiles?.length > 0 || d.resultUrl) {
               setFinished(true);
             } else {
               setFinished(false);
