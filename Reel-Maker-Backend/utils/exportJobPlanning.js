@@ -1,6 +1,25 @@
 /**
- * Export job count + per-job Excel row data (mirrors frontend buildPreviewRowData).
+ * Export job count + per-job Excel row data (mirrors frontend exportJobPlanning).
  */
+
+function countNonemptyExcelRows(excelData) {
+  if (!Array.isArray(excelData)) return 0;
+  return excelData.filter(
+    (row) =>
+      Array.isArray(row) &&
+      row.length > 0 &&
+      row.some((cell) => cell != null && cell !== undefined && String(cell).trim() !== ''),
+  ).length;
+}
+
+function sanitizeExcelData(excelData) {
+  if (!Array.isArray(excelData)) return [];
+  return excelData.filter(
+    (row) =>
+      Array.isArray(row) &&
+      row.some((cell) => cell != null && cell !== undefined && String(cell).trim() !== ''),
+  );
+}
 
 function resolveExportJobCount(opts) {
   const {
@@ -10,33 +29,35 @@ function resolveExportJobCount(opts) {
     captionExport = null,
     voiceCount = 0,
     videoCount = 0,
+    imageCount = 0,
   } = opts;
 
-  const excelLen = Array.isArray(excelData) ? excelData.length : 0;
+  const nonemptyExcel = countNonemptyExcelRows(excelData);
   const rowsPerVideo = parseInt(config.excelRowsPerVideo, 10) || 0;
   const contentMode = config.contentMode || 'multiColumn';
 
   let excelJobs = 0;
-  if (excelLen > 0) {
-    if (contentMode === 'rowBased' && rowsPerVideo > 0) {
-      excelJobs = Math.ceil(excelLen / rowsPerVideo);
-    } else {
-      excelJobs = excelLen;
-    }
+  if (nonemptyExcel > 0) {
+    excelJobs =
+      contentMode === 'rowBased' && rowsPerVideo > 0
+        ? Math.ceil(nonemptyExcel / rowsPerVideo)
+        : nonemptyExcel;
   }
 
   const captionTracks = captionExport?.tracks?.length || 0;
-  const multiVideoCount = videoCount > 1 ? videoCount : 0;
+  const voiceJobs = voiceCount > 0 ? voiceCount : 0;
+  const captionOnlyJobs =
+    voiceJobs === 0 && useCaptionExport && captionTracks > 0 ? captionTracks : 0;
 
-  if (excelJobs > 0) {
-    return Math.max(excelJobs, multiVideoCount);
-  }
+  // Output count is driven by Excel rows and audio/captions — NOT background video/image count.
+  const primaryCount = Math.max(excelJobs, voiceJobs, captionOnlyJobs);
+  if (primaryCount > 0) return primaryCount;
 
-  if (useCaptionExport) {
-    return Math.max(captionTracks, voiceCount, multiVideoCount, 1);
-  }
+  // Visual-only fallback (no excel / no voice)
+  if (imageCount > 0 && videoCount === 0) return 1;
+  if (videoCount > 0) return 1;
 
-  return Math.max(excelLen, 1);
+  return 1;
 }
 
 function buildExportRowData(excelData, jobIndex, config) {
@@ -83,7 +104,6 @@ function buildExportRowData(excelData, jobIndex, config) {
   return Array.isArray(row) ? row.map((c) => String(c ?? '')) : [String(row ?? '')];
 }
 
-/** Row shape for resolveTrackSegments (caption column / timed text). */
 function buildSegmentExcelRow(excelData, jobIndex, config) {
   const parts = buildExportRowData(excelData, jobIndex, config);
   const joined = parts.map((p) => String(p ?? '').trim()).filter(Boolean).join(' ');
@@ -94,16 +114,52 @@ function buildSegmentExcelRow(excelData, jobIndex, config) {
   return Array.isArray(raw) ? raw : [String(raw ?? '')];
 }
 
-function resolveWhisperSegmentsForJob({ jobIndex, bulkExcel, voiceCount, track }) {
+function resolveWhisperSegmentsForJob({ track }) {
   if (!track?.segments?.length) return null;
-  if (!bulkExcel) return track.segments;
-  if (voiceCount > 1 && jobIndex < voiceCount) return track.segments;
-  return null;
+  return track.segments;
+}
+
+/**
+ * Per-export-row config: correct voice captions + shared overlay/line styles from base config.
+ */
+function buildPerRowExportConfig(baseConfig, { jobIndex, voiceCount, captionExport, voiceIndex }) {
+  if (!baseConfig || typeof baseConfig !== 'object') return baseConfig;
+  const voiceTrackIdx =
+    voiceIndex != null && Number.isFinite(voiceIndex)
+      ? voiceIndex
+      : voiceCount > 0
+        ? jobIndex % voiceCount
+        : 0;
+  const track = captionExport?.tracks?.[voiceTrackIdx] || captionExport?.tracks?.[0];
+  const segments = track?.segments;
+  if (!segments?.length) return baseConfig;
+
+  return {
+    ...baseConfig,
+    captionSync: {
+      ...(baseConfig.captionSync || {}),
+      enabled: true,
+      segments,
+      granularity: baseConfig.captionSync?.granularity || 'line',
+      columnIndex: baseConfig.captionSync?.columnIndex ?? 0,
+    },
+  };
+}
+
+/** Row-level export parallelism — controlled by EXPORT_WORKER_CONCURRENCY (default 4). */
+function resolveParallelJobs() {
+  const n = parseInt(process.env.EXPORT_WORKER_CONCURRENCY || '4', 10);
+  if (!Number.isFinite(n) || n < 1) return 4;
+  return Math.min(16, n);
 }
 
 module.exports = {
+  countNonemptyExcelRows,
+  sanitizeExcelData,
   resolveExportJobCount,
   buildExportRowData,
   buildSegmentExcelRow,
   resolveWhisperSegmentsForJob,
+  buildPerRowExportConfig,
+  resolveParallelJobs,
 };

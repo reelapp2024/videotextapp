@@ -36,7 +36,7 @@ module.exports = {
       try {
         const files = req.files;
         let config = {};
-        let excelData = [[]];
+        let excelData = [];
         const configFile = files?.config?.[0];
         const excelFile = files?.excelData?.[0];
         if (configFile?.path && fs.existsSync(configFile.path)) {
@@ -119,7 +119,7 @@ module.exports = {
       try {
         const files = req.files;
         let config = {};
-        let excelData = [[]];
+        let excelData = [];
         let durationPerImageSec = 2;
 
         const configFile = files?.config?.[0];
@@ -222,6 +222,10 @@ module.exports = {
         outputFiles: job.outputFiles || [],
         completedItems: job.completedVideos ?? job.completedItems ?? 0,
         totalItems: job.totalVideos ?? job.totalItems ?? 0,
+        rowProgress: job.exportRowProgress || {},
+        parallelJobs: job.parallelJobs ?? 4,
+        exportDurationMs: job.exportDurationMs ?? null,
+        exportStartedAt: job.exportStartedAt ?? null,
       });
     } catch (e) {
       res.status(500).json({ error: e.message });

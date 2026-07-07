@@ -25,20 +25,48 @@ __export(jobCancellation_exports, {
 });
 module.exports = __toCommonJS(jobCancellation_exports);
 const cancelledJobIds = /* @__PURE__ */ new Set();
+
+// Cache for async cancellation checks to avoid hammering the database
+const asyncCheckCache = new Map();
+const ASYNC_CHECK_CACHE_TTL_MS = 2000; // Cache result for 2 seconds
+
 function markJobCancelled(jobId) {
   cancelledJobIds.add(jobId);
+  // Clear cache when cancelled
+  asyncCheckCache.delete(jobId);
 }
 function isJobCancelled(jobId) {
   return cancelledJobIds.has(jobId);
 }
 
 async function isJobCancelledAsync(jobId) {
+  // Fast path: check in-memory set first
   if (isJobCancelled(jobId)) return true;
+  
+  // Check cache to avoid database query overhead
+  const cached = asyncCheckCache.get(jobId);
+  if (cached && Date.now() - cached.timestamp < ASYNC_CHECK_CACHE_TTL_MS) {
+    return cached.cancelled;
+  }
+  
+  // Query database (only happens once every 2 seconds per job)
   try {
     const VideoJob = require("../models/VideoJob");
     const job = await VideoJob.findOne({ jobId }).select("status").lean();
-    return job?.status === "cancelled";
+    const cancelled = job?.status === "cancelled";
+    
+    // Cache the result
+    asyncCheckCache.set(jobId, { cancelled, timestamp: Date.now() });
+    
+    // If cancelled, also mark in memory for instant future checks
+    if (cancelled) {
+      cancelledJobIds.add(jobId);
+    }
+    
+    return cancelled;
   } catch {
+    // On error, cache as not cancelled to avoid repeated failed queries
+    asyncCheckCache.set(jobId, { cancelled: false, timestamp: Date.now() });
     return false;
   }
 }

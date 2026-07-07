@@ -581,9 +581,14 @@ async function processOneRowWithSharedRenderer(params) {
   let framePipeline = null;
   const frameBytes = w * h * 4;
 
+  // Only check cancellation every N frames to avoid database query overhead
+  // Check once per second (every fps frames) for responsive cancellation without performance hit
+  const cancelCheckInterval = Math.max(1, Math.floor(fps));
+  
   try {
     for (let i = 0; i < totalFrames; i++) {
-      if (isCancelled && await isCancelled()) {
+      // Only check cancellation periodically, not every frame (DB query overhead)
+      if (isCancelled && i % cancelCheckInterval === 0 && await isCancelled()) {
         encoder.abort();
         throw new Error('Job cancelled');
       }
@@ -638,13 +643,24 @@ async function processOneRowWithSharedRenderer(params) {
       metrics.recordFrameRender(frameMs);
       memoryTracker.sample();
 
-      if (onFrameProgress) {
+      // Only report progress every N frames to avoid database/filesystem overhead
+      // Update roughly once per second (every fps frames) for responsive UI without performance hit
+      if (onFrameProgress && i % cancelCheckInterval === 0) {
         onFrameProgress({
           frameIndex: i,
           totalFrames,
           progress: Math.round(((i + 1) / totalFrames) * 90),
         });
       }
+    }
+
+    // Final progress update after all frames rendered
+    if (onFrameProgress) {
+      onFrameProgress({
+        frameIndex: totalFrames - 1,
+        totalFrames,
+        progress: 90,
+      });
     }
 
     if (framePipeline) {

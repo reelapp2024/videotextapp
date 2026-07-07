@@ -35,7 +35,6 @@ __export(videoProcessor_exports, {
   zipDir: () => zipDir
 });
 module.exports = __toCommonJS(videoProcessor_exports);
-var import_ffmpeg = __toESM(require("@ffmpeg-installer/ffmpeg"), 1);
 var import_ffprobe = __toESM(require("@ffprobe-installer/ffprobe"), 1);
 var import_fluent_ffmpeg = __toESM(require("fluent-ffmpeg"), 1);
 var import_fs = __toESM(require("fs"), 1);
@@ -54,7 +53,8 @@ var import_exportRendererConfig = require("./exportRendererConfig");
 var import_serverExportRow = require("./serverExportRow");
 var import_exportFormat = require("./exportFormat");
 var import_exportJobPlanning = require("../utils/exportJobPlanning");
-import_fluent_ffmpeg.default.setFfmpegPath(import_ffmpeg.default.path);
+var import_mediaPairing = require("../utils/mediaPairing");
+import_fluent_ffmpeg.default.setFfmpegPath(import_encodeOptions.getFfmpegPath());
 import_fluent_ffmpeg.default.setFfprobePath(import_ffprobe.default.path);
 const ffprobeAsync = (0, import_util.promisify)(import_fluent_ffmpeg.default.ffprobe);
 const CPU_CORES = import_os.default.cpus().length;
@@ -77,7 +77,7 @@ const CAPTION_EXPORT_PARALLEL = (() => {
 function getVideoEncodeOptions(config) {
   return (0, import_encodeOptions.getEncodeOptions)(config, { fast: true });
 }
-console.log(`FFmpeg: ${import_ffmpeg.default.path}`);
+console.log(`FFmpeg: ${import_encodeOptions.getFfmpegPath()}`);
 console.log(`CPU cores: ${CPU_CORES}, parallel jobs: ${PARALLEL_JOBS}, caption parallel: ${CAPTION_EXPORT_PARALLEL}`);
 (0, import_encodeOptions.logEncodeCapabilities)();
 async function probeHasAudio(filePath) {
@@ -185,6 +185,7 @@ async function processVideoJob(jobId, files, excelData, config, onProgress, jobM
   import_fs.default.mkdirSync(outDir, { recursive: true });
   const jobMediaDir = import_path.default.join(outDir, "_media");
   import_fs.default.mkdirSync(jobMediaDir, { recursive: true });
+  excelData = (0, import_exportJobPlanning.sanitizeExcelData)(excelData);
   const captionExport = config?.captionExport;
   const useCaptionExport = Boolean(
     captionExport?.tracks?.some((t) => t.segments?.length > 0)
@@ -234,55 +235,77 @@ async function processVideoJob(jobId, files, excelData, config, onProgress, jobM
     useCaptionExport,
     captionExport,
     voiceCount: voicePaths.length,
-    videoCount: videoPaths.length
+    videoCount: videoPaths.length,
+    imageCount: imagePaths.length
   });
-  console.log(`[export] job count: ${rows} (excel rows=${excelData?.length || 0}, captionExport=${useCaptionExport})`);
-  const bulkExcel = (excelData?.length || 0) > 1;
+  const rowParallelism = (0, import_exportJobPlanning.resolveParallelJobs)();
+  console.log(`[export] job count: ${rows} (excel rows=${excelData?.length || 0}, voices=${voicePaths.length}, videos=${videoPaths.length}, parallel=${rowParallelism})`);
   const exportFmt = (0, import_exportFormat.resolveExportFormat)(config);
   const outFileRe = (0, import_exportFormat.outputFilePattern)(exportFmt.ext);
-  const syncOutputs = async (completed2, progress, activeRow = null, rowProgress = null) => {
-    const outNames2 = import_fs.default.readdirSync(outDir).filter((f) => outFileRe.test(f)).sort();
-    const outputFiles2 = outNames2.map((f) => `/uploads/processed/${jobId}/${f}`);
+  const MIN_OUTPUT_BYTES = 1e3;
+  const rowProgressMap = {};
+  const readyOutputPaths = [];
+  const isValidOutputFile = (filePath) => {
+    try {
+      return filePath && import_fs.default.existsSync(filePath) && import_fs.default.statSync(filePath).size >= MIN_OUTPUT_BYTES;
+    } catch {
+      return false;
+    }
+  };
+  const syncProgress = async (completed2, progress) => {
     await onProgress({
       progress,
       completed: completed2,
       total: rows,
-      outputFiles: outputFiles2,
-      activeRow,
-      rowProgress
+      outputFiles: [...readyOutputPaths],
+      rowProgress: { ...rowProgressMap },
+      parallelJobs: rowParallelism,
     });
   };
-  await syncOutputs(0, 1);
+  await syncProgress(0, 1);
   let completed = 0;
   let lastExportMetrics = null;
+  const computeOverallProgress = () => {
+    let sum = completed * 100;
+    for (const v of Object.values(rowProgressMap)) {
+      if (typeof v === 'number') sum += v;
+    }
+    return Math.min(89, Math.round((sum / Math.max(rows, 1)) * 0.9));
+  };
+  const pairing = config?.exportMediaPairing || null;
   const tasks = Array.from({ length: rows }, (_, i) => async () => {
     if (await (0, import_jobCancellation.isJobCancelledAsync)(jobId)) throw new import_jobCancellation.JobCancelledError();
-    const uploadVideoPath = videoPaths.length > 0 ? videoPaths[i % videoPaths.length] : null;
-    const uploadImagePath = imagePaths.length > 0 ? imagePaths[i % imagePaths.length] : null;
-    const voicePath = voicePaths.length > 0 ? voicePaths[i % voicePaths.length] : null;
-    const musicPath = musicPaths.length > 0 ? musicPaths[i % musicPaths.length] : null;
+    const videoIdx = (0, import_mediaPairing.resolvePairedIndex)(pairing, "videoIndices", i, videoPaths.length);
+    const imageIdx = (0, import_mediaPairing.resolvePairedIndex)(pairing, "imageIndices", i, imagePaths.length);
+    const voiceIdx = (0, import_mediaPairing.resolvePairedIndex)(pairing, "voiceIndices", i, voicePaths.length);
+    const musicIdx = (0, import_mediaPairing.resolvePairedIndex)(pairing, "musicIndices", i, musicPaths.length);
+    const uploadVideoPath = videoPaths.length > 0 ? videoPaths[videoIdx] : null;
+    const uploadImagePath = imagePaths.length > 0 ? imagePaths[imageIdx] : null;
+    const voicePath = voicePaths.length > 0 ? voicePaths[voiceIdx] : null;
+    const musicPath = musicPaths.length > 0 ? musicPaths[musicIdx] : null;
     const row = (0, import_exportJobPlanning.buildExportRowData)(excelData, i, config);
     const segmentExcelRow = (0, import_exportJobPlanning.buildSegmentExcelRow)(excelData, i, config);
     const outputPath = import_path.default.join(outDir, (0, import_exportFormat.buildOutputFilename)(i, exportFmt.ext));
-    const voiceTrackIdx = voicePaths.length > 0 ? i % voicePaths.length : 0;
+    const voiceTrackIdx = voicePaths.length > 0 ? voiceIdx : 0;
     const track = useCaptionExport ? captionExport?.tracks?.[voiceTrackIdx] || captionExport?.tracks?.[0] : null;
-    const whisperSegments = (0, import_exportJobPlanning.resolveWhisperSegmentsForJob)({
+    const whisperSegments = (0, import_exportJobPlanning.resolveWhisperSegmentsForJob)({ track });
+    const rowConfig = (0, import_exportJobPlanning.buildPerRowExportConfig)(config, {
       jobIndex: i,
-      bulkExcel,
       voiceCount: voicePaths.length,
-      track
+      captionExport,
+      voiceIndex: voiceIdx,
     });
     let segments = (0, import_exportSegments.resolveTrackSegments)({
       segments: whisperSegments,
       excelRow: segmentExcelRow,
-      config,
+      config: rowConfig,
       fallbackDuration: 60
     });
-    if (!segments.length && config?.captionSync?.segments?.length) {
+    if (!segments.length && rowConfig?.captionSync?.segments?.length) {
       segments = (0, import_exportSegments.resolveTrackSegments)({
-        segments: config.captionSync.segments,
+        segments: rowConfig.captionSync.segments,
         excelRow: segmentExcelRow,
-        config,
+        config: rowConfig,
         fallbackDuration: 60
       });
     }
@@ -294,7 +317,7 @@ async function processVideoJob(jobId, files, excelData, config, onProgress, jobM
       throw new Error('Legacy FFmpeg drawtext/ASS export was removed in M10. Set EXPORT_RENDERER=server.');
     }
 
-    console.log(`[export/server] row ${i + 1}: shared renderer → FFmpeg stdin`);
+    console.log(`[export/server] row ${i + 1}: voice=${voiceIdx + 1} video=${videoPaths.length ? videoIdx + 1 : '-'} image=${imagePaths.length ? imageIdx + 1 : '-'}`);
     return (0, import_serverExportRow.processOneRowWithSharedRenderer)({
       videoPath,
       imageBgPath,
@@ -309,7 +332,7 @@ async function processVideoJob(jobId, files, excelData, config, onProgress, jobM
       h,
       fps,
       rowIndex: i,
-      config,
+      config: rowConfig,
       hasVideoAudio: videoHasAudio,
       segments,
       settingsBgVideo: settingsBgVideo,
@@ -318,21 +341,28 @@ async function processVideoJob(jobId, files, excelData, config, onProgress, jobM
       retryCount,
       isCancelled: () => (0, import_jobCancellation.isJobCancelledAsync)(jobId),
       onFrameProgress: async (p) => {
-        const overall = Math.min(89, Math.round(((completed + p.progress / 100) / rows) * 90));
-        await syncOutputs(completed, overall, i, p.progress);
+        rowProgressMap[i] = p.progress;
+        await syncProgress(completed, computeOverallProgress());
       },
     }).then(async (rowMetrics) => {
       lastExportMetrics = rowMetrics;
+      delete rowProgressMap[i];
+      if (!isValidOutputFile(outputPath)) {
+        throw new Error(`Export failed: row ${i + 1} produced no valid output (${outputPath})`);
+      }
+      readyOutputPaths.push(`/uploads/processed/${jobId}/${import_path.default.basename(outputPath)}`);
       completed++;
-      await syncOutputs(completed, Math.round(completed / rows * 90), null, 100);
+      await syncProgress(completed, Math.round((completed / rows) * 90));
     });
   });
-  await runParallel(tasks, useCaptionExport ? CAPTION_EXPORT_PARALLEL : PARALLEL_JOBS);
+  await runParallel(tasks, rowParallelism);
   const outNames = import_fs.default.readdirSync(outDir).filter((f) => outFileRe.test(f)).sort();
-  if (outNames.length === 0) {
-    throw new Error("Export failed: FFmpeg produced no output files");
+  const outputFiles = outNames
+    .filter((f) => isValidOutputFile(import_path.default.join(outDir, f)))
+    .map((f) => `/uploads/processed/${jobId}/${f}`);
+  if (outputFiles.length === 0) {
+    throw new Error("Export failed: FFmpeg produced no valid output files");
   }
-  const outputFiles = outNames.map((f) => `/uploads/processed/${jobId}/${f}`);
   await onProgress({ progress: 100, completed: rows, total: rows, outputFiles });
   const resultUrl = outputFiles[0] || "";
   return { resultUrl, outputFiles, exportMetrics: lastExportMetrics };

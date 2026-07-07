@@ -6,12 +6,15 @@ const { startEmbeddedExportWorker } = require('./services/exportWorkerBootstrap'
 const { startEmbeddedCaptionWorker } = require('./services/captionWorkerBootstrap');
 const { getRedisUrl } = require('./queues/connection');
 const { startWhisperServerPool } = require('./services/whisperServerPool');
+const { logEncodeCapabilities } = require('./services/encodeOptions');
 
 const PORT = process.env.PORT || 3000;
 
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/healthz`);
+  
+  logEncodeCapabilities();
 
   connectMongo().catch((err) => {
     console.warn('[server] Mongo connect warning:', err.message);

@@ -9,6 +9,11 @@ const {
 const { exportLog } = require('./exportLogger');
 const { getExportMetricsStore } = require('./exportMetricsStore');
 const { getWorkerId, MemoryPeakTracker } = require('./workerContext');
+const {
+  sanitizeExcelData,
+  resolveExportJobCount,
+  resolveParallelJobs,
+} = require('../utils/exportJobPlanning');
 
 /** Progress phase labels (M8) — stored on VideoJob.exportPhase (optional). */
 const PHASE = {
@@ -52,6 +57,8 @@ async function updateVideoJobProgress(jobId, update) {
     ...(update.total != null ? { totalVideos: update.total } : {}),
     ...(update.completed != null ? { completedVideos: update.completed } : {}),
     ...(update.outputFiles ? { outputFiles: update.outputFiles } : {}),
+    ...(update.rowProgress != null ? { exportRowProgress: update.rowProgress } : {}),
+    ...(update.parallelJobs != null ? { parallelJobs: update.parallelJobs } : {}),
   });
 }
 
@@ -81,17 +88,40 @@ async function runVideoExportJob(params) {
     throw new JobCancelledError();
   }
 
+  const cleanExcel = sanitizeExcelData(excelData);
+  const captionExport = config?.captionExport;
+  const useCaptionExport = Boolean(
+    captionExport?.tracks?.some((t) => t.segments?.length > 0),
+  );
+  const plannedVideos = resolveExportJobCount({
+    excelData: cleanExcel,
+    config,
+    useCaptionExport,
+    captionExport,
+    voiceCount: (files?.voices || []).length,
+    videoCount: (files?.videos || []).length,
+    imageCount: (files?.images || []).length,
+  });
+
   await VideoJob.findOneAndUpdate({ jobId }, {
     status: 'processing',
     progress: 0,
     exportPhase: PHASE.ASSET_LOADING,
+    totalVideos: plannedVideos,
+    completedVideos: 0,
+    exportRowProgress: {},
+    parallelJobs: resolveParallelJobs(),
+    exportStartedAt: new Date(),
+    exportDurationMs: null,
   });
+
+  exportLog('export.job.planned', { jobId, plannedVideos });
 
   try {
     const result = await processVideoJob(
       jobId,
       files,
-      excelData,
+      cleanExcel,
       config,
       async (update) => {
         if (await isExportCancelled(jobId)) throw new JobCancelledError();
@@ -111,6 +141,7 @@ async function runVideoExportJob(params) {
       exportPhase: PHASE.COMPLETED,
       resultUrl: result.resultUrl,
       outputFiles: result.outputFiles,
+      exportDurationMs: totalMs,
     });
 
     const totalMs = Date.now() - startedAt;

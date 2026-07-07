@@ -1,13 +1,13 @@
 const path = require('path');
 const fs = require('fs');
-const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const ffmpeg = require('fluent-ffmpeg');
 const { v4: uuidv4 } = require('uuid');
 const { zipDir } = require('../services/videoProcessor');
 const ProcessingJob = require('../models/ProcessingJob');
 const { imageJobUpload } = require('../middleware/upload');
+const { getFfmpegPath } = require('../services/encodeOptions');
 
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+ffmpeg.setFfmpegPath(getFfmpegPath());
 
 function esc(s) {
   return String(s ?? '')

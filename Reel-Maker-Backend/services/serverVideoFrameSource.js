@@ -1,8 +1,8 @@
 const { spawn } = require('child_process');
-const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const fs = require('fs');
+const { getFfmpegPath } = require('./encodeOptions');
 
-const FFMPEG = ffmpegInstaller.path;
+const FFMPEG = getFfmpegPath();
 const STDERR_MAX = 4096;
 
 /**

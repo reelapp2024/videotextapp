@@ -30,14 +30,14 @@ __export(captionRenderService_exports, {
   renderCaptionedVideo: () => renderCaptionedVideo
 });
 module.exports = __toCommonJS(captionRenderService_exports);
-var import_ffmpeg = __toESM(require("@ffmpeg-installer/ffmpeg"), 1);
 var import_ffprobe = __toESM(require("@ffprobe-installer/ffprobe"), 1);
 var import_fluent_ffmpeg = __toESM(require("fluent-ffmpeg"), 1);
 var import_fs = __toESM(require("fs"), 1);
 var import_path = __toESM(require("path"), 1);
 var import_util = require("util");
 var import_assSubtitleBuilder = require("./assSubtitleBuilder");
-import_fluent_ffmpeg.default.setFfmpegPath(import_ffmpeg.default.path);
+var import_encodeOptions = require("./encodeOptions");
+import_fluent_ffmpeg.default.setFfmpegPath(import_encodeOptions.getFfmpegPath());
 import_fluent_ffmpeg.default.setFfprobePath(import_ffprobe.default.path);
 const ffprobeAsync = (0, import_util.promisify)(import_fluent_ffmpeg.default.ffprobe);
 function escAssPath(p) {

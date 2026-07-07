@@ -25,9 +25,10 @@ function getRedisPrefix() {
   return process.env.REDIS_PREFIX || 'reel-maker';
 }
 
+/** Parallel row exports per worker process (default 4). Set EXPORT_WORKER_CONCURRENCY in .env. */
 function getWorkerConcurrency() {
-  const n = parseInt(process.env.EXPORT_WORKER_CONCURRENCY || '1', 10);
-  if (!Number.isFinite(n) || n < 1) return 1;
+  const n = parseInt(process.env.EXPORT_WORKER_CONCURRENCY || '4', 10);
+  if (!Number.isFinite(n) || n < 1) return 4;
   return Math.min(16, n);
 }
 

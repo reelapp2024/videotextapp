@@ -1,9 +1,9 @@
 const ffmpeg = require('fluent-ffmpeg');
-const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const ffprobeInstaller = require('@ffprobe-installer/ffprobe');
 const fs = require('fs');
+const { getFfmpegPath } = require('./encodeOptions');
 
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+ffmpeg.setFfmpegPath(getFfmpegPath());
 ffmpeg.setFfprobePath(ffprobeInstaller.path);
 
 /**

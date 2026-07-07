@@ -1,9 +1,9 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+const { getFfmpegPath } = require('./encodeOptions');
 
-const FFMPEG = ffmpegInstaller.path;
+const FFMPEG = getFfmpegPath();
 
 function clamp(n, min, max, fallback) {
   const x = Number(n);
