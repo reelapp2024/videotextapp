@@ -200,21 +200,12 @@ export function useServerJobPolling(params) {
       try {
         const d = await api.getVideoJobStatus(serverJobId);
         const progress = d.progress || 0;
-        const sig = `${d.status}|${progress}|${d.completedItems ?? ''}|${d.totalItems ?? ''}|${(d.outputFiles || []).length}|${JSON.stringify(d.rowProgress || {})}`;
-        if (sig !== lastPollSigRef.current) {
-          lastPollSigRef.current = sig;
-          setServerProgress(progress);
-          updateEta(progress);
-        }
-
-        if (d.type === 'tts' && d.status === 'processing') {
-          await mergeTtsOutputs(d.outputFiles, {
-            totalItems: d.totalItems,
-            isDone: false,
-          });
-        }
+        const rowProgressJson = JSON.stringify(d.rowProgress || {});
+        const sig = `${d.status}|${progress}|${d.completedItems ?? ''}|${d.totalItems ?? ''}|${(d.outputFiles || []).length}|${rowProgressJson}`;
 
         if (isVideoJob && (d.status === 'processing' || d.status === 'queued')) {
+          setServerProgress(progress);
+          updateEta(progress);
           const elapsedMs = Date.now() - jobStartRef.current;
           mergeVideoOutputs(d.outputFiles, {
             totalItems: d.totalItems,
@@ -225,6 +216,9 @@ export function useServerJobPolling(params) {
             exportDurationMs: d.exportDurationMs ?? undefined,
             isDone: false,
           });
+          if (sig !== lastPollSigRef.current) {
+            lastPollSigRef.current = sig;
+          }
           const total = d.totalItems || 0;
           const completed = d.completedItems ?? 0;
           const parallel = d.parallelJobs ?? 4;
@@ -236,6 +230,17 @@ export function useServerJobPolling(params) {
           } else if (total === 1 && progress > 0 && progress < 100) {
             setLogs(`Exporting video — ${progress}%`);
           }
+        } else if (sig !== lastPollSigRef.current) {
+          lastPollSigRef.current = sig;
+          setServerProgress(progress);
+          updateEta(progress);
+        }
+
+        if (d.type === 'tts' && d.status === 'processing') {
+          await mergeTtsOutputs(d.outputFiles, {
+            totalItems: d.totalItems,
+            isDone: false,
+          });
         }
 
         if (d.status === 'done') {

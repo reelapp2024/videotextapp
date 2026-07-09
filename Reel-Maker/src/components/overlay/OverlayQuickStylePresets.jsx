@@ -1,31 +1,28 @@
 import React from 'react';
 import { useScopedOverlay, useOverlayLineScope } from './OverlayLineEditContext.jsx';
 import { buildGlobalLineSettingsPatch } from '../../utils/contentLineSettings.js';
-
-const QUICK_STYLE_PRESETS = [
-  { name: 'Clean', bg: '#000000', color: '#FFFFFF', style: 'box', shadow: false },
-  { name: 'Neon', bg: '#000000', color: '#00FF00', style: 'stroke', shadow: true, shadowColor: '#00FF00' },
-  { name: 'Fire', bg: '#FF0000', color: '#FFFF00', style: 'box', shadow: true, shadowColor: '#FF0000' },
-  { name: 'Ice', bg: '#0066FF', color: '#FFFFFF', style: 'box', shadow: true, shadowColor: '#00CCFF' },
-  { name: 'Gold', bg: '#000000', color: '#FFD700', style: 'stroke', shadow: true, shadowColor: '#FF8C00' },
-  { name: 'Pink', bg: '#FF69B4', color: '#FFFFFF', style: 'box', shadow: false },
-  { name: 'Dark', bg: '#1a1a1a', color: '#CCCCCC', style: 'box', shadow: true },
-  { name: 'Glow', bg: '#000000', color: '#FFFFFF', style: 'stroke', shadow: true, shadowColor: '#FFFFFF' },
-];
+import {
+  QUICK_STYLE_PRESETS,
+  presetToPatch,
+  QuickPresetButton,
+} from './quickStylePresets.jsx';
 
 export default function OverlayQuickStylePresets({ activeOverlayIndex, config, updateOverlayConfig }) {
   const scope = useOverlayLineScope();
-  const { setField, patchFields, lineLabel } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
+  const { setField, patchFields, lineLabel, getField, ov } = useScopedOverlay(
+    activeOverlayIndex,
+    config,
+    updateOverlayConfig,
+  );
+
+  const activeId = getField('quickPresetId', ov?.quickPresetId);
 
   const applyQuick = (preset) => {
-    const fields = {
-      bgColor: preset.bg,
-      color: preset.color,
-      styleType: preset.style,
-      shadowEnabled: preset.shadow,
-    };
-    if (preset.shadowColor) fields.shadowColor = preset.shadowColor;
-    if (preset.style === 'stroke') fields.strokeColor = preset.bg;
+    const fields = presetToPatch(preset);
+    if (scope?.applyScopedPreset) {
+      scope.applyScopedPreset(fields);
+      return;
+    }
     if (scope?.isGlobal) {
       patchFields(buildGlobalLineSettingsPatch(scope.baseOverlay, fields, scope.lineCount));
     } else {
@@ -34,22 +31,24 @@ export default function OverlayQuickStylePresets({ activeOverlayIndex, config, u
   };
 
   return (
-    <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-2 rounded border border-purple-700/30">
-      <p className="text-[10px] text-gray-400 mb-2 font-medium">QUICK PRESETS — {lineLabel}</p>
-      <div className="grid grid-cols-4 gap-1">
+    <div className="bg-gradient-to-r from-purple-900/30 to-blue-900/30 p-2.5 rounded-xl border border-purple-700/30">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[10px] text-gray-400 font-medium">QUICK PRESETS — {lineLabel}</p>
+        {activeId && QUICK_STYLE_PRESETS.some((p) => p.id === activeId) && (
+          <span className="text-[9px] text-purple-300">
+            {QUICK_STYLE_PRESETS.find((p) => p.id === activeId)?.name}
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-4 gap-1.5">
         {QUICK_STYLE_PRESETS.map((preset) => (
-          <button
-            key={preset.name}
-            type="button"
+          <QuickPresetButton
+            key={preset.id}
+            preset={preset}
+            label={preset.name}
+            selected={activeId === preset.id}
             onClick={() => applyQuick(preset)}
-            className="p-1 rounded text-[9px] bg-gray-700 hover:bg-gray-600 text-gray-300 transition"
-            style={{
-              background: preset.bg === '#000000' ? '#333' : preset.bg,
-              color: preset.color,
-            }}
-          >
-            {preset.name}
-          </button>
+          />
         ))}
       </div>
     </div>

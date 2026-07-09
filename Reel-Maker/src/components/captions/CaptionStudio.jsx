@@ -41,6 +41,7 @@ export default function CaptionStudio({
   previewVoiceIndex,
   setPreviewVoiceIndex,
   captionsReadyCount,
+  captionProgressPct,
 }) {
   const [localSegments, setLocalSegments] = useState([])
 
@@ -51,6 +52,9 @@ export default function CaptionStudio({
   }, [selectedTrack?.id, selectedTrack?.segments])
 
   if (activeTab !== 'captions') return null
+
+  const totalTracks = captionJob?.totalTracks ?? voiceFiles?.length ?? 0
+  const captionJobActive = polling || uploading || captionJob?.status === 'transcribing'
 
   const startFromVoices = async () => {
     await uploadFromVoiceFiles(voiceFiles, [])
@@ -104,12 +108,34 @@ export default function CaptionStudio({
       )}
 
       {captionJobId && (
-        <div className="text-[10px] text-gray-400 bg-cyan-500/5 border border-cyan-500/15 rounded-lg p-2 space-y-0.5">
-          <div>Status: <span className="text-cyan-300">{jobStatusLabel(captionJob?.status)}</span></div>
-          <div>Ready: {captionsReadyCount ?? 0} / {captionJob?.totalTracks ?? voiceFiles?.length ?? 0}</div>
+        <div className="text-[10px] text-gray-400 bg-cyan-500/5 border border-cyan-500/15 rounded-lg p-2.5 space-y-2">
+          <div className="flex justify-between items-center gap-2">
+            <span>
+              Status: <span className="text-cyan-300">{jobStatusLabel(captionJob?.status)}</span>
+            </span>
+            <span className="text-cyan-200/80 font-mono tabular-nums shrink-0">
+              {captionsReadyCount ?? 0} / {captionJob?.totalTracks ?? voiceFiles?.length ?? 0}
+            </span>
+          </div>
+
+          <div className="flex justify-between items-center text-[9px]">
+            <span className="text-gray-500 uppercase tracking-wide">Progress</span>
+            <span className="text-cyan-300 font-mono font-semibold tabular-nums">{captionProgressPct ?? 0}%</span>
+          </div>
+          <div className="relative h-2.5 bg-[#0a0e1a] rounded-full overflow-hidden border border-cyan-500/10">
+            <div
+              className="h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-cyan-600 via-sky-500 to-cyan-400 relative"
+              style={{ width: `${captionProgressPct ?? 0}%` }}
+            >
+              {captionJobActive && captionProgressPct < 100 && (
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/25 to-white/0 animate-shimmer rounded-full" />
+              )}
+            </div>
+          </div>
+
           {(polling || uploading) && (
             <span className="flex items-center gap-1 text-amber-300">
-              <Loader2 className="w-3 h-3 animate-spin" /> Processing on CPU…
+              <Loader2 className="w-3 h-3 animate-spin shrink-0" /> Processing on CPU…
             </span>
           )}
         </div>

@@ -1,32 +1,48 @@
 import React from 'react';
+import { useScopedOverlay, useOverlayLineScope } from './OverlayLineEditContext.jsx';
+import {
+  OVERLAY_QUICK_PRESETS,
+  presetToPatch,
+  QuickPresetButton,
+} from './quickStylePresets.jsx';
 
 export default function OverlayQuickPresets({ activeOverlayIndex, config, updateOverlayConfig }) {
+  const scope = useOverlayLineScope();
+  const { getField, ov } = useScopedOverlay(activeOverlayIndex, config, updateOverlayConfig);
+  const activeId = getField('quickPresetId', ov?.quickPresetId);
+
+  const applyPreset = (preset) => {
+    const patch = presetToPatch(preset);
+    if (scope?.applyScopedPreset) {
+      scope.applyScopedPreset(patch);
+      return;
+    }
+    Object.entries(patch).forEach(([key, value]) => {
+      updateOverlayConfig(activeOverlayIndex, key, value);
+    });
+  };
+
   return (
     <div className="bg-indigo-500/[0.03] p-2.5 rounded-xl border border-indigo-500/[0.06]">
-      <p className="text-[10px] text-gray-500 mb-2 font-medium">QUICK PRESETS</p>
-      <div className="flex flex-wrap gap-1">
-        {[
-          { id: 'clean', label: 'Clean', color: '#ffffff', fontPreset: 'modern', styleType: 'stroke', kineticEffect: 'fadeIn' },
-          { id: 'neon', label: 'Neon', color: '#39FF14', fontPreset: 'impact', styleType: 'stroke', colorPreset: 'neon' },
-          { id: 'fire', label: 'Fire', color: '#f5af19', fontPreset: 'bold', styleType: 'box', colorPreset: 'fire' },
-          { id: 'gold', label: 'Gold', color: '#FFD700', fontPreset: 'elegant', styleType: 'box' },
-        ].map((p) => (
-          <button
-            key={p.id}
-            onClick={() => {
-              updateOverlayConfig(activeOverlayIndex, 'color', p.color);
-              if (p.fontPreset) updateOverlayConfig(activeOverlayIndex, 'fontPreset', p.fontPreset);
-              if (p.styleType) updateOverlayConfig(activeOverlayIndex, 'styleType', p.styleType);
-              if (p.kineticEffect) updateOverlayConfig(activeOverlayIndex, 'kineticEffect', p.kineticEffect);
-              if (p.colorPreset) updateOverlayConfig(activeOverlayIndex, 'colorPreset', p.colorPreset);
-            }}
-            className="text-[9px] px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 text-gray-300"
-          >
-            {p.label}
-          </button>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[10px] text-gray-500 font-medium">QUICK PRESETS</p>
+        {activeId && OVERLAY_QUICK_PRESETS.some((p) => p.id === activeId) && (
+          <span className="text-[9px] text-indigo-300 capitalize">
+            {OVERLAY_QUICK_PRESETS.find((p) => p.id === activeId)?.label} selected
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-4 gap-1.5">
+        {OVERLAY_QUICK_PRESETS.map((preset) => (
+          <QuickPresetButton
+            key={preset.id}
+            preset={preset}
+            label={preset.label}
+            selected={activeId === preset.id}
+            onClick={() => applyPreset(preset)}
+          />
         ))}
       </div>
     </div>
   );
 }
-

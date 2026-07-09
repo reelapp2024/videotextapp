@@ -50,8 +50,7 @@ import {
   getCaptionDurationSec,
   getCaptionEntry,
 } from './utils/captionIntegration';
-import { computeContentBreakParts, getContentSampleText } from './utils/contentBreakParts.js';
-import { computeLineEditPreviewTime } from './utils/contentLineSettings.js';
+import { resolveTextTabPreviewPin } from './utils/contentLineSettings.js';
 import {
   resolveExportBitrates,
   resolveExportFps,
@@ -647,6 +646,7 @@ const App = () => {
   const voiceFolderInputRef = useRef(null);
   const musicFolderInputRef = useRef(null);
   const previewSimTimeRef = useRef(0);  // Cycling time for animation/kinetic preview when not playing
+  const previewTextPinRef = useRef({ time: null, lineIdx: 0 });
   const previewContainerSizeRef = useRef({ w: 0, h: 0 });
   const [previewLayoutTick, setPreviewLayoutTick] = useState(0);
   const [bgPreviewMediaTick, setBgPreviewMediaTick] = useState(0);
@@ -1393,28 +1393,12 @@ const App = () => {
     }
 
     if (!isPreviewPlaying) {
-      const editOv = config.overlays?.[activeOverlayIndex];
-      if (editOv?.contentTextSectionEnabled) {
-        const sel = editOv.contentBreakLineSelection;
-        if (sel && sel !== 'all') {
-          const lineIdx = Number(sel) - 1;
-          if (lineIdx >= 0) {
-            previewEditLineIdx = lineIdx;
-            const capEntry = getCaptionEntry(voiceCaptionMap, previewVoiceEarly, pvIdxEarly);
-            const captionSegments = capEntry?.segments || [];
-            const sampleText = getContentSampleText({
-              excelData,
-              overlay: editOv,
-              captionSegments,
-            });
-            const breakParts = computeContentBreakParts(editOv, sampleText, { captionSegments });
-            const pinnedTime = computeLineEditPreviewTime(editOv, lineIdx, breakParts, captionSegments);
-            if (pinnedTime != null && Number.isFinite(pinnedTime)) {
-              vTime = pinnedTime;
-              vDur = Math.max(vDur, pinnedTime + 0.5, 1);
-            }
-          }
-        }
+      const onTextTab = activeTab === 'overlay';
+      const pin = previewTextPinRef.current;
+      if (onTextTab && pin.time != null && Number.isFinite(pin.time)) {
+        vTime = pin.time;
+        vDur = Math.max(vDur, pin.time + 0.5, 1);
+        previewEditLineIdx = pin.lineIdx;
       }
     }
 
@@ -1426,8 +1410,15 @@ const App = () => {
     const drawSeparateUploadLayer =
       showUploadImages && uploadImgReady && settingsBgReady && previewImg !== settingsBgImg;
 
-    if (bgExtras.video?.duration && isFinite(bgExtras.video.duration) && (audioPlaying || videoPlaying)) {
-      const target = vTime % bgExtras.video.duration;
+    const textTabPinned =
+      !isPreviewPlaying
+      && activeTab === 'overlay'
+      && previewTextPinRef.current.time != null
+      && Number.isFinite(previewTextPinRef.current.time);
+
+    if (bgExtras.video?.duration && isFinite(bgExtras.video.duration) && (audioPlaying || videoPlaying || textTabPinned)) {
+      const syncTime = textTabPinned ? previewTextPinRef.current.time : vTime;
+      const target = syncTime % bgExtras.video.duration;
       if (Math.abs(bgExtras.video.currentTime - target) > 0.25) {
         try {
           bgExtras.video.currentTime = target;
@@ -1550,7 +1541,7 @@ const App = () => {
     if (!showUploadImages || !uploadImgReady) {
       ctx.save();
       ctx.globalAlpha = config.video?.opacity ?? 1;
-      if (video && video.readyState >= 2) {
+      if (video && video.readyState >= 2 && !video.seeking) {
         drawVideoContain(
           ctx,
           video,
@@ -1564,7 +1555,7 @@ const App = () => {
 
     drawOverlays(ctx, width, height, currentRow, vTime, vDur, drawCfg);
     drawLogo(ctx, width, height);
-  }, [config, config.background, config.backgroundEffects, bgPreviewMediaTick, previewLayoutTick, excelData, previewRowIndex, previewVoiceIndex, previewVideoIndex, previewImageIndex, voiceCaptionMap, voiceFiles, imageFiles.length, videos.length, musicFiles.length, drawOverlays, drawBackground, drawBackgroundBase, drawPreviewUploadImage, logoEnabled, logoSize, logoPosition, logoOpacity, logoPadding, excelFrameMode, excelRowsPerVideo, isPreviewPlaying, getEffectiveDimensions, estimatedExportDurationSec, previewVoiceDurationSec, activeOverlayIndex]);
+  }, [config, config.background, config.backgroundEffects, bgPreviewMediaTick, previewLayoutTick, excelData, previewRowIndex, previewVoiceIndex, previewVideoIndex, previewImageIndex, voiceCaptionMap, voiceFiles, imageFiles.length, videos.length, musicFiles.length, drawOverlays, drawBackground, drawBackgroundBase, drawPreviewUploadImage, logoEnabled, logoSize, logoPosition, logoOpacity, logoPadding, excelFrameMode, excelRowsPerVideo, isPreviewPlaying, getEffectiveDimensions, estimatedExportDurationSec, previewVoiceDurationSec, activeOverlayIndex, activeTab]);
 
   // Re-measure preview panel when layout changes (window resize, tab switch).
   useEffect(() => {
@@ -2340,6 +2331,94 @@ const App = () => {
     const pvIdx = Math.min(previewVoiceIndex, voiceFiles.length - 1)
     return getCaptionPreviewWords(voiceCaptionMap, voiceFiles[pvIdx], pvIdx)
   }, [voiceCaptionMap, voiceFiles, previewVoiceIndex])
+
+  /** Seek paused preview once when Text tab pin time/line changes (not on every style tweak). */
+  const syncTextTabPreviewPin = useCallback(() => {
+    if (isPreviewPlaying) return;
+
+    if (activeTab !== 'overlay') {
+      previewTextPinRef.current = { time: null, lineIdx: 0 };
+      return;
+    }
+
+    const editOv = config.overlays?.[activeOverlayIndex];
+    if (!editOv || editOv.enabled === false) {
+      previewTextPinRef.current = { time: null, lineIdx: 0 };
+      return;
+    }
+
+    const pvIdx = voiceFiles.length > 0
+      ? Math.min(previewVoiceIndex, voiceFiles.length - 1)
+      : previewRowIndex;
+    const previewVoice = voiceFiles[pvIdx] || null;
+    const capEntry = getCaptionEntry(voiceCaptionMap, previewVoice, pvIdx);
+    const captionSegments = capEntry?.segments || [];
+    const pin = resolveTextTabPreviewPin({
+      overlay: editOv,
+      excelData,
+      captionSegments,
+    });
+    if (!pin) return;
+
+    const prev = previewTextPinRef.current;
+    const needsSeek =
+      prev.time == null
+      || prev.lineIdx !== pin.lineIdx
+      || Math.abs(prev.time - pin.pinnedTime) > 0.02;
+
+    previewTextPinRef.current = { time: pin.pinnedTime, lineIdx: pin.lineIdx };
+    previewSimTimeRef.current = pin.pinnedTime;
+
+    if (!needsSeek) return;
+
+    const video = previewVideoRef.current;
+    const audioEl = previewAudioRef.current;
+    const bgVideo = backgroundVideoRef.current;
+
+    const bumpAfterSeek = () => setPreviewLayoutTick((t) => t + 1);
+
+    if (video?.readyState >= 2 && video.duration > 0) {
+      const loopT = pin.pinnedTime % video.duration;
+      if (Math.abs(video.currentTime - loopT) > 0.05) {
+        const onSeeked = () => {
+          video.removeEventListener('seeked', onSeeked);
+          bumpAfterSeek();
+        };
+        video.addEventListener('seeked', onSeeked);
+        try { video.currentTime = loopT; } catch { /* ignore */ }
+      }
+    }
+
+    if (audioEl?.duration && Number.isFinite(audioEl.duration) && audioEl.paused) {
+      const audioT = Math.min(pin.pinnedTime, Math.max(0, audioEl.duration - 0.02));
+      if (Math.abs(audioEl.currentTime - audioT) > 0.05) {
+        try { audioEl.currentTime = audioT; } catch { /* ignore */ }
+      }
+    }
+
+    if (bgVideo?.duration && Number.isFinite(bgVideo.duration)) {
+      const bgT = pin.pinnedTime % bgVideo.duration;
+      if (Math.abs(bgVideo.currentTime - bgT) > 0.05) {
+        try { bgVideo.currentTime = bgT; } catch { /* ignore */ }
+      }
+    }
+
+    bumpAfterSeek();
+  }, [
+    activeTab,
+    isPreviewPlaying,
+    activeOverlayIndex,
+    config.overlays,
+    excelData,
+    previewRowIndex,
+    previewVoiceIndex,
+    voiceFiles,
+    voiceCaptionMap,
+  ]);
+
+  useEffect(() => {
+    syncTextTabPreviewPin();
+  }, [syncTextTabPreviewPin, bgPreviewMediaTick]);
 
   useEffect(() => {
     if (!config.captionSync?.enabled || config.textSource !== 'captions') return

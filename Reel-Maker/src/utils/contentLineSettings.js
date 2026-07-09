@@ -1,3 +1,5 @@
+import { getContentSampleText, computeContentBreakParts } from './contentBreakParts.js';
+
 /** Global field → per-line array for anim/reveal settings */
 export const LINE_PART_ARRAY_FIELDS = {
   contentLineRevealMode: 'contentPartLineRevealMode',
@@ -358,4 +360,78 @@ export function computeLineEditPreviewTime(overlay, rawLineIndex, breakParts, ca
     cumul += d + h;
   }
   return null;
+}
+
+/**
+ * Preview time for Text tab — first line by default, or the line being edited.
+ * @param {object} params
+ * @param {object} params.overlay
+ * @param {string[]} [params.breakParts]
+ * @param {Array<{ start?: number, end?: number, words?: Array<{ start?: number }> }>} [params.captionSegments]
+ * @param {number} [params.lineIndex]
+ * @returns {number|null}
+ */
+export function computeTextTabPreviewTime({
+  overlay,
+  breakParts,
+  captionSegments,
+  lineIndex = 0,
+}) {
+  if (!overlay) return null;
+
+  const idx = Math.max(0, Number(lineIndex) || 0);
+
+  if (breakParts?.length) {
+    const t = computeLineEditPreviewTime(overlay, idx, breakParts, captionSegments);
+    if (t != null && Number.isFinite(t)) return t;
+  }
+
+  if (captionSegments?.length) {
+    const seg = captionSegments[Math.min(idx, captionSegments.length - 1)] || captionSegments[0];
+    const words = seg?.words;
+    if (Array.isArray(words) && words.length > 0 && words[0]?.start != null) {
+      return Math.max(0, Number(words[0].start) + 0.04);
+    }
+    if (seg) {
+      return timeInsideActiveWindow(
+        seg.start,
+        seg.end,
+        overlay.contentLineHoldAfter ?? 0,
+      );
+    }
+  }
+
+  const animStart = Number(overlay.animationStartTime) || 0;
+  const animDur = Math.max(0.1, Number(overlay.animationDuration) || 1);
+  return animStart + Math.min(0.4, animDur * 0.3);
+}
+
+/**
+ * Resolve preview pin time for Text tab (no side effects).
+ * @param {object} params
+ */
+export function resolveTextTabPreviewPin({
+  overlay,
+  excelData,
+  captionSegments,
+}) {
+  if (!overlay || overlay.enabled === false) return null;
+
+  const sel = overlay.contentBreakLineSelection;
+  const lineIdx =
+    overlay.contentTextSectionEnabled && sel && sel !== 'all'
+      ? Math.max(0, Number(sel) - 1)
+      : 0;
+
+  const sampleText = getContentSampleText({ excelData, overlay, captionSegments });
+  const breakParts = computeContentBreakParts(overlay, sampleText, { captionSegments });
+  const pinnedTime = computeTextTabPreviewTime({
+    overlay,
+    breakParts,
+    captionSegments,
+    lineIndex: lineIdx,
+  });
+
+  if (pinnedTime == null || !Number.isFinite(pinnedTime)) return null;
+  return { pinnedTime, lineIdx, breakParts };
 }

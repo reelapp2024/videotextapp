@@ -67,7 +67,7 @@ export function buildExportVideoSlots({
         index: i,
         name,
         status: 'processing',
-        progress: 0,
+        progress: 2,
         url: null,
       });
     } else {

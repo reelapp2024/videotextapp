@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, startTransition, useMemo } from 'react'
 import api from '../api.js'
 import { syncVoiceCaptionMap, applyCaptionTimingToConfig } from '../utils/captionIntegration.js'
 
@@ -17,6 +17,7 @@ export function useCaptions({
   const [selectedTrackIndex, setSelectedTrackIndex] = useState(0)
   const [error, setError] = useState('')
   const pollRef = useRef(null)
+  const pollInFlightRef = useRef(false)
   // How many tracks were "ready/done" the last time we loaded full segments.
   // Used so we only fetch the heavy (segments + words) payload when readiness actually changes.
   const lastReadyCountRef = useRef(0)
@@ -87,22 +88,24 @@ export function useCaptions({
       const ready = (data?.tracks || []).filter((t) => t.status === 'ready' || t.status === 'done').length
       if (ready > 0) {
         const firstReady = (data?.tracks || []).find((t) => t.segments?.length)
-        setConfig((c) => {
-          let next = {
-            ...c,
-            textSource: 'captions',
-            captionSync: {
-              ...(c.captionSync || {}),
-              enabled: true,
-              granularity: c.captionSync?.granularity || 'line',
-              columnIndex: c.captionSync?.columnIndex ?? 0,
-              segments: firstReady?.segments || c.captionSync?.segments,
-            },
-          }
-          if (firstReady?.segments?.length) {
-            next = applyCaptionTimingToConfig(next, firstReady.segments)
-          }
-          return next
+        startTransition(() => {
+          setConfig((c) => {
+            let next = {
+              ...c,
+              textSource: 'captions',
+              captionSync: {
+                ...(c.captionSync || {}),
+                enabled: true,
+                granularity: c.captionSync?.granularity || 'line',
+                columnIndex: c.captionSync?.columnIndex ?? 0,
+                segments: firstReady?.segments || c.captionSync?.segments,
+              },
+            }
+            if (firstReady?.segments?.length) {
+              next = applyCaptionTimingToConfig(next, firstReady.segments)
+            }
+            return next
+          })
         })
       }
       return map
@@ -123,7 +126,7 @@ export function useCaptions({
   const refreshJob = useCallback(
     async (jobId) => {
       const data = await api.getCaptionJob(jobId)
-      setCaptionJob(data)
+      startTransition(() => setCaptionJob(data))
       applyMapFromJob(data, voiceFiles)
       lastReadyCountRef.current = readyCountOf(data)
       syncTrackErrors(data)
@@ -132,30 +135,34 @@ export function useCaptions({
     [applyMapFromJob, voiceFiles]
   )
 
+  const CAPTION_POLL_MS = 2500
+
   const startPolling = useCallback(
     (jobId) => {
       stopPolling()
       setPolling(true)
-      pollRef.current = setInterval(async () => {
+
+      const pollOnce = async () => {
+        if (pollInFlightRef.current) return
+        pollInFlightRef.current = true
         try {
-          // Lightweight status poll: no segments/words, tiny payload.
           const summary = await api.getCaptionJob(jobId, { summary: true })
-          setCaptionJob((prev) =>
-            statusSignature(prev) === statusSignature(summary)
-              ? prev
-              : mergeStatusKeepingSegments(prev, summary)
-          )
+          startTransition(() => {
+            setCaptionJob((prev) =>
+              statusSignature(prev) === statusSignature(summary)
+                ? prev
+                : mergeStatusKeepingSegments(prev, summary)
+            )
+          })
 
           if (failedTracksOf(summary).length) syncTrackErrors(summary)
 
-          // Only pull the heavy payload when more tracks have finished than last time.
           const readyNow = readyCountOf(summary)
           if (readyNow > lastReadyCountRef.current) {
             await refreshJob(jobId)
           }
 
           if (transcriptionComplete(summary)) {
-            // Ensure the final full payload (with all segments) is loaded once, then stop.
             if (readyCountOf(summary) !== lastReadyCountRef.current) {
               await refreshJob(jobId)
             } else {
@@ -166,8 +173,13 @@ export function useCaptions({
         } catch (e) {
           setError(e.message)
           stopPolling()
+        } finally {
+          pollInFlightRef.current = false
         }
-      }, 800)
+      }
+
+      pollOnce()
+      pollRef.current = setInterval(pollOnce, CAPTION_POLL_MS)
     },
     [refreshJob, stopPolling]
   )
@@ -185,11 +197,10 @@ export function useCaptions({
       setUploading(true)
       try {
         const { jobId } = await api.uploadCaptionBatch(list, videoFiles, {
-          whisperModel: 'base',
           language: 'auto',
         })
         setCaptionJobId(jobId)
-        await refreshJob(jobId)
+        lastReadyCountRef.current = 0
         startPolling(jobId)
         setLogs(`${list.length} voice(s) — alag alag captions generate ho rahi hain…`)
         return jobId
@@ -200,7 +211,7 @@ export function useCaptions({
         setUploading(false)
       }
     },
-    [voiceFiles, refreshJob, startPolling, setLogs]
+    [voiceFiles, startPolling, setLogs]
   )
 
   const saveTrackSegments = useCallback(
@@ -254,6 +265,15 @@ export function useCaptions({
   const editorReady = Boolean(captionJob?.editorReady)
   const captionsReadyCount = tracks.filter((t) => t.status === 'ready' || t.status === 'done').length
 
+  const captionProgressPct = useMemo(() => {
+    const total = captionJob?.totalTracks ?? 0
+    if (!total) return 0
+    const done = Math.max(captionJob?.transcribedCount ?? 0, captionsReadyCount)
+    const transcribing = tracks.filter((t) => t.status === 'transcribing').length
+    const partial = done + transcribing * 0.4
+    return Math.min(100, Math.round((partial / total) * 100))
+  }, [captionJob?.totalTracks, captionJob?.transcribedCount, captionsReadyCount, tracks])
+
   return {
     captionJob,
     captionJobId,
@@ -267,6 +287,7 @@ export function useCaptions({
     tracks,
     editorReady,
     captionsReadyCount,
+    captionProgressPct,
     uploadFromVoiceFiles,
     saveTrackSegments,
     applyCaptionsToBulkExport,
