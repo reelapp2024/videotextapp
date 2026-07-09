@@ -50,7 +50,8 @@ var import_videoLayoutFilters = require("./videoLayoutFilters");
 var import_jobCancellation = require("./jobCancellation");
 var import_exportSegments = require("../utils/exportSegments");
 var import_exportRendererConfig = require("./exportRendererConfig");
-var import_serverExportRow = require("./serverExportRow");
+var import_exportRowProcessor = require("./exportRowProcessor");
+var import_exportResourcePlanner = require("./exportResourcePlanner");
 var import_exportFormat = require("./exportFormat");
 var import_exportJobPlanning = require("../utils/exportJobPlanning");
 var import_mediaPairing = require("../utils/mediaPairing");
@@ -190,8 +191,6 @@ async function processVideoJob(jobId, files, excelData, config, onProgress, jobM
   const useCaptionExport = Boolean(
     captionExport?.tracks?.some((t) => t.segments?.length > 0)
   );
-  
-  // === EXPORT PATH DEBUG ===
   console.log(`[export] ========== EXPORT JOB START ==========`);
   console.log(`[export] useCaptionExport: ${useCaptionExport}`);
   console.log(`[export] captionExport tracks: ${captionExport?.tracks?.length || 0}`);
@@ -206,137 +205,60 @@ async function processVideoJob(jobId, files, excelData, config, onProgress, jobM
     console.log(`[export] first row sample: ${JSON.stringify(excelData[0])?.substring(0, 200)}`);
   }
   console.log(`[export] =====================================`);
-
-  const useSharedRenderer = (0, import_exportRendererConfig.isServerSharedRenderer)();
   console.log(`[export] renderer: shared render-core (EXPORT_RENDERER=${(0, import_exportRendererConfig.resolveExportRenderer)()})`);
-  
   const videoPaths = (files.videos || []).filter((p) => p && import_fs.default.existsSync(p));
   const voicePaths = (files.voices || []).filter((p) => p && import_fs.default.existsSync(p));
-  const musicPaths = (files.music || []).filter((p) => p && import_fs.default.existsSync(p));
-  const imagePaths = (files.images || []).filter((p) => p && import_fs.default.existsSync(p));
-  const videoVol = (0, import_videoLayoutFilters.resolveExportVideoVolume)(config, useCaptionExport);
-  const voiceVol = config?.audio?.volumeEnabled !== false ? config?.audio?.volume ?? 0.5 : 0;
-  const musicVol = config?.audio?.volumeEnabled !== false ? config?.audio?.musicVolume ?? 0.3 : 0;
-  const { w, h } = parseDimsFromConfig(config);
-  const probedSourceFps = videoPaths[0] ? await probeVideoFps(videoPaths[0]) : null;
-  const fps = resolveServerExportFps(config, probedSourceFps);
-  if (probedSourceFps) {
-    console.log(`[export] source fps=${probedSourceFps} → export fps=${fps}`);
-  }
-  const settingsBg = await (0, import_exportMediaResolver.resolveSettingsBackgroundPaths)(config, jobMediaDir);
-  const settingsBgImage = settingsBg.imagePath;
-  const settingsBgVideo = settingsBg.videoPath;
-  if (videoPaths.length === 0 && voicePaths.length === 0 && imagePaths.length === 0 && !settingsBgImage && !settingsBgVideo) {
-    throw new Error("No valid video, image, or voice files found");
-  }
-  const rows = (0, import_exportJobPlanning.resolveExportJobCount)({
-    excelData,
-    config,
-    useCaptionExport,
-    captionExport,
-    voiceCount: voicePaths.length,
-    videoCount: videoPaths.length,
-    imageCount: imagePaths.length
-  });
-  const rowParallelism = (0, import_exportJobPlanning.resolveParallelJobs)();
-  console.log(`[export] job count: ${rows} (excel rows=${excelData?.length || 0}, voices=${voicePaths.length}, videos=${videoPaths.length}, parallel=${rowParallelism})`);
-  const exportFmt = (0, import_exportFormat.resolveExportFormat)(config);
-  const outFileRe = (0, import_exportFormat.outputFilePattern)(exportFmt.ext);
-  const MIN_OUTPUT_BYTES = 1e3;
-  const rowProgressMap = {};
-  const readyOutputPaths = [];
-  const isValidOutputFile = (filePath) => {
-    try {
-      return filePath && import_fs.default.existsSync(filePath) && import_fs.default.statSync(filePath).size >= MIN_OUTPUT_BYTES;
-    } catch {
-      return false;
+  if (videoPaths.length === 0 && voicePaths.length === 0 && (files.images || []).filter((p) => p && import_fs.default.existsSync(p)).length === 0) {
+    const settingsBg = await (0, import_exportMediaResolver.resolveSettingsBackgroundPaths)(config, jobMediaDir);
+    if (!settingsBg.imagePath && !settingsBg.videoPath) {
+      throw new Error("No valid video, image, or voice files found");
     }
+  }
+  const deps = {
+    ffprobeAsync,
+    probeVideoFps,
+    resolveSettingsBackgroundPaths: import_exportMediaResolver.resolveSettingsBackgroundPaths,
+    jobMediaDir,
+    videoVol: (0, import_videoLayoutFilters.resolveExportVideoVolume)(config, useCaptionExport),
+    voiceVol: config?.audio?.volumeEnabled !== false ? config?.audio?.volume ?? 0.5 : 0,
+    musicVol: config?.audio?.volumeEnabled !== false ? config?.audio?.musicVolume ?? 0.3 : 0,
   };
-  const syncProgress = async (completed2, progress) => {
-    await onProgress({
-      progress,
-      completed: completed2,
-      total: rows,
-      outputFiles: [...readyOutputPaths],
-      rowProgress: { ...rowProgressMap },
-      parallelJobs: rowParallelism,
-    });
-  };
-  await syncProgress(0, 1);
+  const ctx = await (0, import_exportRowProcessor.buildExportJobContext)(jobId, files, excelData, config, deps);
+  const rows = ctx.rows;
+  if (ctx.probedSourceFps) {
+    console.log(`[export] source fps=${ctx.probedSourceFps} → export fps=${ctx.fps}`);
+  }
+  const rowParallelism = (0, import_exportResourcePlanner.resolveWorkerConcurrency)();
+  console.log(`[export] job count: ${rows} (excel rows=${excelData?.length || 0}, voices=${voicePaths.length}, videos=${videoPaths.length}, parallel=${rowParallelism})`);
+  const rowProgressMap = {};
   let completed = 0;
   let lastExportMetrics = null;
   const computeOverallProgress = () => {
     let sum = completed * 100;
     for (const v of Object.values(rowProgressMap)) {
-      if (typeof v === 'number') sum += v;
+      if (typeof v === "number") sum += v;
     }
-    return Math.min(89, Math.round((sum / Math.max(rows, 1)) * 0.9));
+    return Math.min(99, Math.round(sum / Math.max(rows, 1)));
   };
-  const pairing = config?.exportMediaPairing || null;
+  const syncProgress = async (completed2, progress, outputFiles = null) => {
+    await onProgress({
+      progress,
+      completed: completed2,
+      total: rows,
+      ...(outputFiles ? { outputFiles } : {}),
+      rowProgress: { ...rowProgressMap },
+      parallelJobs: rowParallelism,
+    });
+  };
+  await syncProgress(0, 1);
+  if (!(0, import_exportRendererConfig.isServerSharedRenderer)()) {
+    throw new Error("Legacy FFmpeg drawtext/ASS export was removed in M10. Set EXPORT_RENDERER=server.");
+  }
   const tasks = Array.from({ length: rows }, (_, i) => async () => {
     if (await (0, import_jobCancellation.isJobCancelledAsync)(jobId)) throw new import_jobCancellation.JobCancelledError();
-    const videoIdx = (0, import_mediaPairing.resolvePairedIndex)(pairing, "videoIndices", i, videoPaths.length);
-    const imageIdx = (0, import_mediaPairing.resolvePairedIndex)(pairing, "imageIndices", i, imagePaths.length);
-    const voiceIdx = (0, import_mediaPairing.resolvePairedIndex)(pairing, "voiceIndices", i, voicePaths.length);
-    const musicIdx = (0, import_mediaPairing.resolvePairedIndex)(pairing, "musicIndices", i, musicPaths.length);
-    const uploadVideoPath = videoPaths.length > 0 ? videoPaths[videoIdx] : null;
-    const uploadImagePath = imagePaths.length > 0 ? imagePaths[imageIdx] : null;
-    const voicePath = voicePaths.length > 0 ? voicePaths[voiceIdx] : null;
-    const musicPath = musicPaths.length > 0 ? musicPaths[musicIdx] : null;
-    const row = (0, import_exportJobPlanning.buildExportRowData)(excelData, i, config);
-    const segmentExcelRow = (0, import_exportJobPlanning.buildSegmentExcelRow)(excelData, i, config);
-    const outputPath = import_path.default.join(outDir, (0, import_exportFormat.buildOutputFilename)(i, exportFmt.ext));
-    const voiceTrackIdx = voicePaths.length > 0 ? voiceIdx : 0;
-    const track = useCaptionExport ? captionExport?.tracks?.[voiceTrackIdx] || captionExport?.tracks?.[0] : null;
-    const whisperSegments = (0, import_exportJobPlanning.resolveWhisperSegmentsForJob)({ track });
-    const rowConfig = (0, import_exportJobPlanning.buildPerRowExportConfig)(config, {
-      jobIndex: i,
-      voiceCount: voicePaths.length,
-      captionExport,
-      voiceIndex: voiceIdx,
-    });
-    let segments = (0, import_exportSegments.resolveTrackSegments)({
-      segments: whisperSegments,
-      excelRow: segmentExcelRow,
-      config: rowConfig,
-      fallbackDuration: 60
-    });
-    if (!segments.length && rowConfig?.captionSync?.segments?.length) {
-      segments = (0, import_exportSegments.resolveTrackSegments)({
-        segments: rowConfig.captionSync.segments,
-        excelRow: segmentExcelRow,
-        config: rowConfig,
-        fallbackDuration: 60
-      });
-    }
-    let imageBgPath = settingsBgImage || uploadImagePath;
-    let videoPath = uploadVideoPath || settingsBgVideo;
-    const videoHasAudio = videoPath ? await probeHasAudio(videoPath) : false;
-
-    if (!useSharedRenderer) {
-      throw new Error('Legacy FFmpeg drawtext/ASS export was removed in M10. Set EXPORT_RENDERER=server.');
-    }
-
-    console.log(`[export/server] row ${i + 1}: voice=${voiceIdx + 1} video=${videoPaths.length ? videoIdx + 1 : '-'} image=${imagePaths.length ? imageIdx + 1 : '-'}`);
-    return (0, import_serverExportRow.processOneRowWithSharedRenderer)({
-      videoPath,
-      imageBgPath,
-      voicePath,
-      musicPath,
-      row,
-      outputPath,
-      videoVol,
-      voiceVol,
-      musicVol,
-      w,
-      h,
-      fps,
-      rowIndex: i,
-      config: rowConfig,
-      hasVideoAudio: videoHasAudio,
-      segments,
-      settingsBgVideo: settingsBgVideo,
-      jobId,
+    return (0, import_exportRowProcessor.processSingleExportRow)(ctx, i, {
+      excelData,
+      config,
       queueWaitMs,
       retryCount,
       isCancelled: () => (0, import_jobCancellation.isJobCancelledAsync)(jobId),
@@ -347,19 +269,13 @@ async function processVideoJob(jobId, files, excelData, config, onProgress, jobM
     }).then(async (rowMetrics) => {
       lastExportMetrics = rowMetrics;
       delete rowProgressMap[i];
-      if (!isValidOutputFile(outputPath)) {
-        throw new Error(`Export failed: row ${i + 1} produced no valid output (${outputPath})`);
-      }
-      readyOutputPaths.push(`/uploads/processed/${jobId}/${import_path.default.basename(outputPath)}`);
       completed++;
-      await syncProgress(completed, Math.round((completed / rows) * 90));
+      const outputFiles = (0, import_exportRowProcessor.scanValidOutputFiles)(ctx.outDir, ctx.exportFmt);
+      await syncProgress(completed, Math.round((completed / rows) * 100), outputFiles);
     });
   });
   await runParallel(tasks, rowParallelism);
-  const outNames = import_fs.default.readdirSync(outDir).filter((f) => outFileRe.test(f)).sort();
-  const outputFiles = outNames
-    .filter((f) => isValidOutputFile(import_path.default.join(outDir, f)))
-    .map((f) => `/uploads/processed/${jobId}/${f}`);
+  const outputFiles = (0, import_exportRowProcessor.scanValidOutputFiles)(ctx.outDir, ctx.exportFmt);
   if (outputFiles.length === 0) {
     throw new Error("Export failed: FFmpeg produced no valid output files");
   }

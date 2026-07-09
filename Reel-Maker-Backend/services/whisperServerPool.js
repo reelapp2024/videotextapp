@@ -253,21 +253,23 @@ class WhisperServerPool {
     this.started = false;
     this.startPromise = null;
     this.roundRobin = 0;
+    this.maxSize = getPoolSize();
+    this.python = null;
   }
 
   async ensureStarted() {
-    if (this.started) return;
+    if (this.started && this.workers.length > 0) return;
     if (this.startPromise) return this.startPromise;
 
     this.startPromise = (async () => {
-      const python = resolvePythonCommand();
-      const size = getPoolSize();
-      console.log(`${LOG_PREFIX} starting ${size} persistent worker(s)`);
+      this.python = resolvePythonCommand();
+      const initialSize = Math.min(1, this.maxSize);
+      console.log(`${LOG_PREFIX} starting ${initialSize} worker(s) (max ${this.maxSize})`);
 
-      this.workers = Array.from({ length: size }, (_, i) => new WhisperWorker(i + 1, python));
+      this.workers = Array.from({ length: initialSize }, (_, i) => new WhisperWorker(i + 1, this.python));
       await Promise.all(this.workers.map((w) => w.start()));
       this.started = true;
-      console.log(`${LOG_PREFIX} ready (${size} worker(s))`);
+      console.log(`${LOG_PREFIX} ready (${this.workers.length} worker(s))`);
     })();
 
     try {
@@ -279,6 +281,16 @@ class WhisperServerPool {
     }
   }
 
+  async ensureWorkerCapacity() {
+    await this.ensureStarted();
+    const idle = this.workers.find((w) => w.ready && !w.busy);
+    if (idle || this.workers.length >= this.maxSize) return;
+    const worker = new WhisperWorker(this.workers.length + 1, this.python);
+    this.workers.push(worker);
+    await worker.start();
+    console.log(`${LOG_PREFIX} scaled up to ${this.workers.length} worker(s)`);
+  }
+
   pickWorker() {
     if (this.workers.length === 1) return this.workers[0];
     const worker = this.workers[this.roundRobin % this.workers.length];
@@ -287,7 +299,7 @@ class WhisperServerPool {
   }
 
   async transcribe(audioPath, options = {}) {
-    await this.ensureStarted();
+    await this.ensureWorkerCapacity();
     const outJson = options.outJson || path.join(path.dirname(audioPath), `whisper-${uuidv4()}.json`);
 
     const idle = this.workers.find((w) => w.ready && !w.busy);

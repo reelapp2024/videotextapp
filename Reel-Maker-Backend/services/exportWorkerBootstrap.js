@@ -6,6 +6,7 @@ const { getExportQueue } = require('../queues/exportQueue');
 const { getExportQueueName, getWorkerConcurrency } = require('./bullExportConfig');
 const {
   runVideoExportJob,
+  runSingleRowExportJob,
   handleExportJobFailure,
   PHASE,
 } = require('./exportJobRunner');
@@ -31,7 +32,9 @@ function queueWaitMs(job) {
 async function processExportJob(job) {
   if (shuttingDown) throw new Error('Worker shutting down');
 
-  const { jobId, files, excelData, config } = job.data;
+  const data = job.data || {};
+  const isRowJob = data.parentJobId != null && data.rowIndex != null;
+  const jobId = isRowJob ? data.parentJobId : data.jobId;
   const waitMs = queueWaitMs(job);
   const attempt = job.attemptsMade + 1;
   const maxAttempts = job.opts?.attempts ?? 1;
@@ -42,6 +45,7 @@ async function processExportJob(job) {
 
   exportLog('export.worker.job.pickup', {
     jobId,
+    rowIndex: isRowJob ? data.rowIndex : null,
     bullJobId: job.id,
     attempt,
     maxAttempts,
@@ -49,25 +53,34 @@ async function processExportJob(job) {
     retryCount: job.attemptsMade,
   });
 
-  await VideoJob.findOneAndUpdate({ jobId }, {
-    exportPhase: PHASE.ASSET_LOADING,
-    progress: 1,
-  });
+  if (!isRowJob) {
+    await VideoJob.findOneAndUpdate({ jobId }, {
+      exportPhase: PHASE.ASSET_LOADING,
+      progress: 1,
+    });
+  }
 
   try {
-    const result = await runVideoExportJob({
-      jobId,
-      files,
-      excelData,
-      config,
-      queueWaitMs: waitMs,
-      retryCount: job.attemptsMade,
-    });
+    const result = isRowJob
+      ? await runSingleRowExportJob({
+        parentJobId: data.parentJobId,
+        rowIndex: data.rowIndex,
+        files: data.files,
+        excelData: data.excelData,
+        config: data.config,
+        queueWaitMs: waitMs,
+        retryCount: job.attemptsMade,
+      })
+      : await runVideoExportJob({
+        jobId: data.jobId,
+        files: data.files,
+        excelData: data.excelData,
+        config: data.config,
+        queueWaitMs: waitMs,
+        retryCount: job.attemptsMade,
+      });
     await job.progress(100);
-    return {
-      resultUrl: result.resultUrl,
-      outputFiles: result.outputFiles,
-    };
+    return result;
   } catch (err) {
     if (err instanceof JobCancelledError) {
       await handleExportJobFailure(jobId, err);
@@ -75,6 +88,7 @@ async function processExportJob(job) {
     }
     exportLog('export.worker.job.error', {
       jobId,
+      rowIndex: isRowJob ? data.rowIndex : null,
       error: err.message,
       attempt,
       maxAttempts,
@@ -84,7 +98,7 @@ async function processExportJob(job) {
     activeJobs = Math.max(0, activeJobs - 1);
     getExportMetricsStore().recordWorkerUtilization(workerId, activeJobs);
     getWorkerAssetCache().clearPerJob();
-    clearJobCancelled(jobId);
+    if (!isRowJob) clearJobCancelled(jobId);
   }
 }
 
@@ -132,24 +146,30 @@ async function startEmbeddedExportWorker() {
     });
 
     queue.on('failed', async (job, err) => {
-      if (!job?.data?.jobId) return;
-      const jobId = job.data.jobId;
+      if (!job?.data) return;
+      const d = job.data;
+      const jobId = d.parentJobId || d.jobId;
+      if (!jobId) return;
       const maxAttempts = job.opts?.attempts ?? 1;
       if (job.attemptsMade < maxAttempts) {
         exportLog('export.worker.job.retry', {
           jobId,
+          rowIndex: d.rowIndex,
           attempt: job.attemptsMade,
           maxAttempts,
           error: err?.message,
         });
-        await VideoJob.findOneAndUpdate({ jobId }, {
-          status: 'processing',
-          exportPhase: PHASE.ASSET_LOADING,
-        });
+        if (!d.parentJobId) {
+          await VideoJob.findOneAndUpdate({ jobId }, {
+            status: 'processing',
+            exportPhase: PHASE.ASSET_LOADING,
+          });
+        }
         return;
       }
       exportLog('export.worker.job.exhausted', {
         jobId,
+        rowIndex: d.rowIndex,
         error: err?.message,
         attempts: job.attemptsMade,
       });

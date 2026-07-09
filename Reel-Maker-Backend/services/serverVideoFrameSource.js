@@ -24,6 +24,8 @@ class ServerVideoFrameSource {
     this.height = opts.height;
     this.fps = opts.fps;
     this.loop = opts.loop ?? false;
+    /** Start reading at this frame index (accurate output seek). */
+    this.startFrame = Math.max(0, Number(opts.startFrame) || 0);
     this._frameBytes = this.width * this.height * 4;
     this._bufferA = Buffer.allocUnsafe(this._frameBytes);
     this._bufferB = Buffer.allocUnsafe(this._frameBytes);
@@ -68,8 +70,12 @@ class ServerVideoFrameSource {
       '-threads', '4',
     ];
     if (this.loop) args.push('-stream_loop', '-1');
+    args.push('-i', this.filePath);
+    if (this.startFrame > 0) {
+      const startSec = (this.startFrame / this.fps).toFixed(6);
+      args.push('-ss', startSec);
+    }
     args.push(
-      '-i', this.filePath,
       '-an',
       '-vf', vf,
       '-vsync', 'cfr',

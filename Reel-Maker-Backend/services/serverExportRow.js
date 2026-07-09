@@ -19,6 +19,14 @@ const { MemoryPeakTracker } = require('./workerContext');
 const { ExportRenderProfiler } = require('./exportRenderProfiler');
 const { ExportFramePipeline } = require('./exportFramePipeline');
 
+/** Hardware/fast encode presets — set EXPORT_ENCODE_FAST=0 to force slower high-quality CPU presets. */
+function resolveExportEncodeFast() {
+  const raw = process.env.EXPORT_ENCODE_FAST;
+  if (raw == null || String(raw).trim() === '') return true;
+  const s = String(raw).trim().toLowerCase();
+  return !(s === '0' || s === 'false' || s === 'no' || s === 'off');
+}
+
 let renderCoreModule = null;
 let bgLayersModule = null;
 let videoFrameDrawModule = null;
@@ -444,6 +452,9 @@ async function processOneRowWithSharedRenderer(params) {
     jobMetrics = null,
     queueWaitMs = 0,
     retryCount = 0,
+    frameRange = null,
+    videoOnly = false,
+    encodeFast = resolveExportEncodeFast(),
   } = params;
 
   const memoryTracker = new MemoryPeakTracker();
@@ -467,7 +478,14 @@ async function processOneRowWithSharedRenderer(params) {
 
   const exportSpeed = Math.max(0.25, Math.min(4, Number(config?.video?.exportSpeed) || 1));
   const outputDuration = Math.max(duration / exportSpeed, 1 / fps);
-  const totalFrames = Math.max(1, Math.ceil(outputDuration * fps));
+  const fullTotalFrames = Math.max(1, Math.ceil(outputDuration * fps));
+  const rangeStart = frameRange
+    ? Math.max(0, Math.min(fullTotalFrames - 1, Number(frameRange.startFrame) || 0))
+    : 0;
+  const rangeEndExclusive = frameRange
+    ? Math.max(rangeStart + 1, Math.min(fullTotalFrames, Number(frameRange.endFrameExclusive) || fullTotalFrames))
+    : fullTotalFrames;
+  const totalFrames = rangeEndExclusive - rangeStart;
 
   const bgVideoPath =
     config?.background?.type === 'video' && params.settingsBgVideo
@@ -518,6 +536,7 @@ async function processOneRowWithSharedRenderer(params) {
       height: h,
       fps,
       loop: duration > 0,
+      startFrame: rangeStart,
     });
     await mainVideoSource.start();
   }
@@ -529,6 +548,7 @@ async function processOneRowWithSharedRenderer(params) {
       height: h,
       fps,
       loop: true,
+      startFrame: rangeStart,
     });
     await bgVideoSource.start();
   }
@@ -539,28 +559,39 @@ async function processOneRowWithSharedRenderer(params) {
     ...config,
     video: { ...(config?.video || {}), fps, format: formatId },
   };
-  const videoEncodeOptions = getVideoEncodeOptions(encodeConfig, { fast: false, width: w, height: h, fps });
+  const videoEncodeOptions = getVideoEncodeOptions(encodeConfig, {
+    fast: encodeFast,
+    width: w,
+    height: h,
+    fps,
+  });
   const audioResolved = resolveAudioEncodeOptions(encodeConfig);
   const audioEncodeOptions = audioResolved.options;
 
   const hasVoice = !!voicePath;
   const hasMusic = !!musicPath;
+  const muxAudio = !videoOnly;
   const audioInputs = [];
-  if (hasVideoAudio && videoPath) audioInputs.push({ path: videoPath });
-  if (hasVoice) audioInputs.push({ path: voicePath });
-  if (hasMusic) audioInputs.push({ path: musicPath });
+  if (muxAudio) {
+    if (hasVideoAudio && videoPath) audioInputs.push({ path: videoPath });
+    if (hasVoice) audioInputs.push({ path: voicePath });
+    if (hasMusic) audioInputs.push({ path: musicPath });
+  }
 
-  const audioFilter = buildAudioFilterForPipe(
-    hasVideoAudio && videoPath,
-    hasVoice,
-    hasMusic,
-    videoVol,
-    voiceVol,
-    musicVol,
-    exportSpeed,
-    outputDuration,
-    audioResolved.audioRate,
-  );
+  const chunkDurationSec = totalFrames / fps;
+  const audioFilter = muxAudio
+    ? buildAudioFilterForPipe(
+      hasVideoAudio && videoPath,
+      hasVoice,
+      hasMusic,
+      videoVol,
+      voiceVol,
+      musicVol,
+      exportSpeed,
+      muxAudio ? outputDuration : chunkDurationSec,
+      audioResolved.audioRate,
+    )
+    : null;
 
   const encoder = new FramePipeEncoder({
     width: w,
@@ -571,7 +602,7 @@ async function processOneRowWithSharedRenderer(params) {
     audioEncodeOptions,
     audioInputs,
     audioFilter,
-    durationSec: outputDuration,
+    durationSec: muxAudio ? outputDuration : chunkDurationSec,
     container: exportFmt.container,
   });
 
@@ -586,9 +617,10 @@ async function processOneRowWithSharedRenderer(params) {
   const cancelCheckInterval = Math.max(1, Math.floor(fps));
   
   try {
-    for (let i = 0; i < totalFrames; i++) {
+    for (let local = 0; local < totalFrames; local++) {
+      const i = rangeStart + local;
       // Only check cancellation periodically, not every frame (DB query overhead)
-      if (isCancelled && i % cancelCheckInterval === 0 && await isCancelled()) {
+      if (isCancelled && local % cancelCheckInterval === 0 && await isCancelled()) {
         encoder.abort();
         throw new Error('Job cancelled');
       }
@@ -645,11 +677,11 @@ async function processOneRowWithSharedRenderer(params) {
 
       // Only report progress every N frames to avoid database/filesystem overhead
       // Update roughly once per second (every fps frames) for responsive UI without performance hit
-      if (onFrameProgress && i % cancelCheckInterval === 0) {
+      if (onFrameProgress && local % cancelCheckInterval === 0) {
         onFrameProgress({
           frameIndex: i,
-          totalFrames,
-          progress: Math.round(((i + 1) / totalFrames) * 90),
+          totalFrames: fullTotalFrames,
+          progress: Math.round(((i + 1) / fullTotalFrames) * 90),
         });
       }
     }
@@ -657,9 +689,9 @@ async function processOneRowWithSharedRenderer(params) {
     // Final progress update after all frames rendered
     if (onFrameProgress) {
       onFrameProgress({
-        frameIndex: totalFrames - 1,
-        totalFrames,
-        progress: 90,
+        frameIndex: rangeEndExclusive - 1,
+        totalFrames: fullTotalFrames,
+        progress: Math.round((rangeEndExclusive / fullTotalFrames) * 90),
       });
     }
 
@@ -674,7 +706,7 @@ async function processOneRowWithSharedRenderer(params) {
     const cacheStats = session.getCacheStats();
     const renderProfile = renderProfiler.summary();
 
-    if (exportFmt.ext === 'mp4') {
+    if (exportFmt.ext === 'mp4' && muxAudio && !frameRange) {
       await finalizeMp4ForMobile(outputPath);
     }
 
@@ -726,8 +758,9 @@ async function processOneRowWithSharedRenderer(params) {
       width: w,
       height: h,
       fps,
-      totalFrames,
+      totalFrames: fullTotalFrames,
       durationSec: outputDuration,
+      chunkFrames: totalFrames,
     };
   } catch (err) {
     encoder.abort();
@@ -751,4 +784,5 @@ async function processOneRowWithSharedRenderer(params) {
 module.exports = {
   ServerExportSession,
   processOneRowWithSharedRenderer,
+  resolveExportEncodeFast,
 };
