@@ -2,8 +2,10 @@ const app = require('./app');
 const { connectMongo } = require('./config/db');
 const { useBullExport } = require('./services/bullExportConfig');
 const { useBullCaptions } = require('./services/bullCaptionConfig');
+const { useBullTts } = require('./services/bullTtsConfig');
 const { startEmbeddedExportWorker } = require('./services/exportWorkerBootstrap');
 const { startEmbeddedCaptionWorker } = require('./services/captionWorkerBootstrap');
+const { startEmbeddedTtsWorker } = require('./services/ttsWorkerBootstrap');
 const { getRedisUrl } = require('./queues/connection');
 const { startWhisperServerPool } = require('./services/whisperServerPool');
 const { logEncodeCapabilities } = require('./services/encodeOptions');
@@ -60,6 +62,22 @@ const server = app.listen(PORT, () => {
       });
   } else {
     console.log('[caption-queue] Bull disabled (USE_BULL_CAPTIONS=false) — in-process captions only');
+  }
+
+  if (useBullTts() && process.env.EMBED_TTS_WORKER !== 'false') {
+    console.log(`[tts-queue] Bull enabled — Redis ${getRedisUrl()}`);
+    connectMongo()
+      .then(() => startEmbeddedTtsWorker())
+      .then((worker) => {
+        if (worker) {
+          console.log('[tts-queue] Embedded TTS worker started (set EMBED_TTS_WORKER=false to disable)');
+        }
+      })
+      .catch((err) => {
+        console.warn('[tts-queue] Embedded worker failed to start:', err.message);
+      });
+  } else {
+    console.log('[tts-queue] Bull disabled (USE_BULL_TTS=false) — in-process TTS only');
   }
 });
 

@@ -1,8 +1,11 @@
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const { batchGenerateTTS, VOICE_LIBRARY } = require('../services/ttsService');
-const { zipDir } = require('../services/videoProcessor');
+const { VOICE_LIBRARY } = require('../services/ttsService');
 const ProcessingJob = require('../models/ProcessingJob');
+const { tryEnqueueTtsBatch } = require('../services/ttsQueueService');
+const { runTtsBatchInProcess } = require('../services/ttsJobRunner');
+const { getTtsWorkerConcurrency } = require('../services/bullTtsConfig');
 
 const EDGE_RATE_PCT = { min: -50, max: 100 };
 const EDGE_PITCH_HZ = { min: -50, max: 50 };
@@ -67,6 +70,29 @@ function formatVolume(vol) {
   return (pct >= 0 ? '+' : '') + pct + '%';
 }
 
+function buildTextList(reqBody) {
+  const { texts, excelData, mode, rows, column } = reqBody;
+  let textList = [];
+
+  if (texts && Array.isArray(texts)) {
+    textList = texts;
+  } else if (excelData && Array.isArray(excelData)) {
+    if (mode === 'row' && typeof rows !== 'undefined') {
+      const rowIndices = Array.isArray(rows) ? rows : [rows];
+      textList = rowIndices.map((ri) => {
+        const row = excelData[ri];
+        if (!Array.isArray(row)) return '';
+        return row.filter((c) => c != null && String(c).trim() !== '').map(String).join(' ');
+      });
+    } else {
+      const col = column ?? 0;
+      textList = excelData.map((row) => String(row[col] ?? ''));
+    }
+  }
+
+  return textList.filter((t) => String(t ?? '').trim().length > 0);
+}
+
 module.exports = {
   listVoices: (_req, res) => {
     const voices = Object.entries(VOICE_LIBRARY).map(([id, v]) => ({
@@ -85,26 +111,9 @@ module.exports = {
 
   generate: async (req, res) => {
     try {
-      const { texts, speaker, rate, pitch, volume, quality, column, excelData, mode, rows } = req.body;
+      const { speaker, rate, pitch, volume, quality } = req.body;
+      const textList = buildTextList(req.body);
 
-      let textList = [];
-      if (texts && Array.isArray(texts)) {
-        textList = texts;
-      } else if (excelData && Array.isArray(excelData)) {
-        if (mode === 'row' && typeof rows !== 'undefined') {
-          const rowIndices = Array.isArray(rows) ? rows : [rows];
-          textList = rowIndices.map((ri) => {
-            const row = excelData[ri];
-            if (!Array.isArray(row)) return '';
-            return row.filter((c) => c != null && String(c).trim() !== '').map(String).join(' ');
-          });
-        } else {
-          const col = column ?? 0;
-          textList = excelData.map((row) => String(row[col] ?? ''));
-        }
-      }
-
-      textList = textList.filter((t) => String(t ?? '').trim().length > 0);
       if (textList.length === 0) {
         return res.status(400).json({ error: 'No texts provided' });
       }
@@ -114,55 +123,56 @@ module.exports = {
       const edgeVolume = formatVolume(volume);
 
       const jobId = uuidv4();
-      await ProcessingJob.create({ jobId, type: 'tts', status: 'queued', progress: 0, totalItems: textList.length });
+      const outDir = path.join(__dirname, '../uploads/processed', jobId);
+      if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+
+      const ttsPayload = {
+        jobId,
+        texts: textList,
+        speaker: speaker || 'en_jenny',
+        rate: edgeRate,
+        pitch: edgePitch,
+        volume: edgeVolume,
+        quality,
+        outDir,
+      };
+
+      await ProcessingJob.create({
+        jobId,
+        type: 'tts',
+        status: 'queued',
+        progress: 0,
+        totalItems: textList.length,
+        completedItems: 0,
+        config: {
+          speaker: ttsPayload.speaker,
+          rate: edgeRate,
+          pitch: edgePitch,
+          volume: edgeVolume,
+          quality,
+          outDir,
+          parallelJobs: getTtsWorkerConcurrency(),
+          completedItemIndexes: [],
+          failedItemIndexes: [],
+          itemProgress: {},
+        },
+      });
+
       res.status(202).json({ jobId, totalItems: textList.length });
 
-      setImmediate(async () => {
-        try {
-          await ProcessingJob.findOneAndUpdate({ jobId }, { status: 'processing' });
-          const outDir = path.join(__dirname, '../uploads/processed', jobId);
-
-          const toPublicUrl = (fp) => `/uploads/processed/${jobId}/${path.basename(fp)}`;
-
-          const outputs = await batchGenerateTTS(
-            textList,
-            outDir,
-            speaker || 'en_jenny',
-            edgeRate,
-            edgePitch,
-            edgeVolume,
-            quality,
-            async (ev) => {
-              const outputFiles = ev.outputPaths.map(toPublicUrl);
-              await ProcessingJob.findOneAndUpdate(
-                { jobId },
-                {
-                  progress: ev.percent,
-                  completedItems: ev.completed,
-                  totalItems: textList.length,
-                  outputFiles,
-                },
-              );
-            },
-          );
-
-          const outputFiles = outputs.map(toPublicUrl);
-
-          await ProcessingJob.findOneAndUpdate({ jobId }, { progress: 92 });
-          const zipPath = path.join(outDir, 'tts_audios.zip');
-          await zipDir(outDir, zipPath);
-          const resultUrl = `/uploads/processed/${jobId}/tts_audios.zip`;
-          await ProcessingJob.findOneAndUpdate({ jobId }, {
-            status: 'done',
-            progress: 100,
-            resultUrl,
-            outputFiles,
-            completedItems: outputs.length,
+      const startInProcess = () => {
+        setImmediate(() => {
+          runTtsBatchInProcess(ttsPayload).catch(async (e) => {
+            await ProcessingJob.findOneAndUpdate({ jobId }, { status: 'error', error: e.message });
           });
-        } catch (e) {
-          await ProcessingJob.findOneAndUpdate({ jobId }, { status: 'error', error: e.message });
-        }
-      });
+        });
+      };
+
+      tryEnqueueTtsBatch(ttsPayload)
+        .then((enqueued) => {
+          if (!enqueued) startInProcess();
+        })
+        .catch(() => startInProcess());
     } catch (e) {
       res.status(500).json({ error: e.message });
     }

@@ -222,8 +222,8 @@ module.exports = {
         outputFiles: job.outputFiles || [],
         completedItems: job.completedVideos ?? job.completedItems ?? 0,
         totalItems: job.totalVideos ?? job.totalItems ?? 0,
-        rowProgress: job.exportRowProgress || {},
-        parallelJobs: job.parallelJobs ?? 4,
+        rowProgress: job.exportRowProgress || job.config?.itemProgress || {},
+        parallelJobs: job.parallelJobs ?? job.config?.parallelJobs ?? 4,
         exportDurationMs: job.exportDurationMs ?? null,
         exportStartedAt: job.exportStartedAt ?? null,
       });
