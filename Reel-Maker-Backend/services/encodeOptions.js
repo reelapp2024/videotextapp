@@ -192,12 +192,12 @@ const ENCODER_CONFIGS = {
       '-tune', 'hq',
       '-profile:v', 'high',
       '-rc', 'vbr',
-      '-rc-lookahead', '32',
+      '-rc-lookahead', fast ? '0' : '32',
       '-spatial-aq', '1',
       '-temporal-aq', '1',
       ...rateOpts,
       ...fpsOpts,
-      ...tail
+      ...tail,
     ],
     pixFmt: 'yuv420p'
   },
@@ -205,20 +205,22 @@ const ENCODER_CONFIGS = {
   // Intel Quick Sync Video
   qsv: {
     codec: 'h264_qsv',
-    testArgs: ['-preset', 'veryfast', '-profile:v', 'high'],
+    testArgs: ['-preset', 'veryfast', '-profile:v', 'high', '-look_ahead', '0'],
     platforms: ['win32', 'linux'],
     priority: 2,
-    buildOptions: (fast, rateOpts, fpsOpts, tail = []) => [
+    buildOptions: (fast, rateOpts, fpsOpts, tail = [], pipeMode = false) => [
       '-c:v', 'h264_qsv',
       '-preset', fast ? 'veryfast' : 'medium',
       '-profile:v', 'high',
-      '-look_ahead', '1',
-      '-look_ahead_depth', '40',
+      // look_ahead deadlocks rawvideo pipe on bundled FFmpeg — never use for pipe/chunk exports
+      ...(pipeMode || fast
+        ? ['-look_ahead', '0', '-async_depth', '1']
+        : ['-look_ahead', '1', '-look_ahead_depth', '40']),
       ...rateOpts,
       ...fpsOpts,
-      ...tail
+      ...tail,
     ],
-    pixFmt: 'nv12'
+    pixFmt: 'nv12',
   },
 
   // AMD AMF/VCE (Windows only via DirectX)
@@ -396,6 +398,7 @@ function resolveHardwareEncoderForExport(config, opts = {}) {
   const height = Number(opts.height);
   const fps = clamp(Number(config?.video?.fps) || Number(opts.fps) || 30, 10, 60, 30);
   const fast = opts?.fast !== false;
+  const pipeMode = opts?.pipe === true;
   const br = opts.br ?? resolveBitrateK(config);
   
   const hasSize = Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0;
@@ -431,7 +434,9 @@ function resolveHardwareEncoderForExport(config, opts = {}) {
     }
 
     const rateProbe = ['-b:v', `${br}k`, '-maxrate', `${Math.round(br * 1.25)}k`, '-bufsize', `${br * 2}k`];
-    const testArgs = [...(config.testArgs || []), ...rateProbe];
+    const testArgs = pipeMode && encoderName === 'qsv'
+      ? ['-preset', 'veryfast', '-profile:v', 'high', '-look_ahead', '0', '-async_depth', '1', ...rateProbe]
+      : [...(config.testArgs || []), ...rateProbe];
     
     const test = testPipeEncoderAtSize(config.codec, width, height, fps, testArgs);
     if (test.ok) {
@@ -538,6 +543,7 @@ function getVideoEncodeOptions(config, opts) {
   const { resolveExportFormat } = require('./exportFormat');
   
   const fast = opts?.fast !== false;
+  const pipeMode = opts?.pipe === true;
   const br = resolveBitrateK(config);
   const fps = clamp(Number(config?.video?.fps) || Number(opts?.fps) || 30, 10, 60, 30);
   const gop = Math.max(fps, Math.round(fps * 2));
@@ -556,14 +562,14 @@ function getVideoEncodeOptions(config, opts) {
   // Resolve best encoder for this export
   const encoderName = resolveHardwareEncoderForExport(config, { ...opts, fps, br });
   const encoderConfig = ENCODER_CONFIGS[encoderName];
-  
+
   const rateOpts = ['-b:v', `${br}k`, '-maxrate', `${Math.round(br * 1.25)}k`, '-bufsize', `${br * 2}k`];
   const fpsOpts = buildFpsOpts(fps, gop, encoderConfig.pixFmt);
   const tail = fmt.container === 'mp4' ? ['-movflags', '+faststart'] : [];
 
-  console.log(`[encode] Export: format=${fmt.ext} encoder=${encoderConfig.codec} fps=${fps} bitrate=${br}k fast=${fast}`);
-  
-  return encoderConfig.buildOptions(fast, rateOpts, fpsOpts, tail);
+  console.log(`[encode] Export: format=${fmt.ext} encoder=${encoderConfig.codec} fps=${fps} bitrate=${br}k fast=${fast} pipe=${pipeMode}`);
+
+  return encoderConfig.buildOptions(fast, rateOpts, fpsOpts, tail, pipeMode);
 }
 
 /**

@@ -258,11 +258,6 @@ class FramePipeEncoder {
       args.push(...this.videoEncodeOptions);
     }
 
-    // FIXED: Enforce high-performance multithreading attributes for software fallbacks
-    if (!isQSV && !isNVENC && this.videoEncodeOptions.includes('libx264')) {
-      args.push('-threads', '0', '-preset', 'ultrafast', '-tune', 'animation', '-crf', '18');
-    }
-
     if (this.container === 'webm') {
       args.push('-f', 'webm');
     } else if (this.container === 'matroska') {

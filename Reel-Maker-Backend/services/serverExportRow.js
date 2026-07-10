@@ -564,6 +564,7 @@ async function processOneRowWithSharedRenderer(params) {
     width: w,
     height: h,
     fps,
+    pipe: true,
   });
   const audioResolved = resolveAudioEncodeOptions(encodeConfig);
   const audioEncodeOptions = audioResolved.options;
