@@ -244,8 +244,9 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
           for (let i = 0; i < segments.length; i++) {
             const start = Number(segments[i].start ?? 0);
             const end = Number(segments[i].end ?? start);
+            const endActive = Math.max(end, start + 0.001);
             const hold = Number(holdAfter[i] ?? 0);
-            if (time >= start && time < end + hold) {
+            if (time >= start && time < endActive + hold) {
               return { partIndex: i, partStartTime: start };
             }
             if (i < segments.length - 1) {
@@ -408,7 +409,32 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
             fullTextForSync = overlayCaptionActive && deps.overlayUsesCaptions(baseOverlay, overlayCfg)
               ? deps.buildFullCaptionScript(overlayCfg.captionSync.segments)
               : contentParts.join(' ');
-          if (contentParts.length > 0 && videoTime != null) {
+
+          const previewRawLine = overlay._previewEditLineIndex;
+          let previewPinned = false;
+          if (
+            previewRawLine != null
+            && Number.isFinite(Number(previewRawLine))
+            && Number(previewRawLine) >= 0
+            && contentParts.length > 0
+          ) {
+            const pinRaw = Number(previewRawLine);
+            const gIdx = groups.findIndex((g) => g.indices.includes(pinRaw));
+            if (gIdx >= 0) {
+              previewPinned = true;
+              partIndex = gIdx;
+              text = contentParts[gIdx];
+              partStartTime = 0;
+              const captionSegments = overlayCaptionActive && deps.overlayUsesCaptions(baseOverlay, overlayCfg)
+                ? overlayCfg.captionSync.segments
+                : null;
+              if (captionSegments?.length && gIdx < captionSegments.length) {
+                partStartTime = Number(captionSegments[gIdx]?.start ?? 0);
+              }
+            }
+          }
+
+          if (!previewPinned && contentParts.length > 0 && videoTime != null) {
             const captionSegments = overlayCaptionActive && deps.overlayUsesCaptions(baseOverlay, overlayCfg)
               ? overlayCfg.captionSync.segments
               : null;
@@ -447,9 +473,9 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
             } else {
               text = contentParts[partIndex];
             }
-            } else if (contentParts.length > 0) {
-              text = contentParts[0];
-          } else {
+          } else if (!previewPinned && contentParts.length > 0) {
+            text = contentParts[0];
+          } else if (!previewPinned) {
             text = rowText;
             contentParts = [rowText];
             fullTextForSync = rowText;
@@ -469,10 +495,13 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
 
       if (!text || String(text).trim() === '') return;
 
-      if (partIndex >= 0 && overlay.contentPartLineStyleOverrides?.[partIndex]) {
+      const styleOverrideIdx = overlay._previewEditLineIndex != null
+        ? Number(overlay._previewEditLineIndex)
+        : partIndex;
+      if (styleOverrideIdx >= 0 && overlay.contentPartLineStyleOverrides?.[styleOverrideIdx]) {
         overlay = {
           ...overlay,
-          ...overlay.contentPartLineStyleOverrides[partIndex],
+          ...overlay.contentPartLineStyleOverrides[styleOverrideIdx],
         };
       }
       
