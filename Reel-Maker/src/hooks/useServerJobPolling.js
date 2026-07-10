@@ -194,7 +194,7 @@ export function useServerJobPolling(params) {
     };
 
     const isVideoJob = serverJobType === 'video' || serverJobType === 'slideshow';
-    const pollMs = serverJobType === 'tts' ? 1000 : isVideoJob ? 800 : 2000;
+    const pollMs = serverJobType === 'tts' ? 1500 : isVideoJob ? 800 : 2000;
 
     const tick = async () => {
       try {
@@ -236,11 +236,21 @@ export function useServerJobPolling(params) {
           updateEta(progress);
         }
 
-        if (d.type === 'tts' && d.status === 'processing') {
+        if (d.type === 'tts' && (d.status === 'processing' || d.status === 'queued')) {
+          setServerProgress(progress);
+          updateEta(progress);
           await mergeTtsOutputs(d.outputFiles, {
             totalItems: d.totalItems,
             isDone: false,
           });
+          const total = d.totalItems || 0;
+          const completed = d.completedItems ?? 0;
+          const parallel = d.parallelJobs ?? 6;
+          if (total > 0) {
+            setLogs(
+              `TTS: ${completed}/${total} audio(s) ready — up to ${parallel} in parallel — ${progress}% overall`,
+            );
+          }
         }
 
         if (d.status === 'done') {
