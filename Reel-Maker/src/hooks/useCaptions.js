@@ -187,7 +187,7 @@ export function useCaptions({
   useEffect(() => () => stopPolling(), [stopPolling])
 
   const uploadFromVoiceFiles = useCallback(
-    async (files, videoFiles = []) => {
+    async (files, videoFiles = [], { language = 'auto' } = {}) => {
       const list = files?.length ? files : voiceFiles
       if (!list?.length) {
         setError('Pehle voice files upload karein (Upload tab).')
@@ -197,7 +197,7 @@ export function useCaptions({
       setUploading(true)
       try {
         const { jobId } = await api.uploadCaptionBatch(list, videoFiles, {
-          language: 'auto',
+          language,
         })
         setCaptionJobId(jobId)
         lastReadyCountRef.current = 0

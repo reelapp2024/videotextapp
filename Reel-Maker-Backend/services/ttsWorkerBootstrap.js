@@ -20,7 +20,7 @@ async function processTtsJob(job) {
     throw new Error('Invalid TTS job payload');
   }
 
-  console.log(`[tts-worker] item ${itemIndex + 1} for job ${parentJobId}`);
+  console.log(`[tts-worker] item ${itemIndex + 1} (${data.mode || 'basic'}) for job ${parentJobId}`);
   return runTtsItemJob(data);
 }
 

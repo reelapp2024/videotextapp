@@ -7,30 +7,39 @@ const { startEmbeddedExportWorker } = require('./services/exportWorkerBootstrap'
 const { startEmbeddedCaptionWorker } = require('./services/captionWorkerBootstrap');
 const { startEmbeddedTtsWorker } = require('./services/ttsWorkerBootstrap');
 const { getRedisUrl } = require('./queues/connection');
+const { probeRedis } = require('./services/redisProbe');
 const { startWhisperServerPool } = require('./services/whisperServerPool');
 const { logEncodeCapabilities } = require('./services/encodeOptions');
 
 const PORT = process.env.PORT || 3000;
+// Bind IPv4 explicitly — avoids intermittent Windows localhost/::1 NetworkError from the frontend
+const HOST = process.env.HOST || '0.0.0.0';
 
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/healthz`);
-  
-  logEncodeCapabilities();
+function disableBullEnv() {
+  process.env.USE_BULL_EXPORT = 'false';
+  process.env.USE_BULL_CAPTIONS = 'false';
+  process.env.USE_BULL_TTS = 'false';
+}
 
-  connectMongo().catch((err) => {
-    console.warn('[server] Mongo connect warning:', err.message);
-  });
+async function startBullWorkersIfRedisOk() {
+  const redis = await probeRedis({ timeoutMs: 1000 });
+  const wantBull = useBullExport() || useBullCaptions() || useBullTts();
 
-  startWhisperServerPool()
-    .then((ok) => {
-      if (ok) {
-        console.log('[whisper-pool] Model pre-loaded — Generate captions will be faster on first click');
-      }
-    })
-    .catch((err) => {
-      console.warn('[whisper-pool] pre-load failed:', err.message);
-    });
+  if (wantBull && !redis.ok) {
+    console.warn(
+      `[redis] Not reachable at ${redis.host}:${redis.port} (${redis.reason || 'down'}) — Bull queues OFF, in-process mode ON.`
+    );
+    console.warn('[redis] To enable queues: start Redis on that port, or keep USE_BULL_*=false in .env.');
+    disableBullEnv();
+    return;
+  }
+
+  if (!wantBull) {
+    console.log('[redis] Bull disabled via USE_BULL_* — in-process TTS/captions/export');
+    return;
+  }
+
+  console.log(`[redis] OK at ${getRedisUrl()} — starting Bull workers`);
 
   if (useBullExport() && process.env.EMBED_EXPORT_WORKER !== 'false') {
     console.log(`[export-queue] Bull enabled — Redis ${getRedisUrl()}`);
@@ -79,6 +88,32 @@ const server = app.listen(PORT, () => {
   } else {
     console.log('[tts-queue] Bull disabled (USE_BULL_TTS=false) — in-process TTS only');
   }
+}
+
+const server = app.listen(PORT, HOST, () => {
+  console.log(`🚀 Server running on http://127.0.0.1:${PORT} (bound ${HOST})`);
+  console.log(`📊 Health check: http://127.0.0.1:${PORT}/healthz`);
+
+  logEncodeCapabilities();
+
+  connectMongo().catch((err) => {
+    console.warn('[server] Mongo connect warning:', err.message);
+  });
+
+  startWhisperServerPool()
+    .then((ok) => {
+      if (ok) {
+        console.log('[whisper-pool] Model pre-loaded — Generate captions will be faster on first click');
+      }
+    })
+    .catch((err) => {
+      console.warn('[whisper-pool] pre-load failed:', err.message);
+    });
+
+  startBullWorkersIfRedisOk().catch((err) => {
+    console.warn('[redis] startup probe failed:', err.message);
+    disableBullEnv();
+  });
 });
 
 server.on('error', (err) => {

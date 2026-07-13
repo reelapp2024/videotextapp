@@ -23,14 +23,7 @@ export function useTTS(params) {
     voiceQualityMode,
   } = params;
 
-  const generateAllTTS = useCallback(async () => {
-    if (excelData.length === 0) {
-      alert('Please upload an Excel/CSV file first.');
-      return;
-    }
-
-    const settings = getFinalVoiceSettings();
-
+  const buildExcelTexts = useCallback(() => {
     let texts = [];
     if (ttsMode === 'row') {
       const rowIdxs = ttsSelectedRows.length > 0 ? ttsSelectedRows : excelData.map((_, i) => i);
@@ -47,6 +40,26 @@ export function useTTS(params) {
       const col = Math.min(ttsColumn, maxCol);
       texts = excelData.map((row) => (Array.isArray(row) ? String(row[col] ?? '') : ''));
     }
+    return texts;
+  }, [excelData, ttsColumn, ttsMode, ttsSelectedRows]);
+
+  const generateAllTTS = useCallback(async (overrides = null) => {
+    if (excelData.length === 0) {
+      alert('Please upload an Excel/CSV file first.');
+      return;
+    }
+
+    // Prefer explicit studio selections (style/pace/voice) over legacy mood stack
+    const settings = overrides && typeof overrides === 'object'
+      ? {
+          rate: overrides.rate,
+          pitch: overrides.pitch ?? 1,
+          volume: overrides.volume ?? 1,
+        }
+      : getFinalVoiceSettings();
+    const speaker = overrides?.speaker || ttsSpeaker;
+    const quality = overrides?.quality || voiceQualityMode;
+    const texts = buildExcelTexts();
 
     const nonEmptyCount = texts.filter((t) => String(t ?? '').trim().length > 0).length;
     if (nonEmptyCount === 0) {
@@ -61,20 +74,27 @@ export function useTTS(params) {
     setTtsGenerating(true);
     setTtsProgress(0);
     setGeneratedAudios([]);
-    setLogs('Generating TTS on server (Neural voices)...');
+    const styleLabel = overrides?.styleId || overrides?.paceId
+      ? `style=${overrides.styleId || '—'} pace=${overrides.paceId || '—'} accent=${overrides.accent || '—'}`
+      : `Neural voice: ${speaker}`;
+    setLogs(`Generating Basic TTS on server (${styleLabel})…`);
 
     try {
       const { jobId, totalItems } = await api.generateTTSOnServer({
         texts,
-        speaker: ttsSpeaker,
+        speaker,
         rate: settings.rate,
         pitch: settings.pitch,
         volume: settings.volume,
-        quality: voiceQualityMode,
+        quality,
         mode: ttsMode,
         ...(ttsMode === 'row'
           ? { rows: ttsSelectedRows.length > 0 ? ttsSelectedRows : excelData.map((_, i) => i) }
           : { column: ttsColumn }),
+        studio: 'basic',
+        styleId: overrides?.styleId,
+        paceId: overrides?.paceId,
+        accent: overrides?.accent,
       });
 
       setServerJobId(jobId);
@@ -82,7 +102,7 @@ export function useTTS(params) {
       setServerProgress(0);
       setServerJobType('tts');
       setTtsGenerating(false);
-      setLogs(`TTS generating on server... (${totalItems || texts.length} items, Neural voice: ${ttsSpeaker})`);
+      setLogs(`Basic TTS generating… (${totalItems || texts.length} items · ${speaker})`);
     } catch (e) {
       console.warn('Backend TTS failed:', e?.message);
       setTtsGenerating(false);
@@ -101,6 +121,7 @@ export function useTTS(params) {
     }
   }, [
     api,
+    buildExcelTexts,
     excelData,
     getFinalVoiceSettings,
     setGeneratedAudios,
@@ -117,6 +138,99 @@ export function useTTS(params) {
     ttsSpeaker,
     voiceQualityMode,
   ]);
+
+  /** Advanced batch — MUST receive live Advanced selections (voice/style/pace/accent) */
+  const generateAdvancedTTS = useCallback(
+    async (advancedOpts = {}) => {
+      if (excelData.length === 0) {
+        alert('Please upload an Excel/CSV file first.');
+        return;
+      }
+      if (!advancedOpts.voiceId && !advancedOpts.voiceName) {
+        alert('Select an Advanced voice before generating.');
+        return;
+      }
+
+      const texts = buildExcelTexts();
+      const nonEmptyCount = texts.filter((t) => String(t ?? '').trim().length > 0).length;
+      if (nonEmptyCount === 0) {
+        alert(
+          ttsMode === 'column'
+            ? 'Selected column has no text in any row. Please select a column that contains text.'
+            : 'No text found in selected rows. Please select rows that have content.'
+        );
+        return;
+      }
+
+      setTtsGenerating(true);
+      setTtsProgress(0);
+      setGeneratedAudios([]);
+      setLogs(
+        `Generating Advanced TTS (${advancedOpts.voiceName || advancedOpts.voiceId} · ${advancedOpts.emotion || 'style'} · ${advancedOpts.paceId || 'pace'} · ${advancedOpts.accent || 'accent'})…`
+      );
+
+      try {
+        const { jobId, totalItems, voice, speaker } = await api.generateAdvancedTTSOnServer({
+          texts,
+          quality: 'clear',
+          mode: ttsMode,
+          ...(ttsMode === 'row'
+            ? { rows: ttsSelectedRows.length > 0 ? ttsSelectedRows : excelData.map((_, i) => i) }
+            : { column: ttsColumn }),
+          voiceId: advancedOpts.voiceId,
+          voiceName: advancedOpts.voiceName,
+          voiceType: advancedOpts.voiceType,
+          accent: advancedOpts.accent,
+          emotion: advancedOpts.emotion,
+          speed: advancedOpts.speed,
+          pitch: advancedOpts.pitch,
+          emotionAmt: advancedOpts.emotionAmt,
+          stability: advancedOpts.stability,
+          similarity: advancedOpts.similarity,
+          cfgScale: advancedOpts.cfgScale,
+          temperature: advancedOpts.temperature,
+          language: advancedOpts.language,
+          sampleRate: advancedOpts.sampleRate,
+          precision: advancedOpts.precision || 'studio',
+          paceId: advancedOpts.paceId || 'natural',
+          cloneId: advancedOpts.cloneId,
+          engine: advancedOpts.engine || 'piper_local',
+          studio: 'advanced',
+        });
+
+        setServerJobId(jobId);
+        setServerProcessing(true);
+        setServerProgress(0);
+        setServerJobType('tts');
+        setTtsGenerating(false);
+        setLogs(
+          `Advanced TTS on server… (${totalItems || texts.length} · ${voice || advancedOpts.voiceName || speaker} · ${advancedOpts.accent || ''} · ${advancedOpts.emotion || ''} · ${advancedOpts.paceId || ''})`
+        );
+      } catch (e) {
+        console.warn('Advanced TTS failed:', e?.message);
+        setTtsGenerating(false);
+        const msg = e?.message || String(e);
+        setLogs(`Advanced TTS error: ${msg}`);
+        alert(`Advanced TTS failed:\n${msg}\n\nMake sure the backend is running.`);
+      }
+    },
+    [
+      api,
+      buildExcelTexts,
+      excelData,
+      setGeneratedAudios,
+      setLogs,
+      setServerJobId,
+      setServerJobType,
+      setServerProcessing,
+      setServerProgress,
+      setTtsGenerating,
+      setTtsProgress,
+      ttsColumn,
+      ttsMode,
+      ttsSelectedRows,
+    ]
+  );
 
   const addGeneratedAudioToVoiceLibrary = useCallback(
     async (audioUrl, filename) => {
@@ -187,6 +301,7 @@ export function useTTS(params) {
 
   return {
     generateAllTTS,
+    generateAdvancedTTS,
     addGeneratedAudioToVoiceLibrary,
     addAllGeneratedToVoiceLibrary,
     downloadSingleAudio,

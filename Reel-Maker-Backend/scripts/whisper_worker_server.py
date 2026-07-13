@@ -8,10 +8,40 @@ import os
 import sys
 import traceback
 
+LANG_PROMPTS = {
+    "hi": (
+        "यह हिंदी भाषा में बोला गया है। "
+        "हिंदी शब्दों को देवनागरी लिपि में लिखें। "
+        "कुछ अंग्रेजी शब्द भी हो सकते हैं।"
+    ),
+    "pa": (
+        "ਇਹ ਪੰਜਾਬੀ ਭਾਸ਼ਾ ਵਿੱਚ ਬੋਲਿਆ ਗਿਆ ਹੈ। "
+        "ਪੰਜਾਬੀ ਸ਼ਬਦਾਂ ਨੂੰ ਗੁਰਮੁਖੀ ਲਿਪੀ ਵਿੱਚ ਲਿਖੋ। "
+        "ਕੁਝ ਅੰਗਰੇਜ਼ੀ ਸ਼ਬਦ ਵੀ ਹੋ ਸਕਦੇ ਹਨ।"
+    ),
+    "en": (
+        "This is spoken in English. Transcribe clearly."
+    ),
+    "ur": (
+        "یہ اردو زبان میں بولا گیا ہے۔"
+    ),
+}
+
 DEFAULT_PROMPT = (
     "Mixed Hindi, English, and Punjabi speech. "
+    "हिंदी और ਪੰਜਾਬੀ शब्दों को सही लिपि में लिखें। "
     "Hinglish, Punjabi words, and English phrases in the same sentence."
 )
+
+
+def get_prompt_for_language(language):
+    """Return a language-specific initial_prompt so Whisper outputs the right script."""
+    env_prompt = os.environ.get("WHISPER_PROMPT")
+    if env_prompt:
+        return env_prompt
+    if language and language in LANG_PROMPTS:
+        return LANG_PROMPTS[language]
+    return DEFAULT_PROMPT
 
 
 def log(msg):
@@ -42,6 +72,9 @@ def transcribe(model, audio_path, output_path, language, model_size):
 
     beam_size = int(os.environ.get("WHISPER_BEAM_SIZE", "5"))
     best_of = int(os.environ.get("WHISPER_BEST_OF", str(beam_size)))
+    prompt = get_prompt_for_language(language)
+
+    log(f"[whisper-worker] transcribe lang={language} beam={beam_size} prompt={prompt[:60]}…")
 
     segments_iter, info = model.transcribe(
         audio_path,
@@ -51,7 +84,7 @@ def transcribe(model, audio_path, output_path, language, model_size):
         beam_size=beam_size,
         best_of=best_of,
         temperature=0.0,
-        initial_prompt=os.environ.get("WHISPER_PROMPT", DEFAULT_PROMPT),
+        initial_prompt=prompt,
         condition_on_previous_text=True,
     )
 

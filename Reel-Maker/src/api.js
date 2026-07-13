@@ -1,9 +1,11 @@
 /**
  * Backend API client - Video Text App
- * Base URL: VITE_API_URL (default http://localhost:3000 for dev)
+ * Base URL: VITE_API_URL (prefer 127.0.0.1 over localhost on Windows)
  */
 // Dev: use proxy ('' = same origin). Prod: set VITE_API_URL to backend URL
-const BASE = import.meta.env.VITE_API_URL || ''
+const RAW_BASE = import.meta.env.VITE_API_URL || ''
+// Windows often resolves "localhost" to ::1 while Node listens on IPv4 → intermittent NetworkError
+const BASE = String(RAW_BASE).replace(/localhost/gi, '127.0.0.1').replace(/\/$/, '')
 
 const getToken = () => localStorage.getItem('videoTextToken')
 const setToken = (t) => { if (t) localStorage.setItem('videoTextToken', t); else localStorage.removeItem('videoTextToken') }
@@ -14,6 +16,51 @@ const headers = (json = true) => {
   const t = getToken()
   if (t) h['Authorization'] = `Bearer ${t}`
   return h
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+function isNetworkFetchError(e) {
+  const name = e?.name || ''
+  const msg = String(e?.message || e || '')
+  return (
+    name === 'TypeError' ||
+    name === 'AbortError' ||
+    /NetworkError|Failed to fetch|network|fetch failed|Load failed|aborted|timed out|timeout/i.test(msg)
+  )
+}
+
+function friendlyNetworkError(e) {
+  const msg = String(e?.message || e || '')
+  if (/AbortError|aborted|timed out|timeout/i.test(e?.name || '') || /timed out|timeout/i.test(msg)) {
+    return 'TTS preview timed out. Backend may be busy — try again in a moment.'
+  }
+  const where = BASE || 'the Vite /api proxy'
+  return `Cannot reach backend (${where}). Start Reel-Maker-Backend (port 3002) and retry. Original: ${msg}`
+}
+
+/**
+ * Fetch with timeout + retries for flaky Windows localhost / brief backend restarts.
+ */
+async function fetchWithRetry(url, options = {}, { timeoutMs = 45000, retries = 2 } = {}) {
+  let lastErr
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const ctrl = new AbortController()
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs)
+    try {
+      const r = await fetch(url, { ...options, signal: ctrl.signal })
+      clearTimeout(timer)
+      return r
+    } catch (e) {
+      clearTimeout(timer)
+      lastErr = e
+      if (!isNetworkFetchError(e) || attempt === retries) {
+        throw new Error(friendlyNetworkError(e))
+      }
+      await sleep(350 * (attempt + 1))
+    }
+  }
+  throw new Error(friendlyNetworkError(lastErr))
 }
 
 const res = async (r) => {
@@ -186,6 +233,70 @@ export const api = {
 
   async fetchTTSVoices() {
     return res(await fetch(`${BASE}/api/tts/generate/voices`, { headers: headers() }))
+  },
+
+  /** Real Edge Neural sample (audio blob) — not browser speechSynthesis */
+  async previewTTSSample({ text, speaker, rate, pitch, volume, quality }) {
+    const r = await fetchWithRetry(
+      `${BASE}/api/tts/generate/preview`,
+      {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify({ text, speaker, rate, pitch, volume, quality }),
+      },
+      { timeoutMs: 25000, retries: 0 }
+    )
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}))
+      throw new Error(err.error || err.message || r.statusText)
+    }
+    return r.blob()
+  },
+
+  async fetchAdvancedTTSVoices() {
+    return res(await fetchWithRetry(`${BASE}/api/tts/generate/advanced/voices`, { headers: headers() }, { timeoutMs: 15000, retries: 1 }))
+  },
+
+  async fetchAdvancedTTSStatus() {
+    return res(await fetchWithRetry(`${BASE}/api/tts/generate/advanced/status`, { headers: headers() }, { timeoutMs: 10000, retries: 1 }))
+  },
+
+  async previewAdvancedTTS(payload) {
+    const r = await fetchWithRetry(
+      `${BASE}/api/tts/generate/advanced/preview`,
+      {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(payload),
+      },
+      { timeoutMs: 45000, retries: 0 }
+    )
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}))
+      throw new Error(err.error || err.message || r.statusText)
+    }
+    return r.blob()
+  },
+
+  async generateAdvancedTTSOnServer(payload) {
+    return res(await fetch(`${BASE}/api/tts/generate/advanced`, {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify(payload),
+    }))
+  },
+
+  async uploadAdvancedClone(file) {
+    const fd = new FormData()
+    fd.append('audio', file)
+    const h = {}
+    const t = getToken()
+    if (t) h['Authorization'] = `Bearer ${t}`
+    return res(await fetch(`${BASE}/api/tts/generate/advanced/clone`, {
+      method: 'POST',
+      headers: h,
+      body: fd,
+    }))
   },
 
   async generateTTSOnServer({ texts, speaker, rate, pitch, volume, quality, excelData, column, mode, rows }) {

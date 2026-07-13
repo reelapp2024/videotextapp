@@ -1,6 +1,7 @@
 const Queue = require('bull');
 const { getBullRedisConfig, getRedisPrefixKey } = require('./connection');
 const { getTtsQueueName } = require('../services/bullTtsConfig');
+const { logQueueError } = require('../services/redisProbe');
 
 /** @type {import('bull').Queue|null} */
 let ttsQueue = null;
@@ -29,7 +30,7 @@ function getTtsQueue() {
   ttsQueue = new Queue(name, opts);
 
   ttsQueue.on('error', (err) => {
-    console.error('[tts-queue] queue error:', err.message);
+    logQueueError('[tts-queue]', err);
   });
 
   ttsQueue.on('ready', () => {
@@ -45,7 +46,8 @@ function itemBullJobId(parentJobId, itemIndex) {
 
 /**
  * Enqueue one Bull job per TTS text item (flattened queue).
- * @param {object} parent — { jobId, speaker, rate, pitch, volume, quality, outDir }
+ * Supports Basic (Edge) and Advanced (Piper + studio FX) via `mode`.
+ * @param {object} parent
  * @param {Array<{ itemIndex: number, text: string }>} items
  */
 async function addBulkTtsJobs(parent, items) {
@@ -57,8 +59,10 @@ async function addBulkTtsJobs(parent, items) {
   await queue.isReady();
 
   const parentJobId = String(parent.jobId);
+  const mode = parent.mode === 'advanced' ? 'advanced' : 'basic';
   const jobs = items.map(({ itemIndex, text }) => ({
     data: {
+      mode,
       parentJobId,
       itemIndex,
       text,
@@ -68,6 +72,7 @@ async function addBulkTtsJobs(parent, items) {
       volume: parent.volume,
       quality: parent.quality,
       outDir: parent.outDir,
+      advancedOpts: mode === 'advanced' ? parent.advancedOpts || {} : undefined,
     },
     opts: {
       jobId: itemBullJobId(parentJobId, itemIndex),
@@ -77,7 +82,7 @@ async function addBulkTtsJobs(parent, items) {
   }));
 
   await queue.addBulk(jobs);
-  console.log(`[tts-queue] enqueued ${jobs.length} item job(s) for parent ${parentJobId}`);
+  console.log(`[tts-queue] enqueued ${jobs.length} ${mode} item job(s) for parent ${parentJobId}`);
 }
 
 /**

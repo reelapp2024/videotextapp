@@ -33,6 +33,7 @@ async function tryEnqueueTtsBatch(payload) {
       progress: 1,
       totalItems: items.length,
       'config.parallelJobs': getTtsWorkerConcurrency(),
+      'config.mode': payload.mode === 'advanced' ? 'advanced' : 'basic',
     });
 
     await addBulkTtsJobs(payload, items);

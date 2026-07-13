@@ -3,7 +3,7 @@ import { buildExportVideoSlots } from '../utils/exportVideoSlots';
 import { formatDurationMs } from '../utils/formatExportTime';
 
 function ttsSortKey(name) {
-  const m = String(name || '').match(/tts_(\d+)\.mp3/i);
+  const m = String(name || '').match(/tts_(\d+)\.(?:mp3|wav|m4a|ogg)/i);
   return m ? parseInt(m[1], 10) : 0;
 }
 
@@ -111,8 +111,11 @@ export function useServerJobPolling(params) {
     };
 
     const mergeTtsOutputs = async (outputFiles, { zipUrl, totalItems, isDone }) => {
-      const mp3Files = (outputFiles || []).filter((f) => /\.mp3$/i.test(String(f)));
-      const fresh = mp3Files.filter((f) => !knownTtsFilesRef.current.has(f));
+      // Basic → .mp3 (Edge); Advanced → .wav (Piper) — accept both
+      const audioFiles = (outputFiles || []).filter((f) =>
+        /\.(mp3|wav|m4a|ogg)$/i.test(String(f))
+      );
+      const fresh = audioFiles.filter((f) => !knownTtsFilesRef.current.has(f));
       if (fresh.length === 0 && !isDone) return;
 
       for (const f of fresh) knownTtsFilesRef.current.add(f);
@@ -130,7 +133,7 @@ export function useServerJobPolling(params) {
       }
 
       const count = knownTtsFilesRef.current.size;
-      const total = totalItems || mp3Files.length || count;
+      const total = totalItems || audioFiles.length || count;
       if (isDone) {
         setGeneratedAudios((prev) =>
           prev.map((a) => (zipUrl ? { ...a, zipUrl } : a))

@@ -149,16 +149,19 @@ function isEdgeTtsFailurePath(p) {
 }
 function computeTtsTimeoutMs(text) {
   const len = String(text ?? "").length;
-  const base = 12e4;
-  const perChar = 80;
-  const max = 3e5;
+  // Preview / short lines — fail fast (was 120s+ and felt "stuck")
+  if (len <= 400) return Math.min(22000, 7000 + len * 35);
+  const base = 45e3;
+  const perChar = 45;
+  const max = 18e4;
   return Math.min(max, base + len * perChar);
 }
 async function synthesizeEdgeTts(opts) {
   const { text, outputPath, xmlLang, voiceShort, innerContent } = opts;
   const timeoutMs = opts.timeoutMs ?? computeTtsTimeoutMs(text);
-  const idleAfterAudioMs = 6e4;
-  const connectWaitMs = Math.max(timeoutMs, 18e4);
+  // Never floor to 180s — that made Basic Play hang for minutes
+  const idleAfterAudioMs = opts.idleAfterAudioMs ?? Math.min(25e3, Math.max(6e3, Math.round(timeoutMs * 0.6)));
+  const connectWaitMs = opts.connectWaitMs ?? Math.min(Math.max(timeoutMs, 8e3), 9e4);
   let { rate, pitch, volume } = opts;
   if (rate === "default") rate = "+0%";
   if (pitch === "default") pitch = "+0Hz";

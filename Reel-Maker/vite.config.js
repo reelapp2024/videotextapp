@@ -15,8 +15,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api': { target: 'http://localhost:3001', changeOrigin: true },
-      '/uploads': { target: 'http://localhost:3001', changeOrigin: true },
+      // Must match Reel-Maker-Backend PORT (3002 in backend .env)
+      '/api': { target: 'http://127.0.0.1:3002', changeOrigin: true, timeout: 120000 },
+      '/uploads': { target: 'http://127.0.0.1:3002', changeOrigin: true, timeout: 120000 },
     },
   },
 })

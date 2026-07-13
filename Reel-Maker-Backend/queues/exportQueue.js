@@ -1,6 +1,7 @@
 const Queue = require('bull');
 const { getBullRedisConfig, getRedisPrefixKey } = require('./connection');
 const { getExportQueueName } = require('../services/bullExportConfig');
+const { logQueueError } = require('../services/redisProbe');
 
 /** @type {import('bull').Queue|null} */
 let exportQueue = null;
@@ -38,7 +39,7 @@ function getExportQueue() {
   exportQueue = new Queue(name, opts);
 
   exportQueue.on('error', (err) => {
-    console.error('[redis] queue error:', err.message);
+    logQueueError('[redis]', err);
   });
 
   exportQueue.on('ready', () => {

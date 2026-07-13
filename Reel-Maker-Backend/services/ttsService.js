@@ -62,20 +62,21 @@ const VOICE_LIBRARY = {
   en_emma_ml: { voice: "en-US-EmmaMultilingualNeural", lang: "en-US", gender: "female", label: "Emma \u2014 USA multilingual", category: "English USA", pitchTier: "mid", basePitchHz: 0 },
   en_ava_ml: { voice: "en-US-AvaMultilingualNeural", lang: "en-US", gender: "female", label: "Ava \u2014 USA multilingual", category: "English USA", pitchTier: "mid", basePitchHz: 1 },
   en_andrew_ml: { voice: "en-US-AndrewMultilingualNeural", lang: "en-US", gender: "male", label: "Andrew \u2014 USA multilingual", category: "English USA", pitchTier: "mid", basePitchHz: -3 },
-  // Additional US originals (append-only; existing voices untouched)
-  en_amber: { voice: "en-US-AmberNeural", lang: "en-US", gender: "female", label: "Amber \u2014 USA", category: "English USA", pitchTier: "mid", basePitchHz: 1 },
-  en_ashley: { voice: "en-US-AshleyNeural", lang: "en-US", gender: "female", label: "Ashley \u2014 USA", category: "English USA", pitchTier: "high", basePitchHz: 4 },
-  en_cora: { voice: "en-US-CoraNeural", lang: "en-US", gender: "female", label: "Cora \u2014 USA", category: "English USA", pitchTier: "mid", basePitchHz: 0 },
-  en_elizabeth: { voice: "en-US-ElizabethNeural", lang: "en-US", gender: "female", label: "Elizabeth \u2014 USA", category: "English USA", pitchTier: "mid", basePitchHz: 1 },
-  en_jane: { voice: "en-US-JaneNeural", lang: "en-US", gender: "female", label: "Jane \u2014 USA", category: "English USA", pitchTier: "mid", basePitchHz: 0 },
-  en_monica: { voice: "en-US-MonicaNeural", lang: "en-US", gender: "female", label: "Monica \u2014 USA", category: "English USA", pitchTier: "mid", basePitchHz: 2 },
-  en_nancy: { voice: "en-US-NancyNeural", lang: "en-US", gender: "female", label: "Nancy \u2014 USA", category: "English USA", pitchTier: "high", basePitchHz: 5 },
-  en_sara: { voice: "en-US-SaraNeural", lang: "en-US", gender: "female", label: "Sara \u2014 USA", category: "English USA", pitchTier: "high", basePitchHz: 4 },
-  en_brandon: { voice: "en-US-BrandonNeural", lang: "en-US", gender: "male", label: "Brandon \u2014 USA", category: "English USA", pitchTier: "mid", basePitchHz: -3 },
-  en_davis: { voice: "en-US-DavisNeural", lang: "en-US", gender: "male", label: "Davis \u2014 USA", category: "English USA", pitchTier: "low", basePitchHz: -6 },
-  en_jacob: { voice: "en-US-JacobNeural", lang: "en-US", gender: "male", label: "Jacob \u2014 USA", category: "English USA", pitchTier: "low", basePitchHz: -5 },
-  en_jason: { voice: "en-US-JasonNeural", lang: "en-US", gender: "male", label: "Jason \u2014 USA", category: "English USA", pitchTier: "mid", basePitchHz: -2 },
-  en_tony: { voice: "en-US-TonyNeural", lang: "en-US", gender: "male", label: "Tony \u2014 USA", category: "English USA", pitchTier: "low", basePitchHz: -7 },
+  // Additional US slots — Edge free TTS only supports a subset of Azure Neural names.
+  // Map aliases to Edge-supported ShortNames (Tony/Nancy/Jason/etc. are rejected by Edge).
+  en_amber: { voice: "en-US-AvaNeural", lang: "en-US", gender: "female", label: "Amber \u2014 USA (Ava engine)", category: "English USA", pitchTier: "mid", basePitchHz: 1 },
+  en_ashley: { voice: "en-US-AnaNeural", lang: "en-US", gender: "female", label: "Ashley \u2014 USA (Ana engine)", category: "English USA", pitchTier: "high", basePitchHz: 4 },
+  en_cora: { voice: "en-US-EmmaNeural", lang: "en-US", gender: "female", label: "Cora \u2014 USA (Emma engine)", category: "English USA", pitchTier: "mid", basePitchHz: 0 },
+  en_elizabeth: { voice: "en-US-MichelleNeural", lang: "en-US", gender: "female", label: "Elizabeth \u2014 USA (Michelle engine)", category: "English USA", pitchTier: "mid", basePitchHz: 1 },
+  en_jane: { voice: "en-US-JennyNeural", lang: "en-US", gender: "female", label: "Jane \u2014 USA (Jenny engine)", category: "English USA", pitchTier: "mid", basePitchHz: 0 },
+  en_monica: { voice: "en-US-MichelleNeural", lang: "en-US", gender: "female", label: "Monica \u2014 USA (Michelle engine)", category: "English USA", pitchTier: "mid", basePitchHz: 2 },
+  en_nancy: { voice: "en-US-AnaNeural", lang: "en-US", gender: "female", label: "Nancy \u2014 USA (Ana engine)", category: "English USA", pitchTier: "high", basePitchHz: 5 },
+  en_sara: { voice: "en-US-AriaNeural", lang: "en-US", gender: "female", label: "Sara \u2014 USA (Aria engine)", category: "English USA", pitchTier: "high", basePitchHz: 4 },
+  en_brandon: { voice: "en-US-GuyNeural", lang: "en-US", gender: "male", label: "Brandon \u2014 USA (Guy engine)", category: "English USA", pitchTier: "mid", basePitchHz: -3 },
+  en_davis: { voice: "en-US-BrianNeural", lang: "en-US", gender: "male", label: "Davis \u2014 USA (Brian engine)", category: "English USA", pitchTier: "low", basePitchHz: -6 },
+  en_jacob: { voice: "en-US-ChristopherNeural", lang: "en-US", gender: "male", label: "Jacob \u2014 USA (Christopher engine)", category: "English USA", pitchTier: "low", basePitchHz: -5 },
+  en_jason: { voice: "en-US-AndrewNeural", lang: "en-US", gender: "male", label: "Jason \u2014 USA (Andrew engine)", category: "English USA", pitchTier: "mid", basePitchHz: -2 },
+  en_tony: { voice: "en-US-EricNeural", lang: "en-US", gender: "male", label: "Tony \u2014 USA (Eric engine)", category: "English USA", pitchTier: "low", basePitchHz: -7 },
   // ── Punjabi — Edge has no pa-IN Neural; hi-IN + US voices with xml:lang pa-IN (romanized Punjabi best) ──
   pa_swara: { voice: "hi-IN-SwaraNeural", lang: "pa-IN", gender: "female", label: "Swara \u2014 Punjabi (female)", category: "Punjabi", pitchTier: "high", basePitchHz: 5 },
   pa_madhur: { voice: "hi-IN-MadhurNeural", lang: "pa-IN", gender: "male", label: "Madhur \u2014 Punjabi (male, deep)", category: "Punjabi", pitchTier: "low", basePitchHz: -10 },
@@ -109,6 +110,59 @@ const VOICE_LIBRARY = {
   en_in_neerja: { voice: "en-IN-NeerjaNeural", lang: "en-IN", gender: "female", label: "Neerja (India English)", category: "English IN", pitchTier: "mid", basePitchHz: 2 },
   en_in_prabhat: { voice: "en-IN-PrabhatNeural", lang: "en-IN", gender: "male", label: "Prabhat (India English)", category: "English IN", pitchTier: "low", basePitchHz: -7 },
   en_in_neerja_exp: { voice: "en-IN-NeerjaExpressiveNeural", lang: "en-IN", gender: "female", label: "Neerja expressive (India)", category: "English IN", pitchTier: "high", basePitchHz: 5 },
+  // ── English global (Edge-supported ShortNames — Advanced roster) ──
+  en_hk_yan: { voice: "en-HK-YanNeural", lang: "en-HK", gender: "female", label: "Yan \u2014 Hong Kong", category: "English HK", pitchTier: "mid", basePitchHz: 2 },
+  en_hk_sam: { voice: "en-HK-SamNeural", lang: "en-HK", gender: "male", label: "Sam \u2014 Hong Kong", category: "English HK", pitchTier: "mid", basePitchHz: -3 },
+  en_ke_asilia: { voice: "en-KE-AsiliaNeural", lang: "en-KE", gender: "female", label: "Asilia \u2014 Kenya", category: "English KE", pitchTier: "mid", basePitchHz: 2 },
+  en_ke_chilemba: { voice: "en-KE-ChilembaNeural", lang: "en-KE", gender: "male", label: "Chilemba \u2014 Kenya", category: "English KE", pitchTier: "low", basePitchHz: -5 },
+  en_ng_ezinne: { voice: "en-NG-EzinneNeural", lang: "en-NG", gender: "female", label: "Ezinne \u2014 Nigeria", category: "English NG", pitchTier: "mid", basePitchHz: 3 },
+  en_ng_abeo: { voice: "en-NG-AbeoNeural", lang: "en-NG", gender: "male", label: "Abeo \u2014 Nigeria", category: "English NG", pitchTier: "mid", basePitchHz: -4 },
+  en_ph_rosa: { voice: "en-PH-RosaNeural", lang: "en-PH", gender: "female", label: "Rosa \u2014 Philippines", category: "English PH", pitchTier: "high", basePitchHz: 4 },
+  en_ph_james: { voice: "en-PH-JamesNeural", lang: "en-PH", gender: "male", label: "James \u2014 Philippines", category: "English PH", pitchTier: "mid", basePitchHz: -3 },
+  en_sg_luna: { voice: "en-SG-LunaNeural", lang: "en-SG", gender: "female", label: "Luna \u2014 Singapore", category: "English SG", pitchTier: "high", basePitchHz: 5 },
+  en_sg_wayne: { voice: "en-SG-WayneNeural", lang: "en-SG", gender: "male", label: "Wayne \u2014 Singapore", category: "English SG", pitchTier: "mid", basePitchHz: -3 },
+  en_tz_imani: { voice: "en-TZ-ImaniNeural", lang: "en-TZ", gender: "female", label: "Imani \u2014 Tanzania", category: "English TZ", pitchTier: "mid", basePitchHz: 2 },
+  en_tz_elimu: { voice: "en-TZ-ElimuNeural", lang: "en-TZ", gender: "male", label: "Elimu \u2014 Tanzania", category: "English TZ", pitchTier: "low", basePitchHz: -5 },
+  en_za_leah: { voice: "en-ZA-LeahNeural", lang: "en-ZA", gender: "female", label: "Leah \u2014 South Africa", category: "English ZA", pitchTier: "mid", basePitchHz: 2 },
+  en_za_luke: { voice: "en-ZA-LukeNeural", lang: "en-ZA", gender: "male", label: "Luke \u2014 South Africa", category: "English ZA", pitchTier: "mid", basePitchHz: -4 },
+  // ── Advanced fill — multilingual / EU (unique ShortNames, English-capable) ──
+  fr_eloise: { voice: "fr-FR-EloiseNeural", lang: "fr-FR", gender: "female", label: "Eloise (French youth)", category: "International", pitchTier: "high", basePitchHz: 6 },
+  fr_vivienne_ml: { voice: "fr-FR-VivienneMultilingualNeural", lang: "fr-FR", gender: "female", label: "Vivienne multilingual", category: "International", pitchTier: "mid", basePitchHz: 2 },
+  fr_remy_ml: { voice: "fr-FR-RemyMultilingualNeural", lang: "fr-FR", gender: "male", label: "Remy multilingual", category: "International", pitchTier: "low", basePitchHz: -5 },
+  de_amala: { voice: "de-DE-AmalaNeural", lang: "de-DE", gender: "female", label: "Amala (German)", category: "International", pitchTier: "high", basePitchHz: 4 },
+  de_seraphina_ml: { voice: "de-DE-SeraphinaMultilingualNeural", lang: "de-DE", gender: "female", label: "Seraphina multilingual", category: "International", pitchTier: "mid", basePitchHz: 2 },
+  de_florian_ml: { voice: "de-DE-FlorianMultilingualNeural", lang: "de-DE", gender: "male", label: "Florian multilingual", category: "International", pitchTier: "low", basePitchHz: -6 },
+  de_killian: { voice: "de-DE-KillianNeural", lang: "de-DE", gender: "male", label: "Killian (German)", category: "International", pitchTier: "low", basePitchHz: -7 },
+  de_leni: { voice: "de-CH-LeniNeural", lang: "de-CH", gender: "female", label: "Leni (Swiss German)", category: "International", pitchTier: "high", basePitchHz: 5 },
+  de_jan: { voice: "de-CH-JanNeural", lang: "de-CH", gender: "male", label: "Jan (Swiss German)", category: "International", pitchTier: "mid", basePitchHz: -4 },
+  nl_fenna: { voice: "nl-NL-FennaNeural", lang: "nl-NL", gender: "female", label: "Fenna (Dutch)", category: "International", pitchTier: "high", basePitchHz: 5 },
+  nl_colette: { voice: "nl-NL-ColetteNeural", lang: "nl-NL", gender: "female", label: "Colette (Dutch)", category: "International", pitchTier: "mid", basePitchHz: 2 },
+  nl_maarten: { voice: "nl-NL-MaartenNeural", lang: "nl-NL", gender: "male", label: "Maarten (Dutch)", category: "International", pitchTier: "low", basePitchHz: -6 },
+  sv_sofie: { voice: "sv-SE-SofieNeural", lang: "sv-SE", gender: "female", label: "Sofie (Swedish)", category: "International", pitchTier: "high", basePitchHz: 4 },
+  sv_mattias: { voice: "sv-SE-MattiasNeural", lang: "sv-SE", gender: "male", label: "Mattias (Swedish)", category: "International", pitchTier: "low", basePitchHz: -5 },
+  nb_pernille: { voice: "nb-NO-PernilleNeural", lang: "nb-NO", gender: "female", label: "Pernille (Norwegian)", category: "International", pitchTier: "high", basePitchHz: 4 },
+  nb_finn: { voice: "nb-NO-FinnNeural", lang: "nb-NO", gender: "male", label: "Finn (Norwegian)", category: "International", pitchTier: "low", basePitchHz: -5 },
+  fi_noora: { voice: "fi-FI-NooraNeural", lang: "fi-FI", gender: "female", label: "Noora (Finnish)", category: "International", pitchTier: "high", basePitchHz: 4 },
+  fi_harri: { voice: "fi-FI-HarriNeural", lang: "fi-FI", gender: "male", label: "Harri (Finnish)", category: "International", pitchTier: "low", basePitchHz: -6 },
+  da_christel: { voice: "da-DK-ChristelNeural", lang: "da-DK", gender: "female", label: "Christel (Danish)", category: "International", pitchTier: "mid", basePitchHz: 3 },
+  da_jeppe: { voice: "da-DK-JeppeNeural", lang: "da-DK", gender: "male", label: "Jeppe (Danish)", category: "International", pitchTier: "low", basePitchHz: -5 },
+  pl_zofia: { voice: "pl-PL-ZofiaNeural", lang: "pl-PL", gender: "female", label: "Zofia (Polish)", category: "International", pitchTier: "mid", basePitchHz: 2 },
+  pl_marek: { voice: "pl-PL-MarekNeural", lang: "pl-PL", gender: "male", label: "Marek (Polish)", category: "International", pitchTier: "low", basePitchHz: -6 },
+  it_isabella: { voice: "it-IT-IsabellaNeural", lang: "it-IT", gender: "female", label: "Isabella (Italian)", category: "International", pitchTier: "high", basePitchHz: 3 },
+  it_giuseppe_ml: { voice: "it-IT-GiuseppeMultilingualNeural", lang: "it-IT", gender: "male", label: "Giuseppe multilingual", category: "International", pitchTier: "low", basePitchHz: -5 },
+  pt_thalita_ml: { voice: "pt-BR-ThalitaMultilingualNeural", lang: "pt-BR", gender: "female", label: "Thalita multilingual", category: "International", pitchTier: "high", basePitchHz: 4 },
+  pt_duarte: { voice: "pt-PT-DuarteNeural", lang: "pt-PT", gender: "male", label: "Duarte (Portuguese)", category: "International", pitchTier: "low", basePitchHz: -6 },
+  pt_raquel: { voice: "pt-PT-RaquelNeural", lang: "pt-PT", gender: "female", label: "Raquel (Portuguese)", category: "International", pitchTier: "mid", basePitchHz: 2 },
+  fil_blessica: { voice: "fil-PH-BlessicaNeural", lang: "fil-PH", gender: "female", label: "Blessica (Filipino)", category: "International", pitchTier: "high", basePitchHz: 5 },
+  fil_angelo: { voice: "fil-PH-AngeloNeural", lang: "fil-PH", gender: "male", label: "Angelo (Filipino)", category: "International", pitchTier: "mid", basePitchHz: -3 },
+  id_gadis: { voice: "id-ID-GadisNeural", lang: "id-ID", gender: "female", label: "Gadis (Indonesian)", category: "International", pitchTier: "high", basePitchHz: 4 },
+  id_ardi: { voice: "id-ID-ArdiNeural", lang: "id-ID", gender: "male", label: "Ardi (Indonesian)", category: "International", pitchTier: "low", basePitchHz: -5 },
+  ro_emil: { voice: "ro-RO-EmilNeural", lang: "ro-RO", gender: "male", label: "Emil (Romanian)", category: "International", pitchTier: "low", basePitchHz: -6 },
+  ro_alina: { voice: "ro-RO-AlinaNeural", lang: "ro-RO", gender: "female", label: "Alina (Romanian)", category: "International", pitchTier: "mid", basePitchHz: 2 },
+  el_nestoras: { voice: "el-GR-NestorasNeural", lang: "el-GR", gender: "male", label: "Nestoras (Greek)", category: "International", pitchTier: "low", basePitchHz: -6 },
+  el_athina: { voice: "el-GR-AthinaNeural", lang: "el-GR", gender: "female", label: "Athina (Greek)", category: "International", pitchTier: "mid", basePitchHz: 2 },
+  cs_antonin: { voice: "cs-CZ-AntoninNeural", lang: "cs-CZ", gender: "male", label: "Antonin (Czech)", category: "International", pitchTier: "low", basePitchHz: -6 },
+  cs_vlasta: { voice: "cs-CZ-VlastaNeural", lang: "cs-CZ", gender: "female", label: "Vlasta (Czech)", category: "International", pitchTier: "mid", basePitchHz: 1 },
   // ── Indian regional ──
   bn_bashkar: { voice: "bn-IN-BashkarNeural", lang: "bn-IN", gender: "male", label: "Bashkar (Bengali)", category: "Indian Regional", pitchTier: "low", basePitchHz: -6 },
   bn_tanishaa: { voice: "bn-IN-TanishaaNeural", lang: "bn-IN", gender: "female", label: "Tanishaa (Bengali)", category: "Indian Regional", pitchTier: "high", basePitchHz: 5 },
@@ -206,21 +260,27 @@ function ttsErrMsg(e) {
   if (typeof e === "string") return e;
   return String(e) || "Unknown error";
 }
-async function generateTTS(text, outputPath, speaker = "en_jenny", rate = "+0%", pitch = "+0Hz", volume = "+0%", quality = "balanced") {
-  const cfg = resolveVoice(speaker);
+async function generateTTS(text, outputPath, speaker = "en_jenny", rate = "+0%", pitch = "+0Hz", volume = "+0%", quality = "balanced", opts = {}) {
+  let cfg = resolveVoice(speaker);
   const effectivePitch = (0, import_ttsTextNormalize.mergePitchHz)(pitch, cfg.basePitchHz);
-  const timeoutMs = (0, import_edgeTtsClient.computeTtsTimeoutMs)(text);
-  const maxAttempts = 6;
-  const runOnce = async (innerContent) => {
+  const fast = !!(opts && (opts.fast || opts.preview));
+  const timeoutMs = fast
+    ? Math.min(18e3, (0, import_edgeTtsClient.computeTtsTimeoutMs)(text))
+    : (0, import_edgeTtsClient.computeTtsTimeoutMs)(text);
+  const maxAttempts = fast ? 2 : 6;
+  const retryBaseMs = fast ? 250 : 1200;
+  const runOnce = async (innerContent, voiceCfg = cfg) => {
     await (0, import_edgeTtsClient.synthesizeEdgeTts)({
       text,
       outputPath,
-      xmlLang: cfg.lang,
-      voiceShort: cfg.voice,
+      xmlLang: voiceCfg.lang,
+      voiceShort: voiceCfg.voice,
       rate,
       pitch: effectivePitch,
       volume,
       timeoutMs,
+      connectWaitMs: fast ? timeoutMs : undefined,
+      idleAfterAudioMs: fast ? Math.min(12e3, timeoutMs) : undefined,
       innerContent
     });
   };
@@ -233,17 +293,45 @@ async function generateTTS(text, outputPath, speaker = "en_jenny", rate = "+0%",
     } catch (e) {
       lastErr = e instanceof Error ? e : new Error(ttsErrMsg(e));
       const msg = lastErr.message;
+      // Edge free TTS rejects some Azure-only ShortNames — fall back by gender
+      if (/unsupported voice/i.test(msg)) {
+        const fallbackId = (cfg.gender || "").toLowerCase() === "male" ? "en_guy" : "en_jenny";
+        const fallback = VOICE_LIBRARY[fallbackId] || VOICE_LIBRARY.en_jenny;
+        console.warn(`[TTS] Unsupported voice ${cfg.voice} → fallback ${fallback.voice}`);
+        try {
+          await runOnce(undefined, fallback);
+          lastErr = null;
+          break;
+        } catch (e2) {
+          lastErr = e2 instanceof Error ? e2 : new Error(ttsErrMsg(e2));
+        }
+      }
       if ((0, import_ttsTextNormalize.isLikelySsmlRejectError)(msg)) {
         console.warn(`[TTS] SSML rejected, minimal retry: ${cfg.voice}`);
-        await runOnce((0, import_ttsTextNormalize.buildTtsSpeechMinimal)(text));
-        lastErr = null;
-        break;
+        try {
+          await runOnce((0, import_ttsTextNormalize.buildTtsSpeechMinimal)(text));
+          lastErr = null;
+          break;
+        } catch (e3) {
+          // If minimal still says unsupported, try gender fallback
+          if (/unsupported voice/i.test(String(e3?.message || e3))) {
+            const fallbackId = (cfg.gender || "").toLowerCase() === "male" ? "en_guy" : "en_jenny";
+            const fallback = VOICE_LIBRARY[fallbackId] || VOICE_LIBRARY.en_jenny;
+            await runOnce((0, import_ttsTextNormalize.buildTtsSpeechMinimal)(text), fallback);
+            lastErr = null;
+            break;
+          }
+          lastErr = e3 instanceof Error ? e3 : new Error(ttsErrMsg(e3));
+        }
       }
       if (attempt < maxAttempts - 1 && isRetryableTtsError(msg)) {
-        await delay(1200 * (attempt + 1));
+        await delay(retryBaseMs * (attempt + 1));
         continue;
       }
-      throw lastErr;
+      if (lastErr && !/unsupported voice/i.test(lastErr.message) && attempt >= maxAttempts - 1) throw lastErr;
+      if (lastErr && !isRetryableTtsError(msg) && !/unsupported voice/i.test(msg) && !(0, import_ttsTextNormalize.isLikelySsmlRejectError)(msg)) {
+        throw lastErr;
+      }
     }
   }
   if (lastErr) throw lastErr;
@@ -268,7 +356,7 @@ function getParallelTts(jobCount) {
   } else {
     p = 4;
   }
-  return Math.min(6, Math.max(1, p), Math.max(1, jobCount));
+  return Math.min(8, Math.max(1, p), Math.max(1, jobCount));
 }
 async function batchGenerateTTS(texts, outDir, speaker = "en_jenny", rate = "+0%", pitch = "+0Hz", volume = "+0%", quality = "balanced", onProgress) {
   if (!import_fs.default.existsSync(outDir)) import_fs.default.mkdirSync(outDir, { recursive: true });

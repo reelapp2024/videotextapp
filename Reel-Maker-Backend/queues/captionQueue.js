@@ -1,6 +1,7 @@
 const Queue = require('bull');
 const { getBullRedisConfig, getRedisPrefixKey } = require('./connection');
 const { getCaptionQueueName } = require('../services/bullCaptionConfig');
+const { logQueueError } = require('../services/redisProbe');
 
 /** @type {import('bull').Queue|null} */
 let captionQueue = null;
@@ -22,7 +23,7 @@ function getCaptionQueue() {
   captionQueue = new Queue(name, opts);
 
   captionQueue.on('error', (err) => {
-    console.error('[caption-queue] queue error:', err.message);
+    logQueueError('[caption-queue]', err);
   });
 
   captionQueue.on('ready', () => {

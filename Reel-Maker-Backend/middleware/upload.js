@@ -81,12 +81,31 @@ const imageJobUpload = multer({
   limits: { fileSize: 50 * 1024 * 1024 },
 });
 
+const cloneUpload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      const dir = path.join(uploadDir, 'clones_tmp');
+      fs.mkdirSync(dir, { recursive: true });
+      cb(null, dir);
+    },
+    filename: (_req, file, cb) =>
+      cb(null, `clone_${Date.now()}_${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`),
+  }),
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (/\.(wav|mp3|m4a|ogg|flac|webm)$/i.test(file.originalname) || /^audio\//i.test(file.mimetype || '')) {
+      cb(null, true);
+    } else cb(new Error('Only audio files allowed for clone reference'));
+  },
+});
+
 module.exports = {
   generalUpload,
   excelUpload,
   createJobUpload,
   captionUpload,
   imageJobUpload,
+  cloneUpload,
   jobsDir,
   captionJobsDir,
   uploadDir,

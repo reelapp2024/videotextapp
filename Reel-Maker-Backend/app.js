@@ -89,14 +89,67 @@ for (const [routePath, modulePath, featureKey] of heavyRoutes) {
 
 const { useBullExport } = require('./services/bullExportConfig');
 const { useBullCaptions } = require('./services/bullCaptionConfig');
+const { useBullTts, getTtsWorkerConcurrency } = require('./services/bullTtsConfig');
+const os = require('os');
+
+function buildHardwareSnapshot() {
+  let encoder = null;
+  let availableEncoders = [];
+  let hasNvidiaNvenc = false;
+  try {
+    const enc = require('./services/encodeOptions');
+    encoder = enc.HW_ENCODER || null;
+    availableEncoders = (enc.DETECTED_ENCODERS?.available || []).map((e) => e.name || e.config?.codec).filter(Boolean);
+    hasNvidiaNvenc = availableEncoders.includes('nvenc') || String(encoder).includes('nvenc');
+  } catch (_) {}
+
+  return {
+    platform: process.platform,
+    arch: process.arch,
+    cpuCores: os.cpus().length,
+    cpuModel: os.cpus()[0]?.model || 'Unknown CPU',
+    totalMemGb: Math.round((os.totalmem() / (1024 ** 3)) * 10) / 10,
+    freeMemGb: Math.round((os.freemem() / (1024 ** 3)) * 10) / 10,
+    hostname: os.hostname(),
+    encoder,
+    availableEncoders,
+    hasNvidiaNvenc,
+    // XTTS FastAPI worker is future — report env if configured
+    xttsFastapiUrl: process.env.XTTS_FASTAPI_URL || process.env.ADVANCED_TTS_URL || null,
+    xttsEnabled: process.env.ADVANCED_TTS_ENABLED === 'true' || process.env.XTTS_ENABLED === 'true',
+  };
+}
 
 app.get('/api/capabilities', (_req, res) => {
+  const mongo = getMongoStatus();
+  const hardware = buildHardwareSnapshot();
   res.json({
     serverless: !!process.env.VERCEL,
     exportRenderer: process.env.EXPORT_RENDERER || 'server',
     useBullExport: useBullExport(),
     useBullCaptions: useBullCaptions(),
+    useBullTts: useBullTts(),
+    ttsWorkerConcurrency: getTtsWorkerConcurrency(),
     features: loadedFeatures,
+    mongo: {
+      connected: mongo.isConnected,
+      status: mongo.status,
+    },
+    redis: {
+      configured: !!(process.env.REDIS_URL || process.env.REDIS_HOST),
+      bullExport: useBullExport(),
+      bullTts: useBullTts(),
+      bullCaptions: useBullCaptions(),
+    },
+    hardware,
+    stack: {
+      frontend: 'React',
+      api: 'Node.js',
+      database: 'MongoDB',
+      queue: 'Redis / BullMQ',
+      advancedTts: 'Python FastAPI + XTTS v2',
+      gpuWorker: 'NVIDIA GPU worker',
+    },
   });
 });
 

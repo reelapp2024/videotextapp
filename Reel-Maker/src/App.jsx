@@ -86,7 +86,8 @@ import LoginScreen from './components/LoginScreen';
 import GeneratedAudiosPanel from './components/GeneratedAudiosPanel';
 import AppHeader from './components/AppHeader';
 import AdminPanelContainer from './components/AdminPanelContainer';
-import TTSControls from './components/TTSControls';
+import ExcelTTSPanel from './components/TTS/ExcelTTSPanel';
+import TTSLayout from './components/TTS/TTSLayout';
 import UploadTab from './components/UploadTab';
 import SettingsPanel from './components/SettingsPanel';
 import ProjectsPanel from './components/ProjectsPanel';
@@ -97,15 +98,42 @@ import SettingsOverlayGrid from './components/SettingsOverlayGrid';
 
 /** If backend /voices is unreachable, keep a minimal UI list. */
 const OFFLINE_NEURAL_VOICES = [
-  { id: 'en_jenny', voice: 'en-US-JennyNeural', lang: 'en-US', gender: 'female', label: 'Jenny â€” USA', category: 'English USA', pitchTier: 'mid' },
-  { id: 'en_aria', voice: 'en-US-AriaNeural', lang: 'en-US', gender: 'female', label: 'Aria â€” USA', category: 'English USA', pitchTier: 'high' },
-  { id: 'en_roger', voice: 'en-US-RogerNeural', lang: 'en-US', gender: 'male', label: 'Roger â€” USA (bass)', category: 'English USA', pitchTier: 'low' },
-  { id: 'en_gb_libby', voice: 'en-GB-LibbyNeural', lang: 'en-GB', gender: 'female', label: 'Libby â€” UK', category: 'English UK', pitchTier: 'high' },
-  { id: 'en_gb_ryan', voice: 'en-GB-RyanNeural', lang: 'en-GB', gender: 'male', label: 'Ryan â€” UK', category: 'English UK', pitchTier: 'low' },
-  { id: 'en_au_natasha', voice: 'en-AU-NatashaNeural', lang: 'en-AU', gender: 'female', label: 'Natasha â€” Australia', category: 'English AU', pitchTier: 'mid' },
-  { id: 'en_ca_clara', voice: 'en-CA-ClaraNeural', lang: 'en-CA', gender: 'female', label: 'Clara â€” Canada', category: 'English Canada', pitchTier: 'mid' },
-  { id: 'en_ca_liam', voice: 'en-CA-LiamNeural', lang: 'en-CA', gender: 'male', label: 'Liam â€” Canada', category: 'English Canada', pitchTier: 'mid' },
-  { id: 'pa_swara', voice: 'hi-IN-SwaraNeural', lang: 'pa-IN', gender: 'female', label: 'Swara â€” Punjabi', category: 'Punjabi', pitchTier: 'high' },
+  { id: 'en_jenny', voice: 'en-US-JennyNeural', lang: 'en-US', gender: 'female', label: 'Jenny — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_aria', voice: 'en-US-AriaNeural', lang: 'en-US', gender: 'female', label: 'Aria — USA (bright)', category: 'English USA', pitchTier: 'high' },
+  { id: 'en_michelle', voice: 'en-US-MichelleNeural', lang: 'en-US', gender: 'female', label: 'Michelle — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_elizabeth', voice: 'en-US-ElizabethNeural', lang: 'en-US', gender: 'female', label: 'Elizabeth — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_ava', voice: 'en-US-AvaNeural', lang: 'en-US', gender: 'female', label: 'Ava — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_emma', voice: 'en-US-EmmaNeural', lang: 'en-US', gender: 'female', label: 'Emma — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_amber', voice: 'en-US-AmberNeural', lang: 'en-US', gender: 'female', label: 'Amber — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_sara', voice: 'en-US-SaraNeural', lang: 'en-US', gender: 'female', label: 'Sara — USA', category: 'English USA', pitchTier: 'high' },
+  { id: 'en_ana', voice: 'en-US-AnaNeural', lang: 'en-US', gender: 'female', label: 'Ana — USA (soft)', category: 'English USA', pitchTier: 'high' },
+  { id: 'en_ashley', voice: 'en-US-AshleyNeural', lang: 'en-US', gender: 'female', label: 'Ashley — USA', category: 'English USA', pitchTier: 'high' },
+  { id: 'en_nancy', voice: 'en-US-NancyNeural', lang: 'en-US', gender: 'female', label: 'Nancy — USA', category: 'English USA', pitchTier: 'high' },
+  { id: 'en_roger', voice: 'en-US-RogerNeural', lang: 'en-US', gender: 'male', label: 'Roger — USA (bass)', category: 'English USA', pitchTier: 'low' },
+  { id: 'en_brian', voice: 'en-US-BrianNeural', lang: 'en-US', gender: 'male', label: 'Brian — USA (deep)', category: 'English USA', pitchTier: 'low' },
+  { id: 'en_christopher', voice: 'en-US-ChristopherNeural', lang: 'en-US', gender: 'male', label: 'Christopher — USA (bass)', category: 'English USA', pitchTier: 'low' },
+  { id: 'en_guy', voice: 'en-US-GuyNeural', lang: 'en-US', gender: 'male', label: 'Guy — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_davis', voice: 'en-US-DavisNeural', lang: 'en-US', gender: 'male', label: 'Davis — USA', category: 'English USA', pitchTier: 'low' },
+  { id: 'en_eric', voice: 'en-US-EricNeural', lang: 'en-US', gender: 'male', label: 'Eric — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_tony', voice: 'en-US-TonyNeural', lang: 'en-US', gender: 'male', label: 'Tony — USA', category: 'English USA', pitchTier: 'low' },
+  { id: 'en_jason', voice: 'en-US-JasonNeural', lang: 'en-US', gender: 'male', label: 'Jason — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_steffan', voice: 'en-US-SteffanNeural', lang: 'en-US', gender: 'male', label: 'Steffan — USA (deep)', category: 'English USA', pitchTier: 'low' },
+  { id: 'en_jacob', voice: 'en-US-JacobNeural', lang: 'en-US', gender: 'male', label: 'Jacob — USA', category: 'English USA', pitchTier: 'low' },
+  { id: 'en_elizabeth', voice: 'en-US-ElizabethNeural', lang: 'en-US', gender: 'female', label: 'Elizabeth — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_monica', voice: 'en-US-MonicaNeural', lang: 'en-US', gender: 'female', label: 'Monica — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_jane', voice: 'en-US-JaneNeural', lang: 'en-US', gender: 'female', label: 'Jane — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_cora', voice: 'en-US-CoraNeural', lang: 'en-US', gender: 'female', label: 'Cora — USA', category: 'English USA', pitchTier: 'mid' },
+  { id: 'en_gb_libby', voice: 'en-GB-LibbyNeural', lang: 'en-GB', gender: 'female', label: 'Libby — UK', category: 'English UK', pitchTier: 'high' },
+  { id: 'en_gb_sonia', voice: 'en-GB-SoniaNeural', lang: 'en-GB', gender: 'female', label: 'Sonia — UK', category: 'English UK', pitchTier: 'mid' },
+  { id: 'en_gb_maisie', voice: 'en-GB-MaisieNeural', lang: 'en-GB', gender: 'female', label: 'Maisie — UK (youth)', category: 'English UK', pitchTier: 'high' },
+  { id: 'en_gb_ryan', voice: 'en-GB-RyanNeural', lang: 'en-GB', gender: 'male', label: 'Ryan — UK', category: 'English UK', pitchTier: 'low' },
+  { id: 'en_gb_thomas', voice: 'en-GB-ThomasNeural', lang: 'en-GB', gender: 'male', label: 'Thomas — UK', category: 'English UK', pitchTier: 'low' },
+  { id: 'en_au_natasha', voice: 'en-AU-NatashaNeural', lang: 'en-AU', gender: 'female', label: 'Natasha — Australia', category: 'English AU', pitchTier: 'mid' },
+  { id: 'en_au_william', voice: 'en-AU-WilliamMultilingualNeural', lang: 'en-AU', gender: 'male', label: 'William — Australia', category: 'English AU', pitchTier: 'low' },
+  { id: 'en_in_neerja', voice: 'en-IN-NeerjaNeural', lang: 'en-IN', gender: 'female', label: 'Neerja (India English)', category: 'English IN', pitchTier: 'mid' },
+  { id: 'en_in_prabhat', voice: 'en-IN-PrabhatNeural', lang: 'en-IN', gender: 'male', label: 'Prabhat (India English)', category: 'English IN', pitchTier: 'low' },
+  { id: 'en_in_neerja_exp', voice: 'en-IN-NeerjaExpressiveNeural', lang: 'en-IN', gender: 'female', label: 'Neerja expressive (India)', category: 'English IN', pitchTier: 'high' },
+  { id: 'en_nz_molly', voice: 'en-NZ-MollyNeural', lang: 'en-NZ', gender: 'female', label: 'Molly — New Zealand', category: 'English NZ', pitchTier: 'high' },
 ]
 
 const TTS_CATEGORY_ORDER = [
@@ -345,6 +373,8 @@ const App = () => {
   const [backendVoices, setBackendVoices] = useState([]);
   const [generatedAudios, setGeneratedAudios] = useState([]);
   const [ttsPreviewText, setTtsPreviewText] = useState('');
+  const [excelFileName, setExcelFileName] = useState('');
+  const [ttsSampleLoading, setTtsSampleLoading] = useState(false);
   const [selectedVoiceIndex, setSelectedVoiceIndex] = useState(-1);
   const [ttsMuted, setTtsMuted] = useState(true);
 
@@ -640,6 +670,8 @@ const App = () => {
   const backgroundImageRef = useRef(null);
   const backgroundVideoRef = useRef(null);
   const previewAudioRef = useRef(null);
+  const ttsSampleAudioRef = useRef(null);
+  const ttsSampleUrlRef = useRef(null);
   const previewImageRef = useRef(null); // For image-only preview (uploaded images)
   const imageFolderInputRef = useRef(null);
   const videoFolderInputRef = useRef(null);
@@ -1895,7 +1927,6 @@ const App = () => {
         contentLineDisplayDuration: 5,
         contentLineHoldAfter: 0,
         contentLineAnimate: false,
-        contentPartLineStyleOverrides: [], contentLineDisplayDuration: 5, contentLineHoldAfter: 0, contentLineAnimate: false,
         contentLineAnimSpeed: 2, contentLineRevealMode: 'wordByWord', contentLineAnimType: 'fadeIn'
       });
     }
@@ -1913,6 +1944,7 @@ const App = () => {
   const handleExcelUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setExcelFileName(file.name || '');
     try {
       try {
         const { rows } = await api.parseExcel(file);
@@ -2237,60 +2269,79 @@ const App = () => {
   }, [ttsEffect, voiceQualityMode, ttsSpeakerGender, ttsSpeaker, ttsPitch, ttsRate, ttsMood]);
 
 
-  // Advanced TTS Preview with all settings
-  const previewTTS = () => {
-    const textToSpeak = ttsPreviewText || (excelData.length > 0 && excelData[0] && excelData[0][ttsColumn]) || "Hello, this is a preview of the voice.";
+  // Real Edge Neural sample (same engine as Generate) — NOT browser speechSynthesis
+  const previewTTS = async (speakerOverride, overrides = {}) => {
+    const textToSpeak =
+      ttsPreviewText ||
+      (excelData.length > 0 && excelData[0] && excelData[0][ttsColumn]) ||
+      'Hello, this is a sample of my unique neural voice. Each character sounds different.';
     if (!textToSpeak || !String(textToSpeak).trim()) {
-      alert("Please enter preview text or upload Excel data.");
+      alert('Please enter preview text or upload Excel data.');
       return;
     }
-    
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
-    
-    // Create utterance with advanced settings
-    const utterance = new SpeechSynthesisUtterance(textToSpeak.toString());
-    
-    // Select best matching browser voice for the selected speaker
-    const neuralList = getNeuralVoicesForUI();
-    const voice = getVoiceForSpeaker(ttsSpeaker);
-    const isBackendVoice = neuralList.some((v) => v.id === ttsSpeaker);
-    if (voice) {
-      utterance.voice = voice;
-      const bv = neuralList.find((v) => v.id === ttsSpeaker);
-      if (isBackendVoice) {
-        setLogs(`Preview: ${voice.name} (browser ${bv?.gender || ''} voice) | Final will use: ${bv?.label || ttsSpeaker} (Neural)`);
-      } else {
-        setLogs(`Using voice: ${voice.name} (${voice.lang})`);
-      }
-    }
-    
-    // Apply all voice settings (mood + effect already computed)
+
+    const speakerId =
+      typeof speakerOverride === 'string' && speakerOverride ? speakerOverride : ttsSpeaker;
     const settings = getFinalVoiceSettings();
-    utterance.rate = settings.rate;
-    utterance.pitch = settings.pitch;
-    utterance.volume = settings.volume || 1.0;
-    
-    // Log settings for debugging
-    console.log('TTS Settings:', {
-      speaker: settings.speaker,
-      mood: settings.mood,
-      effect: settings.effect,
-      quality: settings.quality,
-      pitch: settings.pitch.toFixed(3),
-      rate: settings.rate.toFixed(3)
-    });
-    
-    // Event handlers for better UX
-    utterance.onstart = () => setLogs('Speaking...');
-    utterance.onend = () => setLogs('Preview complete.');
-    utterance.onerror = (e) => setLogs(`Error: ${e.error}`);
-    
-    window.speechSynthesis.speak(utterance);
+    const neural = getNeuralVoicesForUI().find((v) => v.id === speakerId);
+    const rate = overrides.rate ?? settings.rate;
+    const pitch = overrides.pitch ?? settings.pitch;
+    const volume = overrides.volume ?? settings.volume;
+
+    try {
+      setTtsSampleLoading(true);
+      setLogs(`Generating Edge Neural sample: ${neural?.label || speakerId}…`);
+
+      // Stop previous sample
+      try {
+        window.speechSynthesis?.cancel?.();
+      } catch (_) {}
+      if (ttsSampleAudioRef.current) {
+        ttsSampleAudioRef.current.pause();
+        ttsSampleAudioRef.current = null;
+      }
+      if (ttsSampleUrlRef.current) {
+        URL.revokeObjectURL(ttsSampleUrlRef.current);
+        ttsSampleUrlRef.current = null;
+      }
+
+      const blob = await api.previewTTSSample({
+        text: String(textToSpeak).slice(0, 180),
+        speaker: speakerId,
+        rate,
+        pitch,
+        volume,
+        quality: 'clear',
+      });
+
+      const url = URL.createObjectURL(blob);
+      ttsSampleUrlRef.current = url;
+      const audio = new Audio(url);
+      ttsSampleAudioRef.current = audio;
+      audio.onended = () => {
+        setLogs(`Sample complete: ${neural?.label || speakerId}`);
+      };
+      audio.onerror = () => {
+        setLogs('Sample playback failed.');
+        setTtsSampleLoading(false);
+      };
+      await audio.play();
+      setTtsSampleLoading(false);
+      setLogs(`Playing Edge Neural: ${neural?.label || speakerId}`);
+    } catch (e) {
+      console.error('Edge TTS preview failed:', e);
+      setTtsSampleLoading(false);
+      const msg = e?.message || String(e);
+      setLogs(`Sample error: ${msg}`);
+      alert(
+        `Could not play real Edge Neural sample.\n\n${msg}\n\nMake sure the backend is running (Reel-Maker-Backend). No API key is required.`
+      );
+    }
   };
 
   const {
     generateAllTTS,
+    generateAdvancedTTS,
     addGeneratedAudioToVoiceLibrary,
     addAllGeneratedToVoiceLibrary,
     downloadSingleAudio,
@@ -2315,6 +2366,16 @@ const App = () => {
     setVoiceFiles,
     voiceQualityMode,
   });
+
+  /** Routes Excel "Generate All" to Basic or Advanced based on active studio tab + live selections */
+  const studioApiRef = useRef(null);
+  const generateAllFromStudio = useCallback(async () => {
+    if (studioApiRef.current?.generate) {
+      await studioApiRef.current.generate();
+      return;
+    }
+    await generateAllTTS();
+  }, [generateAllTTS]);
 
   const captionStudioProps = useCaptions({
     setConfig,
@@ -3062,8 +3123,7 @@ const App = () => {
               <span className="font-medium">{libsLoaded ? 'All systems ready' : 'Loading...'}</span>
             </div>
 
-            <TTSControls
-              libsLoaded={libsLoaded}
+            <ExcelTTSPanel
               activeTab={activeTab}
               ttsMode={ttsMode}
               setTtsMode={setTtsMode}
@@ -3072,38 +3132,14 @@ const App = () => {
               excelData={excelData}
               ttsSelectedRows={ttsSelectedRows}
               setTtsSelectedRows={setTtsSelectedRows}
-              backendVoices={backendVoices}
-              availableVoices={availableVoices}
-              ttsSpeaker={ttsSpeaker}
-              setTtsSpeaker={setTtsSpeaker}
-              getNeuralVoiceCategoriesForUI={getNeuralVoiceCategoriesForUI}
-              getNeuralVoicesForUI={getNeuralVoicesForUI}
-              speakerGenderOptions={speakerGenderOptions}
-              ttsSpeakerGender={ttsSpeakerGender}
-              setTtsSpeakerGender={setTtsSpeakerGender}
-              moodPresets={moodPresets}
-              applyMood={applyMood}
-              ttsMood={ttsMood}
-              audioEffects={audioEffects}
-              ttsEffect={ttsEffect}
-              setTtsEffect={setTtsEffect}
-              getFinalVoiceSettings={getFinalVoiceSettings}
-              ttsRate={ttsRate}
-              setTtsRate={setTtsRate}
-              ttsPitch={ttsPitch}
-              setTtsPitch={setTtsPitch}
-              ttsPreviewText={ttsPreviewText}
-              setTtsPreviewText={setTtsPreviewText}
-              previewTTS={previewTTS}
+              handleExcelUpload={handleExcelUpload}
+              excelFileName={excelFileName}
+              ttsGenerating={ttsGenerating}
+              generateAllTTS={generateAllFromStudio}
               serverProcessing={serverProcessing}
               serverJobType={serverJobType}
               serverProgress={serverProgress}
               ttsProgress={ttsProgress}
-              ttsGenerating={ttsGenerating}
-              generateAllTTS={generateAllTTS}
-              voiceQualityMode={voiceQualityMode}
-              setVoiceQualityMode={setVoiceQualityMode}
-              voiceQualityModes={voiceQualityModes}
             />
 
             <CaptionStudio
@@ -3371,6 +3407,32 @@ const App = () => {
 
           {/* CENTER/RIGHT: Preview & Results */}
           <div className="lg:col-span-8 xl:col-span-9 space-y-3">
+          <TTSLayout
+            activeTab={activeTab}
+            voices={getNeuralVoicesForUI()}
+            ttsSpeaker={ttsSpeaker}
+            setTtsSpeaker={setTtsSpeaker}
+            setTtsRate={setTtsRate}
+            setTtsPitch={setTtsPitch}
+            setTtsMood={setTtsMood}
+            setTtsEffect={setTtsEffect}
+            setTtsSpeakerGender={setTtsSpeakerGender}
+            setVoiceQualityMode={setVoiceQualityMode}
+            ttsPreviewText={ttsPreviewText}
+            setTtsPreviewText={setTtsPreviewText}
+            previewTTS={previewTTS}
+            ttsSampleLoading={ttsSampleLoading}
+            excelData={excelData}
+            ttsColumn={ttsColumn}
+            ttsMode={ttsMode}
+            ttsSelectedRows={ttsSelectedRows}
+            onAdvancedGenerate={generateAdvancedTTS}
+            onBasicGenerate={generateAllTTS}
+            advancedGenerating={ttsGenerating}
+            studioApiRef={studioApiRef}
+          />
+
+          {activeTab !== 'tts' && (
           <PreviewAndResultsPanel
             excelData={excelData}
             previewRowIndex={previewRowIndex}
@@ -3411,6 +3473,7 @@ const App = () => {
             downloadAllZip={downloadAllZip}
             downloadSingleVideo={downloadSingleVideo}
           />
+          )}
 
             <GeneratedAudiosPanel
               generatedAudios={generatedAudios}

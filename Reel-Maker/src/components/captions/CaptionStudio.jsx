@@ -22,6 +22,20 @@ function jobStatusLabel(status) {
   return status
 }
 
+const CAPTION_LANGUAGES = [
+  { id: 'auto', label: 'Auto-detect' },
+  { id: 'hi', label: 'Hindi (हिन्दी)' },
+  { id: 'en', label: 'English' },
+  { id: 'pa', label: 'Punjabi (ਪੰਜਾਬੀ)' },
+  { id: 'hinglish', label: 'Hinglish (Hindi + English)' },
+  { id: 'ur', label: 'Urdu (اردو)' },
+  { id: 'ta', label: 'Tamil (தமிழ்)' },
+  { id: 'te', label: 'Telugu (తెలుగు)' },
+  { id: 'bn', label: 'Bengali (বাংলা)' },
+  { id: 'mr', label: 'Marathi (मराठी)' },
+  { id: 'gu', label: 'Gujarati (ગુજરાતી)' },
+]
+
 export default function CaptionStudio({
   activeTab,
   voiceFiles,
@@ -44,6 +58,7 @@ export default function CaptionStudio({
   captionProgressPct,
 }) {
   const [localSegments, setLocalSegments] = useState([])
+  const [captionLanguage, setCaptionLanguage] = useState('auto')
 
   useEffect(() => {
     if (selectedTrack?.segments) {
@@ -57,7 +72,8 @@ export default function CaptionStudio({
   const captionJobActive = polling || uploading || captionJob?.status === 'transcribing'
 
   const startFromVoices = async () => {
-    await uploadFromVoiceFiles(voiceFiles, [])
+    const lang = captionLanguage === 'hinglish' ? 'hi' : captionLanguage
+    await uploadFromVoiceFiles(voiceFiles, [], { language: lang })
   }
 
   return (
@@ -79,15 +95,36 @@ export default function CaptionStudio({
       )}
 
       {!captionJobId && (
-        <button
-          type="button"
-          disabled={uploading || !voiceFiles?.length}
-          onClick={startFromVoices}
-          className="w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-white text-[10px] font-semibold flex items-center justify-center gap-1.5"
-        >
-          {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-          Generate captions ({voiceFiles?.length || 0} voices)
-        </button>
+        <div className="space-y-2">
+          <label className="text-[10px] text-gray-400 block">
+            Language
+            <select
+              value={captionLanguage}
+              onChange={(e) => setCaptionLanguage(e.target.value)}
+              className="w-full mt-0.5 bg-black/40 border border-cyan-500/25 rounded-lg px-2 py-1.5 text-xs text-gray-200 outline-none focus:border-cyan-400/50"
+            >
+              {CAPTION_LANGUAGES.map((l) => (
+                <option key={l.id} value={l.id}>{l.label}</option>
+              ))}
+            </select>
+          </label>
+          <p className="text-[9px] text-gray-600 leading-snug">
+            {captionLanguage === 'auto'
+              ? 'Auto-detects language from audio — works best with single-language clips.'
+              : captionLanguage === 'hinglish'
+                ? 'Optimized for mixed Hindi + English (Hinglish) speech.'
+                : `Forces ${CAPTION_LANGUAGES.find((l) => l.id === captionLanguage)?.label || captionLanguage} transcription.`}
+          </p>
+          <button
+            type="button"
+            disabled={uploading || !voiceFiles?.length}
+            onClick={startFromVoices}
+            className="w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-white text-[10px] font-semibold flex items-center justify-center gap-1.5"
+          >
+            {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+            Generate captions ({voiceFiles?.length || 0} voices)
+          </button>
+        </div>
       )}
 
       {voiceFiles?.length > 1 && (
@@ -149,7 +186,7 @@ export default function CaptionStudio({
                 key={t.id}
                 type="button"
                 onClick={() => setSelectedTrackIndex(i)}
-                title={t.status === 'error' && t.error ? t.error : undefined}
+                title={t.status === 'error' && t.error ? t.error : t.language ? `Detected: ${t.language}` : undefined}
                 className={`text-[9px] px-2 py-1 rounded border ${
                   t.status === 'error'
                     ? 'border-rose-500/40 text-rose-300 bg-rose-500/10'
@@ -159,6 +196,9 @@ export default function CaptionStudio({
                 }`}
               >
                 Voice {i + 1} {trackStatusLabel(t.status)}
+                {t.language && (t.status === 'ready' || t.status === 'done') && (
+                  <span className="ml-1 text-[8px] text-gray-500 uppercase">{t.language}</span>
+                )}
               </button>
             ))}
           </div>
