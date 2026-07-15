@@ -179,9 +179,10 @@ async function runSingleRowExportJob(params) {
 
   const total = updated?.totalVideos || ctx.rows;
   const completed = updated?.completedVideos || 0;
+  const { computeOverallProgress } = require('./exportProgress');
   const progress = completed >= total
     ? 100
-    : Math.min(99, Math.round((completed / Math.max(total, 1)) * 100));
+    : computeOverallProgress(completed, total, updated?.exportRowProgress || {});
 
   if (completed >= total) {
     const outputFiles = scanValidOutputFiles(ctx.outDir, ctx.exportFmt);

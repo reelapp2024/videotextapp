@@ -24,6 +24,9 @@ function trackDto(t) {
 }
 
 function trackSummaryDto(t) {
+  const segmentCount = Array.isArray(t.segments)
+    ? t.segments.length
+    : (typeof t.segmentCount === 'number' ? t.segmentCount : null);
   return {
     id: String(t._id),
     trackIndex: t.trackIndex,
@@ -33,6 +36,7 @@ function trackSummaryDto(t) {
     language: t.language,
     duration: t.duration,
     outputVideoUrl: t.outputVideoUrl,
+    segmentCount,
   };
 }
 
@@ -52,7 +56,11 @@ module.exports = {
         if (!audioFiles.length) return res.status(400).json({ error: 'At least one audio required' });
 
         const videoFiles = files?.videos || [];
-        const whisperModel = req.body?.whisperModel || process.env.WHISPER_MODEL || 'base';
+        let whisperModel = req.body?.whisperModel || process.env.WHISPER_MODEL || 'small';
+        // Block weak models that collapse Hindi/Punjabi into English nonsense.
+        if (['tiny', 'base', 'tiny.en', 'base.en'].includes(String(whisperModel).toLowerCase())) {
+          whisperModel = process.env.WHISPER_MODEL || 'small';
+        }
         const language = req.body?.language || 'auto';
         const jobDir = path.join(captionJobsDir, captionJobId);
 
@@ -118,10 +126,22 @@ module.exports = {
     };
 
     if (summary) {
-      const tracks = await CaptionTrack.find({ captionJobId: jobId })
-        .select('trackIndex label status error language duration outputVideoUrl')
-        .sort({ trackIndex: 1 })
-        .lean();
+      const tracks = await CaptionTrack.aggregate([
+        { $match: { captionJobId: jobId } },
+        {
+          $project: {
+            trackIndex: 1,
+            label: 1,
+            status: 1,
+            error: 1,
+            language: 1,
+            duration: 1,
+            outputVideoUrl: 1,
+            segmentCount: { $size: { $ifNull: ['$segments', []] } },
+          },
+        },
+        { $sort: { trackIndex: 1 } },
+      ]);
       return res.json({ ...base, tracks: tracks.map(trackSummaryDto) });
     }
 

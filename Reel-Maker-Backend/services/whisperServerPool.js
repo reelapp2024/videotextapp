@@ -28,7 +28,8 @@ function getPoolSize() {
 }
 
 function getModelLoadTimeoutMs() {
-  return Math.max(30000, parseInt(process.env.WHISPER_MODEL_LOAD_TIMEOUT_MS || '180000', 10) || 180000);
+  // First boot may download Whisper weights; allow enough time, but prefer local cache.
+  return Math.max(120000, parseInt(process.env.WHISPER_MODEL_LOAD_TIMEOUT_MS || '600000', 10) || 600000);
 }
 
 function getRequestTimeoutMs() {

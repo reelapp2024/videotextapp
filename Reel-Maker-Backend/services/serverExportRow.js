@@ -18,6 +18,8 @@ const { exportLog } = require('./exportLogger');
 const { MemoryPeakTracker } = require('./workerContext');
 const { ExportRenderProfiler } = require('./exportRenderProfiler');
 const { ExportFramePipeline } = require('./exportFramePipeline');
+const { acquireEncodeSlot, getEncodeSlotStats } = require('./exportEncodeSlot');
+const { isTruthyEnv } = require('./exportResourcePlanner');
 
 /** Hardware/fast encode presets — set EXPORT_ENCODE_FAST=0 to force slower high-quality CPU presets. */
 function resolveExportEncodeFast() {
@@ -240,7 +242,12 @@ class ServerExportSession {
     if (!this[key]) {
       this[key] = ctx.createImageData(this.width, this.height);
     }
-    this[key].data.set(rgbaBuffer);
+    const dest = this[key].data;
+    if (Buffer.isBuffer(rgbaBuffer) && dest.buffer) {
+      rgbaBuffer.copy(Buffer.from(dest.buffer, dest.byteOffset, dest.byteLength));
+    } else {
+      dest.set(rgbaBuffer);
+    }
     ctx.putImageData(this[key], 0, 0);
   }
 
@@ -266,44 +273,54 @@ class ServerExportSession {
     const ctx = this.ctx;
     const { width, height } = this;
 
+    // Full-bleed opaque main video covers the entire frame — skip background paint.
+    const skipBackground = Boolean(
+      mainVideoFrame
+      && this._useFullBleedVideo
+      && (mainVideoOpacity == null || mainVideoOpacity >= 0.999)
+      && !bgVideoFrame,
+    );
+
     let t0 = profiler?.mark();
 
-    const usedStaticBg = this.staticLayers.compositeBase(ctx, width, height);
-    if (!usedStaticBg) {
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, width, height);
+    if (!skipBackground) {
+      const usedStaticBg = this.staticLayers.compositeBase(ctx, width, height);
+      if (!usedStaticBg) {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, width, height);
 
-      const bg = config.background || { type: 'solid', solidColor: '#000000' };
-      const fx = config.backgroundEffects || { enabled: false, effectId: 'none' };
-      const extras = { ...bgDrawExtras };
-      if (bgVideoFrame) {
-        extras.videoFrame = this._rgbaToVideoCanvas(bgVideoFrame, 'bg');
-      }
+        const bg = config.background || { type: 'solid', solidColor: '#000000' };
+        const fx = config.backgroundEffects || { enabled: false, effectId: 'none' };
+        const extras = { ...bgDrawExtras };
+        if (bgVideoFrame) {
+          extras.videoFrame = this._rgbaToVideoCanvas(bgVideoFrame, 'bg');
+        }
 
-      this._drawBackgroundLayer(
-        ctx,
-        width,
-        height,
-        bg,
-        extras,
-        videoTime,
-        duration,
-        fx,
-        { fallbackUploadImage: !!bgDrawExtras?.image },
-      );
-    } else if (bgVideoFrame) {
-      const bgT0 = profiler?.mark();
-      ctx.save();
-      ctx.globalAlpha = 1;
-      if (this._useFullBleedVideo) {
-        this._blitFullRgba(ctx, bgVideoFrame, 'bg');
-      } else {
-        const canvas = this._rgbaToVideoCanvas(bgVideoFrame, 'bg');
-        ctx.drawImage(canvas, 0, 0, width, height);
+        this._drawBackgroundLayer(
+          ctx,
+          width,
+          height,
+          bg,
+          extras,
+          videoTime,
+          duration,
+          fx,
+          { fallbackUploadImage: !!bgDrawExtras?.image },
+        );
+      } else if (bgVideoFrame) {
+        const bgT0 = profiler?.mark();
+        ctx.save();
+        ctx.globalAlpha = 1;
+        if (this._useFullBleedVideo) {
+          this._blitFullRgba(ctx, bgVideoFrame, 'bg');
+        } else {
+          const canvas = this._rgbaToVideoCanvas(bgVideoFrame, 'bg');
+          ctx.drawImage(canvas, 0, 0, width, height);
+        }
+        ctx.restore();
+        profiler?.record('bgVideo', bgT0);
       }
-      ctx.restore();
-      profiler?.record('bgVideo', bgT0);
     }
     profiler?.record('background', t0);
 
@@ -559,15 +576,32 @@ async function processOneRowWithSharedRenderer(params) {
     ...config,
     video: { ...(config?.video || {}), fps, format: formatId },
   };
+
+  // Chunk workers + QSV overflow use software encode so Redis can run many safely in parallel.
+  const preferSoftware = !!videoOnly || !!frameRange || isTruthyEnv('EXPORT_FORCE_SOFTWARE', false);
+  const encodeSlot = await acquireEncodeSlot({ preferSoftware });
+  const forceSoftware = encodeSlot.forceSoftware;
+
   const videoEncodeOptions = getVideoEncodeOptions(encodeConfig, {
-    fast: encodeFast,
+    // Software parallel lane: veryfast (not ultrafast) so quality stays strong
+    fast: forceSoftware ? false : encodeFast,
     width: w,
     height: h,
     fps,
     pipe: true,
+    forceSoftware,
   });
   const audioResolved = resolveAudioEncodeOptions(encodeConfig);
   const audioEncodeOptions = audioResolved.options;
+
+  exportLog('export.encode.slot', {
+    jobId,
+    rowIndex,
+    lane: encodeSlot.lane,
+    forceSoftware,
+    videoOnly: !!videoOnly,
+    slots: getEncodeSlotStats(),
+  });
 
   const hasVoice = !!voicePath;
   const hasMusic = !!musicPath;
@@ -613,17 +647,23 @@ async function processOneRowWithSharedRenderer(params) {
   let framePipeline = null;
   const frameBytes = w * h * 4;
 
-  // Only check cancellation every N frames to avoid database query overhead
-  // Check once per second (every fps frames) for responsive cancellation without performance hit
-  const cancelCheckInterval = Math.max(1, Math.floor(fps));
-  
+  // Cancel/progress every ~2s — Mongo Atlas round-trips must not sit in the hot frame loop.
+  const cancelCheckInterval = Math.max(1, Math.floor(fps * 2));
+  let cancelPending = null;
+  let cancelledFlag = false;
+
   try {
     for (let local = 0; local < totalFrames; local++) {
       const i = rangeStart + local;
-      // Only check cancellation periodically, not every frame (DB query overhead)
-      if (isCancelled && local % cancelCheckInterval === 0 && await isCancelled()) {
+      if (cancelledFlag) {
         encoder.abort();
         throw new Error('Job cancelled');
+      }
+      if (isCancelled && local % cancelCheckInterval === 0 && !cancelPending) {
+        cancelPending = Promise.resolve()
+          .then(() => isCancelled())
+          .then((v) => { cancelledFlag = !!v; cancelPending = null; })
+          .catch(() => { cancelPending = null; });
       }
 
       const wallTime = i / fps;
@@ -632,8 +672,20 @@ async function processOneRowWithSharedRenderer(params) {
       renderProfiler.beginFrame();
 
       const videoT0 = renderProfiler.mark();
-      const mainFrame = mainVideoSource ? await mainVideoSource.readFrame() : null;
-      const bgVidFrame = bgVideoSource ? await bgVideoSource.readFrame() : null;
+      // Prefetch inside ServerVideoFrameSource overlaps decode of next frame with this render.
+      // Read main + bg in parallel when both exist.
+      let mainFrame = null;
+      let bgVidFrame = null;
+      if (mainVideoSource && bgVideoSource) {
+        [mainFrame, bgVidFrame] = await Promise.all([
+          mainVideoSource.readFrame(),
+          bgVideoSource.readFrame(),
+        ]);
+      } else if (mainVideoSource) {
+        mainFrame = await mainVideoSource.readFrame();
+      } else if (bgVideoSource) {
+        bgVidFrame = await bgVideoSource.readFrame();
+      }
       renderProfiler.record('videoRead', videoT0);
 
       if (!encoderStarted) {
@@ -644,6 +696,7 @@ async function processOneRowWithSharedRenderer(params) {
           height: h,
           fps,
           outputPath,
+          encodeLane: encodeSlot.lane,
           videoCodec: videoEncodeOptions.includes('h264_nvenc')
             ? 'h264_nvenc'
             : videoEncodeOptions.includes('h264_qsv')
@@ -676,14 +729,13 @@ async function processOneRowWithSharedRenderer(params) {
       metrics.recordFrameRender(frameMs);
       memoryTracker.sample();
 
-      // Only report progress every N frames to avoid database/filesystem overhead
-      // Update roughly once per second (every fps frames) for responsive UI without performance hit
       if (onFrameProgress && local % cancelCheckInterval === 0) {
-        onFrameProgress({
+        // Fire-and-forget — never await Mongo in the render loop.
+        Promise.resolve(onFrameProgress({
           frameIndex: i,
           totalFrames: fullTotalFrames,
           progress: Math.round(((i + 1) / fullTotalFrames) * 90),
-        });
+        })).catch(() => {});
       }
     }
 
@@ -733,6 +785,7 @@ async function processOneRowWithSharedRenderer(params) {
       assetJobCache: cacheStats.assetJobCache,
       textLayoutHitRatio: cacheStats.textLayoutHitRatio,
       renderProfile,
+      encodeLane: encodeSlot.lane,
       videoDecode: {
         main: mainVideoSource?.getStats?.() ?? null,
         bg: bgVideoSource?.getStats?.() ?? null,
@@ -774,6 +827,7 @@ async function processOneRowWithSharedRenderer(params) {
     });
     throw err;
   } finally {
+    try { encodeSlot.release(); } catch { /* ignore */ }
     framePipeline?.dispose();
     mainVideoSource?.dispose();
     bgVideoSource?.dispose();

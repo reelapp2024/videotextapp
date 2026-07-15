@@ -306,11 +306,12 @@ export const api = {
     }))
   },
 
-  async uploadCaptionBatch(audioFiles, videoFiles = [], { whisperModel = 'base', language = 'auto' } = {}) {
+  async uploadCaptionBatch(audioFiles, videoFiles = [], { whisperModel, language = 'auto' } = {}) {
     const fd = new FormData()
     audioFiles.forEach((f) => fd.append('audios', f))
     videoFiles.forEach((f) => fd.append('videos', f))
-    fd.append('whisperModel', whisperModel)
+    // Never force "base" — backend .env WHISPER_MODEL (small/medium) is much better for HI/PA.
+    if (whisperModel) fd.append('whisperModel', whisperModel)
     fd.append('language', language)
     const r = await fetch(`${BASE}/api/captions/batch`, {
       method: 'POST',

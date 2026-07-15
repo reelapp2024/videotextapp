@@ -1,39 +1,11 @@
 #!/usr/bin/env python3
-"""CPU-friendly Faster-Whisper for Hindi / English / Punjabi mix. Outputs JSON."""
+"""One-shot Faster-Whisper for Hindi / Punjabi / English captions. Outputs JSON."""
 import json
 import os
 import sys
 
-
-LANG_PROMPTS = {
-    "hi": (
-        "यह हिंदी भाषा में बोला गया है। "
-        "हिंदी शब्दों को देवनागरी लिपि में लिखें। "
-        "कुछ अंग्रेजी शब्द भी हो सकते हैं।"
-    ),
-    "pa": (
-        "ਇਹ ਪੰਜਾਬੀ ਭਾਸ਼ਾ ਵਿੱਚ ਬੋਲਿਆ ਗਿਆ ਹੈ। "
-        "ਪੰਜਾਬੀ ਸ਼ਬਦਾਂ ਨੂੰ ਗੁਰਮੁਖੀ ਲਿਪੀ ਵਿੱਚ ਲਿਖੋ। "
-        "ਕੁਝ ਅੰਗਰੇਜ਼ੀ ਸ਼ਬਦ ਵੀ ਹੋ ਸਕਦੇ ਹਨ।"
-    ),
-    "en": "This is spoken in English. Transcribe clearly.",
-    "ur": "یہ اردو زبان میں بولا گیا ہے۔",
-}
-
-DEFAULT_PROMPT = (
-    "Mixed Hindi, English, and Punjabi speech. "
-    "हिंदी और ਪੰਜਾਬੀ शब्दों को सही लिपि में लिखें। "
-    "Hinglish, Punjabi words, and English phrases in the same sentence."
-)
-
-
-def get_prompt_for_language(language):
-    env_prompt = os.environ.get("WHISPER_PROMPT")
-    if env_prompt:
-        return env_prompt
-    if language and language in LANG_PROMPTS:
-        return LANG_PROMPTS[language]
-    return DEFAULT_PROMPT
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from whisper_indic_transcribe import normalize_language, transcribe_accurate  # noqa: E402
 
 
 def main():
@@ -46,10 +18,10 @@ def main():
 
     audio_path = sys.argv[1]
     output_path = sys.argv[2]
-    model_size = sys.argv[3] if len(sys.argv) > 3 else os.environ.get("WHISPER_MODEL", "base")
-    language = sys.argv[4] if len(sys.argv) > 4 else os.environ.get("WHISPER_LANGUAGE", "auto")
-    if language in ("auto", "", "null", "None"):
-        language = None
+    model_size = sys.argv[3] if len(sys.argv) > 3 else os.environ.get("WHISPER_MODEL", "small")
+    language = normalize_language(
+        sys.argv[4] if len(sys.argv) > 4 else os.environ.get("WHISPER_LANGUAGE", "auto")
+    )
 
     try:
         from faster_whisper import WhisperModel
@@ -68,49 +40,30 @@ def main():
         cpu_threads=cpu_threads,
     )
 
-    beam_size = int(os.environ.get("WHISPER_BEAM_SIZE", "5"))
-    best_of = int(os.environ.get("WHISPER_BEST_OF", str(beam_size)))
-    prompt = get_prompt_for_language(language)
-
-    segments_iter, info = model.transcribe(
-        audio_path,
-        language=language,
-        word_timestamps=True,
-        vad_filter=True,
-        beam_size=beam_size,
-        best_of=best_of,
-        temperature=0.0,
-        initial_prompt=prompt,
-        condition_on_previous_text=True,
-    )
-
-    segments = []
-    for seg in segments_iter:
-        words = []
-        if seg.words:
-            for w in seg.words:
-                words.append({
-                    "start": round(float(w.start), 3),
-                    "end": round(float(w.end), 3),
-                    "word": (w.word or "").strip(),
-                })
-        segments.append({
-            "start": round(float(seg.start), 3),
-            "end": round(float(seg.end), 3),
-            "text": (seg.text or "").strip(),
-            "words": words,
-        })
-
+    result = transcribe_accurate(model, audio_path, language)
     payload = {
-        "language": info.language,
-        "duration": round(float(info.duration), 3) if info.duration else None,
-        "segments": segments,
+        "language": result["language"],
+        "languageProbability": result.get("languageProbability"),
+        "requestedLanguage": result.get("requestedLanguage"),
+        "detectMeta": result.get("detectMeta"),
+        "duration": result.get("duration"),
+        "segments": result["segments"],
     }
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
 
-    print(json.dumps({"ok": True, "segments": len(segments), "language": info.language}))
+    print(
+        json.dumps(
+            {
+                "ok": True,
+                "segments": len(payload["segments"]),
+                "language": payload["language"],
+                "languageProbability": payload.get("languageProbability"),
+            },
+            ensure_ascii=False,
+        )
+    )
 
 
 if __name__ == "__main__":

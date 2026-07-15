@@ -1,47 +1,16 @@
 #!/usr/bin/env python3
 """
-Persistent Faster-Whisper worker — loads the model once, then serves JSON-line requests on stdin.
-Stdout: one JSON response per line. Logs go to stderr.
+Persistent Faster-Whisper worker — loads model once, serves JSON-line requests on stdin.
+Detects language (HI/PA/EN bias), then force-transcribes in that language.
 """
 import json
 import os
 import sys
 import traceback
 
-LANG_PROMPTS = {
-    "hi": (
-        "यह हिंदी भाषा में बोला गया है। "
-        "हिंदी शब्दों को देवनागरी लिपि में लिखें। "
-        "कुछ अंग्रेजी शब्द भी हो सकते हैं।"
-    ),
-    "pa": (
-        "ਇਹ ਪੰਜਾਬੀ ਭਾਸ਼ਾ ਵਿੱਚ ਬੋਲਿਆ ਗਿਆ ਹੈ। "
-        "ਪੰਜਾਬੀ ਸ਼ਬਦਾਂ ਨੂੰ ਗੁਰਮੁਖੀ ਲਿਪੀ ਵਿੱਚ ਲਿਖੋ। "
-        "ਕੁਝ ਅੰਗਰੇਜ਼ੀ ਸ਼ਬਦ ਵੀ ਹੋ ਸਕਦੇ ਹਨ।"
-    ),
-    "en": (
-        "This is spoken in English. Transcribe clearly."
-    ),
-    "ur": (
-        "یہ اردو زبان میں بولا گیا ہے۔"
-    ),
-}
-
-DEFAULT_PROMPT = (
-    "Mixed Hindi, English, and Punjabi speech. "
-    "हिंदी और ਪੰਜਾਬੀ शब्दों को सही लिपि में लिखें। "
-    "Hinglish, Punjabi words, and English phrases in the same sentence."
-)
-
-
-def get_prompt_for_language(language):
-    """Return a language-specific initial_prompt so Whisper outputs the right script."""
-    env_prompt = os.environ.get("WHISPER_PROMPT")
-    if env_prompt:
-        return env_prompt
-    if language and language in LANG_PROMPTS:
-        return LANG_PROMPTS[language]
-    return DEFAULT_PROMPT
+# Ensure sibling imports work when spawned from Node.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from whisper_indic_transcribe import normalize_language, transcribe_accurate  # noqa: E402
 
 
 def log(msg):
@@ -56,68 +25,53 @@ def load_model(model_size):
     cpu_threads = int(os.environ.get("WHISPER_CPU_THREADS", str(os.cpu_count() or 4)))
 
     log(f"[whisper-worker] loading model={model_size} device={device} compute={compute_type} threads={cpu_threads}")
-    model = WhisperModel(
-        model_size,
+    common = dict(
         device=device,
         compute_type=compute_type,
         cpu_threads=cpu_threads,
     )
-    log("[whisper-worker] model ready")
-    return model
+    # Prefer local cache so caption jobs never hang on Hugging Face mid-request.
+    try:
+        model = WhisperModel(model_size, local_files_only=True, **common)
+        log(f"[whisper-worker] model ready (local cache): {model_size}")
+        return model
+    except Exception as cache_err:
+        log(f"[whisper-worker] local cache miss for {model_size}: {cache_err}")
+        log("[whisper-worker] downloading model once from Hugging Face… (can take several minutes)")
+        model = WhisperModel(model_size, **common)
+        log(f"[whisper-worker] model ready (downloaded): {model_size}")
+        return model
 
 
 def transcribe(model, audio_path, output_path, language, model_size):
-    if language in ("auto", "", "null", "None"):
-        language = None
-
-    beam_size = int(os.environ.get("WHISPER_BEAM_SIZE", "5"))
-    best_of = int(os.environ.get("WHISPER_BEST_OF", str(beam_size)))
-    prompt = get_prompt_for_language(language)
-
-    log(f"[whisper-worker] transcribe lang={language} beam={beam_size} prompt={prompt[:60]}…")
-
-    segments_iter, info = model.transcribe(
-        audio_path,
-        language=language,
-        word_timestamps=True,
-        vad_filter=True,
-        beam_size=beam_size,
-        best_of=best_of,
-        temperature=0.0,
-        initial_prompt=prompt,
-        condition_on_previous_text=True,
-    )
-
-    segments = []
-    for seg in segments_iter:
-        words = []
-        if seg.words:
-            for w in seg.words:
-                words.append({
-                    "start": round(float(w.start), 3),
-                    "end": round(float(w.end), 3),
-                    "word": (w.word or "").strip(),
-                })
-        segments.append({
-            "start": round(float(seg.start), 3),
-            "end": round(float(seg.end), 3),
-            "text": (seg.text or "").strip(),
-            "words": words,
-        })
+    language = normalize_language(language)
+    result = transcribe_accurate(model, audio_path, language)
 
     payload = {
-        "language": info.language,
-        "duration": round(float(info.duration), 3) if info.duration else None,
-        "segments": segments,
+        "language": result["language"],
+        "languageProbability": result.get("languageProbability"),
+        "requestedLanguage": result.get("requestedLanguage"),
+        "detectMeta": result.get("detectMeta"),
+        "duration": result.get("duration"),
+        "segments": result["segments"],
     }
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
 
+    log(
+        f"[whisper-worker] done lang={payload['language']} "
+        f"p={payload.get('languageProbability')} segs={len(payload['segments'])} "
+        f"req={payload.get('requestedLanguage')}"
+        + (" EMPTY — will retry/repair in next pass if needed" if not payload["segments"] else "")
+    )
+
     return {
         "ok": True,
-        "segments": len(segments),
-        "language": info.language,
+        "segments": len(payload["segments"]),
+        "language": payload["language"],
+        "languageProbability": payload.get("languageProbability"),
+        "empty": len(payload["segments"]) == 0,
     }
 
 
@@ -126,7 +80,7 @@ def respond(payload):
 
 
 def main():
-    default_model = os.environ.get("WHISPER_MODEL", "base")
+    default_model = os.environ.get("WHISPER_MODEL", "small")
     models = {}
 
     try:
@@ -135,8 +89,24 @@ def main():
         respond({"ok": False, "error": "Install: pip install faster-whisper"})
         sys.exit(2)
 
-    respond({"ok": True, "ready": True, "defaultModel": default_model})
-    log("[whisper-worker] waiting for requests")
+    # Warm the default model BEFORE marking ready so first caption click is not stuck downloading.
+    try:
+        models[default_model] = load_model(default_model)
+    except Exception as e:
+        log(f"[whisper-worker] failed to warm {default_model}: {e}")
+        # Fallback to already-cached base so production captions keep working.
+        fallback = "base"
+        if default_model != fallback:
+            log(f"[whisper-worker] falling back to cached model={fallback}")
+            try:
+                models[fallback] = load_model(fallback)
+                default_model = fallback
+            except Exception as e2:
+                respond({"ok": False, "error": f"Could not load Whisper model: {e2}"})
+                sys.exit(3)
+
+    respond({"ok": True, "ready": True, "defaultModel": default_model, "warmed": list(models.keys())})
+    log(f"[whisper-worker] waiting for requests (warmed={list(models.keys())})")
 
     for line in sys.stdin:
         line = line.strip()
@@ -158,8 +128,13 @@ def main():
             if not os.path.isfile(audio_path):
                 raise FileNotFoundError(f"Audio not found: {audio_path}")
 
+            # If client asks for an uncached larger model, prefer warmed default instead of hanging.
             if model_size not in models:
-                models[model_size] = load_model(model_size)
+                try:
+                    models[model_size] = load_model(model_size)
+                except Exception as load_err:
+                    log(f"[whisper-worker] cannot load {model_size}: {load_err} — using {default_model}")
+                    model_size = default_model
 
             result = transcribe(models[model_size], audio_path, output_path, language, model_size)
             respond({"id": req_id, **result})

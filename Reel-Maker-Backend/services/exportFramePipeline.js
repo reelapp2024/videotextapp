@@ -1,5 +1,6 @@
 /**
- * Overlap render and FFmpeg stdin writes using ping-pong RGBA buffers.
+ * Overlap render and FFmpeg stdin writes using triple RGBA buffers.
+ * submitFrame only blocks when 2 writes are already in flight (keeps encoder fed).
  */
 class ExportFramePipeline {
   /**
@@ -8,15 +9,20 @@ class ExportFramePipeline {
    */
   constructor(encoder, frameBytes) {
     this.encoder = encoder;
-    this.bufferA = Buffer.allocUnsafe(frameBytes);
-    this.bufferB = Buffer.allocUnsafe(frameBytes);
-    this._flip = false;
-    this._pendingWrite = Promise.resolve();
+    this.buffers = [
+      Buffer.allocUnsafe(frameBytes),
+      Buffer.allocUnsafe(frameBytes),
+      Buffer.allocUnsafe(frameBytes),
+    ];
+    this._idx = 0;
+    this._gate = Promise.resolve();
+    this._writesInFlight = 0;
   }
 
   nextRenderBuffer() {
-    this._flip = !this._flip;
-    return this._flip ? this.bufferA : this.bufferB;
+    const buf = this.buffers[this._idx];
+    this._idx = (this._idx + 1) % this.buffers.length;
+    return buf;
   }
 
   /**
@@ -24,20 +30,30 @@ class ExportFramePipeline {
    * @param {import('./exportRenderProfiler').ExportRenderProfiler | null} [profiler]
    */
   async submitFrame(buffer, profiler = null) {
-    await this._pendingWrite;
+    // Block only when FFmpeg backlog would overwrite a buffer still being written.
+    while (this._writesInFlight >= 2) {
+      await this._gate;
+    }
     const t0 = profiler?.mark();
-    this._pendingWrite = this.encoder.writeFrameSync(buffer).then(() => {
+    this._writesInFlight += 1;
+    const done = this.encoder.writeFrameSync(buffer).then(() => {
       if (profiler && t0 != null) profiler.record('ffmpegWrite', t0);
     });
+    this._gate = done
+      .catch(() => {})
+      .finally(() => {
+        this._writesInFlight = Math.max(0, this._writesInFlight - 1);
+      });
   }
 
   async flush() {
-    await this._pendingWrite;
+    while (this._writesInFlight > 0) {
+      await this._gate;
+    }
   }
 
   dispose() {
-    this.bufferA = null;
-    this.bufferB = null;
+    this.buffers = [];
   }
 }
 

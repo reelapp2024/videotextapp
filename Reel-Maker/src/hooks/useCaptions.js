@@ -22,11 +22,31 @@ export function useCaptions({
   // Used so we only fetch the heavy (segments + words) payload when readiness actually changes.
   const lastReadyCountRef = useRef(0)
 
+  const trackHasCaptions = (t) => {
+    if (!t) return false
+    if (Array.isArray(t.segments)) return t.segments.length > 0
+    if (typeof t.segmentCount === 'number') return t.segmentCount > 0
+    // Summary payloads without segmentCount: trust ready/done status
+    return t.status === 'ready' || t.status === 'done'
+  }
+
   const readyCountOf = (data) =>
-    (data?.tracks || []).filter((t) => t.status === 'ready' || t.status === 'done').length
+    (data?.tracks || []).filter(
+      (t) => (t.status === 'ready' || t.status === 'done') && trackHasCaptions(t),
+    ).length
 
   const failedTracksOf = (data) =>
-    (data?.tracks || []).filter((t) => t.status === 'error')
+    (data?.tracks || []).filter((t) => {
+      if (t.status === 'error') return true
+      // Only treat ready tracks as failed when we KNOW they have zero captions
+      if ((t.status === 'ready' || t.status === 'done') && Array.isArray(t.segments) && t.segments.length === 0) {
+        return true
+      }
+      if ((t.status === 'ready' || t.status === 'done') && t.segmentCount === 0) {
+        return true
+      }
+      return false
+    })
 
   const syncTrackErrors = (data) => {
     const failed = failedTracksOf(data)
@@ -85,7 +105,9 @@ export function useCaptions({
     (data, files) => {
       const map = syncVoiceCaptionMap(files || voiceFiles, data?.tracks || [])
       setVoiceCaptionMap(map)
-      const ready = (data?.tracks || []).filter((t) => t.status === 'ready' || t.status === 'done').length
+      const ready = (data?.tracks || []).filter(
+        (t) => (t.status === 'ready' || t.status === 'done') && t.segments?.length,
+      ).length
       if (ready > 0) {
         const firstReady = (data?.tracks || []).find((t) => t.segments?.length)
         startTransition(() => {
@@ -263,7 +285,9 @@ export function useCaptions({
   const tracks = captionJob?.tracks || []
   const selectedTrack = tracks[selectedTrackIndex] || null
   const editorReady = Boolean(captionJob?.editorReady)
-  const captionsReadyCount = tracks.filter((t) => t.status === 'ready' || t.status === 'done').length
+  const captionsReadyCount = tracks.filter(
+    (t) => (t.status === 'ready' || t.status === 'done') && trackHasCaptions(t),
+  ).length
 
   const captionProgressPct = useMemo(() => {
     const total = captionJob?.totalTracks ?? 0

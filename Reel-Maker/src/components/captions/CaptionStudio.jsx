@@ -5,7 +5,12 @@ import {
   Save,
   Zap,
   AlertCircle,
+  FileSpreadsheet,
+  FileText,
+  Captions,
+  Download,
 } from 'lucide-react'
+import { exportCaptionsFiles } from '../../utils/captionFileExport.js'
 
 function trackStatusLabel(status) {
   if (status === 'ready' || status === 'done') return '✓'
@@ -59,6 +64,9 @@ export default function CaptionStudio({
 }) {
   const [localSegments, setLocalSegments] = useState([])
   const [captionLanguage, setCaptionLanguage] = useState('auto')
+  const [exportScope, setExportScope] = useState('current')
+  const [exporting, setExporting] = useState(false)
+  const [exportMsg, setExportMsg] = useState('')
 
   useEffect(() => {
     if (selectedTrack?.segments) {
@@ -70,10 +78,38 @@ export default function CaptionStudio({
 
   const totalTracks = captionJob?.totalTracks ?? voiceFiles?.length ?? 0
   const captionJobActive = polling || uploading || captionJob?.status === 'transcribing'
+  const canExportCaptions = (captionsReadyCount ?? 0) > 0
 
   const startFromVoices = async () => {
     const lang = captionLanguage === 'hinglish' ? 'hi' : captionLanguage
     await uploadFromVoiceFiles(voiceFiles, [], { language: lang })
+  }
+
+  const runExport = async (format) => {
+    if (!canExportCaptions || exporting) return
+    setExporting(true)
+    setExportMsg('')
+    try {
+      const result = await exportCaptionsFiles({
+        format,
+        scope: exportScope,
+        tracks,
+        selectedTrackIndex,
+        localSegments,
+        jobId: captionJobId,
+      })
+      const label =
+        format === 'excel' ? 'Excel (.xlsx)' : format === 'txt' ? 'Text (.txt)' : format === 'vtt' ? 'WebVTT (.vtt)' : 'Subtitles (.srt)'
+      setExportMsg(
+        result.files > 1
+          ? `Downloaded ${result.files} ${label} files (zip).`
+          : `Downloaded ${label}.`,
+      )
+    } catch (e) {
+      setExportMsg(e?.message || 'Export failed')
+    } finally {
+      setExporting(false)
+    }
   }
 
   return (
@@ -110,10 +146,10 @@ export default function CaptionStudio({
           </label>
           <p className="text-[9px] text-gray-600 leading-snug">
             {captionLanguage === 'auto'
-              ? 'Auto-detects language from audio — works best with single-language clips.'
+              ? 'Auto: detects language first (Hindi / Punjabi / English), then captions in that script. For best accuracy pick Hindi or Punjabi manually.'
               : captionLanguage === 'hinglish'
-                ? 'Optimized for mixed Hindi + English (Hinglish) speech.'
-                : `Forces ${CAPTION_LANGUAGES.find((l) => l.id === captionLanguage)?.label || captionLanguage} transcription.`}
+                ? 'Forces Hindi (Devanagari) with Hinglish-aware prompt.'
+                : `Forces ${CAPTION_LANGUAGES.find((l) => l.id === captionLanguage)?.label || captionLanguage} transcription in the correct script.`}
           </p>
           <button
             type="button"
@@ -207,6 +243,89 @@ export default function CaptionStudio({
             <p className="text-[10px] text-rose-300/90 whitespace-pre-line">{selectedTrack.error}</p>
           )}
         </>
+      )}
+
+      {canExportCaptions && (
+        <div className="bg-[#0c1022]/80 border border-emerald-500/20 rounded-xl p-3 space-y-2.5">
+          <div className="flex items-center gap-1.5 text-emerald-300">
+            <Download className="w-3.5 h-3.5" />
+            <p className="text-[10px] font-semibold uppercase tracking-wide">Export captions</p>
+          </div>
+
+          <div className="flex gap-1">
+            {[
+              { id: 'current', label: 'This voice' },
+              { id: 'all', label: `All ready (${captionsReadyCount})` },
+            ].map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setExportScope(opt.id)}
+                className={`flex-1 text-[9px] py-1.5 rounded-md border transition ${
+                  exportScope === opt.id
+                    ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-200'
+                    : 'border-gray-700 text-gray-500 hover:border-gray-600'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-3 gap-1.5">
+            <button
+              type="button"
+              disabled={exporting}
+              onClick={() => runExport('excel')}
+              className="flex flex-col items-center gap-1 py-2 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 disabled:opacity-40 text-white text-[9px] font-semibold"
+              title="Download .xlsx with timings + text"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              Excel
+            </button>
+            <button
+              type="button"
+              disabled={exporting}
+              onClick={() => runExport('txt')}
+              className="flex flex-col items-center gap-1 py-2 rounded-lg bg-sky-600/90 hover:bg-sky-500 disabled:opacity-40 text-white text-[9px] font-semibold"
+              title="Download plain text with timestamps"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Text
+            </button>
+            <button
+              type="button"
+              disabled={exporting}
+              onClick={() => runExport('srt')}
+              className="flex flex-col items-center gap-1 py-2 rounded-lg bg-violet-600/90 hover:bg-violet-500 disabled:opacity-40 text-white text-[9px] font-semibold"
+              title="Download .srt subtitle / captions file"
+            >
+              <Captions className="w-3.5 h-3.5" />
+              Captions
+            </button>
+          </div>
+
+          <button
+            type="button"
+            disabled={exporting}
+            onClick={() => runExport('vtt')}
+            className="w-full text-[9px] py-1.5 rounded-md border border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-500 disabled:opacity-40"
+          >
+            Also download WebVTT (.vtt)
+          </button>
+
+          {(exporting || exportMsg) && (
+            <p className={`text-[9px] ${exporting ? 'text-amber-300' : exportMsg.includes('fail') || exportMsg.includes('No ready') ? 'text-rose-300' : 'text-emerald-300/90'}`}>
+              {exporting ? (
+                <span className="inline-flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Preparing download…
+                </span>
+              ) : (
+                exportMsg
+              )}
+            </p>
+          )}
+        </div>
       )}
 
       {editorReady && tracks.length > 0 && (

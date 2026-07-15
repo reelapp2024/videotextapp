@@ -76,24 +76,48 @@ async function transcribeOneTrack(captionJobId, trackId, model, language) {
   if (!track) throw new Error(`Caption track not found: ${trackId}`);
   if (track.status === "ready" || track.status === "done") return;
   const shouldCountCompletion = track.status !== "error";
+  let counted = false;
   try {
     await import_CaptionTrack.default.findByIdAndUpdate(track._id, { status: "transcribing" });
     const result = await (0, import_fasterWhisperService.transcribeWithFasterWhisper)(track.audioPath, { model, language });
+    const segments = Array.isArray(result.segments) ? result.segments : [];
+    if (!segments.length) {
+      const msg =
+        "No speech/captions detected in this audio. Try a clearer voice file, or force Hindi/Punjabi/English in the language dropdown.";
+      await import_CaptionTrack.default.findByIdAndUpdate(track._id, {
+        status: "error",
+        segments: [],
+        language: result.language || null,
+        duration: result.duration ?? null,
+        error: msg,
+      });
+      if (shouldCountCompletion) {
+        await incrementTranscribed(captionJobId);
+        counted = true;
+      }
+      throw new Error(msg);
+    }
     await import_CaptionTrack.default.findByIdAndUpdate(track._id, {
       status: "ready",
-      segments: result.segments,
+      segments,
       language: result.language,
       duration: result.duration,
       error: null
     });
     await markFirstEditorReady(captionJobId, String(track._id));
-    if (shouldCountCompletion) await incrementTranscribed(captionJobId);
+    if (shouldCountCompletion) {
+      await incrementTranscribed(captionJobId);
+      counted = true;
+    }
   } catch (e) {
-    await import_CaptionTrack.default.findByIdAndUpdate(track._id, {
-      status: "error",
-      error: e.message
-    });
-    if (shouldCountCompletion) await incrementTranscribed(captionJobId);
+    const current = await import_CaptionTrack.default.findById(trackId).select("status").lean();
+    if (current?.status !== "error") {
+      await import_CaptionTrack.default.findByIdAndUpdate(track._id, {
+        status: "error",
+        error: e.message
+      });
+    }
+    if (shouldCountCompletion && !counted) await incrementTranscribed(captionJobId);
     throw e;
   }
 }

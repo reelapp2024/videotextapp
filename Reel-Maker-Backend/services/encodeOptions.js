@@ -400,6 +400,12 @@ function resolveHardwareEncoderForExport(config, opts = {}) {
   const fast = opts?.fast !== false;
   const pipeMode = opts?.pipe === true;
   const br = opts.br ?? resolveBitrateK(config);
+
+  // Parallel overflow / chunk workers — avoid QSV multi-pipe deadlock
+  if (opts.forceSoftware === true) {
+    console.log('[encode] Using libx264 (software lane for parallel export)');
+    return 'libx264';
+  }
   
   const hasSize = Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0;
   

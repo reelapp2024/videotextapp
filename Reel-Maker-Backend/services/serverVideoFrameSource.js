@@ -7,7 +7,7 @@ const STDERR_MAX = 4096;
 
 /**
  * Sequential RGBA frame reader via FFmpeg rawvideo pipe.
- * Optimized for zero promise/listener churn and absolute sub-pixel frame stability.
+ * Prefetch-capable: kick next read while the previous frame is being rendered.
  */
 class ServerVideoFrameSource {
   /**
@@ -17,6 +17,7 @@ class ServerVideoFrameSource {
    * @param {number} opts.height
    * @param {number} opts.fps
    * @param {boolean} [opts.loop]
+   * @param {number} [opts.startFrame]
    */
   constructor(opts) {
     this.filePath = opts.filePath;
@@ -24,7 +25,6 @@ class ServerVideoFrameSource {
     this.height = opts.height;
     this.fps = opts.fps;
     this.loop = opts.loop ?? false;
-    /** Start reading at this frame index (accurate output seek). */
     this.startFrame = Math.max(0, Number(opts.startFrame) || 0);
     this._frameBytes = this.width * this.height * 4;
     this._bufferA = Buffer.allocUnsafe(this._frameBytes);
@@ -43,6 +43,8 @@ class ServerVideoFrameSource {
     this.frameIndex = 0;
     this._duplicateFrameCount = 0;
     this._resolver = null;
+    /** @type {Promise<Buffer|null>|null} */
+    this._prefetch = null;
   }
 
   get frameBytes() {
@@ -55,8 +57,7 @@ class ServerVideoFrameSource {
       return;
     }
 
-    // FIXED SHIVERING: Force intermediate scaled bounds to perfect even integers before padding.
-    // This stops fractional division coordinates from jittering back and forth by 1 pixel on alternating frames.
+    // One scale + even dims via trunc — same visual result as dual-scale, less filter work.
     const vf = [
       `fps=fps=${this.fps}:start_time=0:round=near`,
       `scale=${this.width}:${this.height}:force_original_aspect_ratio=decrease`,
@@ -64,10 +65,12 @@ class ServerVideoFrameSource {
       `pad=${this.width}:${this.height}:(ow-iw)/2:(oh-ih)/2:black`,
     ].join(',');
 
+    const decodeThreads = Math.max(1, parseInt(process.env.EXPORT_DECODE_THREADS || '4', 10) || 4);
+
     const args = [
       '-hide_banner',
       '-loglevel', 'error',
-      '-threads', '4',
+      '-threads', String(decodeThreads),
     ];
     if (this.loop) args.push('-stream_loop', '-1');
     args.push('-i', this.filePath);
@@ -93,7 +96,7 @@ class ServerVideoFrameSource {
       this._stderr = (this._stderr + msg).slice(-STDERR_MAX);
       console.warn('[serverVideoFrameSource]', msg.trim());
     };
-    
+
     this._closeHandler = () => {
       this._ended = true;
       if (this._resolver) {
@@ -106,8 +109,6 @@ class ServerVideoFrameSource {
     this._proc.stderr.on('data', this._stderrHandler);
     this._proc.on('close', this._closeHandler);
 
-    // OPTIMIZATION: Setup single, persistent stream event subscription.
-    // This stops the allocation of 100,000+ individual wrapper promises and listener arrays inside the frame loop.
     this._stdout.on('data', (chunk) => {
       if (chunk && chunk.length > 0) {
         this._chunks.push(chunk);
@@ -128,6 +129,9 @@ class ServerVideoFrameSource {
         res();
       }
     });
+
+    // Prime one frame so the first await is usually already ready.
+    this.prefetch();
   }
 
   _consumeFrameBytes() {
@@ -151,7 +155,7 @@ class ServerVideoFrameSource {
   /**
    * @returns {Promise<Buffer|null>}
    */
-  readFrame() {
+  _readFrameInternal() {
     return new Promise((resolve) => {
       const checkAndProcess = () => {
         if (this._pendingLen >= this._frameBytes) {
@@ -162,7 +166,7 @@ class ServerVideoFrameSource {
           resolve(this._lastFrame);
           return true;
         }
-        
+
         if (this._ended) {
           if (this._consumeFrameBytes()) {
             this.frameIndex += 1;
@@ -186,6 +190,27 @@ class ServerVideoFrameSource {
     });
   }
 
+  /**
+   * Kick asynchronous decode of the next frame (overlaps with canvas render).
+   */
+  prefetch() {
+    if (this._prefetch || this._ended) return;
+    this._prefetch = this._readFrameInternal();
+  }
+
+  /**
+   * @returns {Promise<Buffer|null>}
+   */
+  async readFrame() {
+    let promise = this._prefetch;
+    this._prefetch = null;
+    if (!promise) promise = this._readFrameInternal();
+    const frame = await promise;
+    // Start filling the alternate buffer while caller renders this frame.
+    this.prefetch();
+    return frame;
+  }
+
   getStats() {
     return {
       frameIndex: this.frameIndex,
@@ -195,6 +220,7 @@ class ServerVideoFrameSource {
   }
 
   dispose() {
+    this._prefetch = null;
     if (this._proc) {
       if (this._stderrHandler) this._proc.stderr?.removeListener('data', this._stderrHandler);
       if (this._closeHandler) this._proc.removeListener('close', this._closeHandler);

@@ -47,16 +47,18 @@ function clampFps(n, min, max, fallback) {
 function resolveServerExportFps(config, sourceFps) {
   const videoCfg = config?.video || {};
   const manual = clampFps(videoCfg.fps, 10, 60, 30);
+  const maxFps = clampFps(parseInt(process.env.EXPORT_MAX_FPS || '30', 10), 12, 60, 30);
   const useMatch = videoCfg.frameRateMode === 'match'
     || (videoCfg.frameRateMode !== 'manual' && videoCfg.useSourceFps !== false);
   if (!useMatch || sourceFps == null || !Number.isFinite(sourceFps) || sourceFps <= 0) {
-    return manual;
+    return Math.min(manual, maxFps);
   }
   const rounded = Math.round(sourceFps);
-  if (rounded <= 26) return 24;
-  if (rounded <= 45) return 30;
-  if (rounded <= 75) return 60;
-  return Math.min(60, Math.max(24, rounded));
+  let fps;
+  if (rounded <= 26) fps = 24;
+  else if (rounded <= 45) fps = 30;
+  else fps = 30; // never auto-bump to 60 — doubles export time with no caption benefit
+  return Math.min(fps, maxFps);
 }
 
 async function computeRowFrameCount(params) {
