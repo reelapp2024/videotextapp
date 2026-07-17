@@ -11,6 +11,8 @@ import {
   clampBlockStartY,
   clampTextAnchorX,
   resolveBlockFontScale,
+  resolveSafeMarginX,
+  resolveSafeMarginY,
 } from '../layout/metrics.js';
 import { applyTextTransform } from '../layout/applyTextTransform.js';
 import { wrapText } from '../layout/wrapText.js';
@@ -125,9 +127,10 @@ export function buildFrameScene(params) {
   const boxPadding = resolveBoxPadding(overlay, fontSize);
   const boxRadius = resolveBoxCornerRadius(overlay, fontSize);
   const strokeW = resolveStrokeWidth(overlay, fontSize);
-  const pad = Math.max(boxPadding, 8);
+  const padX = Math.max(resolveSafeMarginX(width), boxPadding);
+  const padY = Math.max(resolveSafeMarginY(height), boxPadding);
 
-  const blockScale = resolveBlockFontScale(lines.length, lineHeight, height, pad);
+  const blockScale = resolveBlockFontScale(lines.length, lineHeight, height, padY);
   if (blockScale < 1) {
     fontSize = Math.round(fontSize * blockScale);
     textMaxWidth = resolveTextMaxWidth(width, overlay, fontSize);
@@ -137,7 +140,7 @@ export function buildFrameScene(params) {
 
   const totalBlockHeight = lines.length * lineHeight;
   let startY = height * (overlay.positionY / 100) - totalBlockHeight / 2 + lineHeight / 2;
-  startY = clampBlockStartY(startY, totalBlockHeight, height, pad);
+  startY = clampBlockStartY(startY, totalBlockHeight, height, padY);
   const baseX = width * ((overlay.positionX ?? 50) / 100);
 
   const allWords = lines.flatMap((l) => l.split(' ').filter(Boolean));
@@ -160,7 +163,7 @@ export function buildFrameScene(params) {
     const yPos = startY + idx * lineHeight;
     const displayLine = line;
     const lineWidthForBox = measureCtx.measureText(displayLine).width;
-    const lineAnchorX = clampTextAnchorX(baseX, lineWidthForBox, width, overlay.textAlign, pad);
+    const lineAnchorX = clampTextAnchorX(baseX, lineWidthForBox, width, overlay.textAlign, padX);
     const wordStartIdx = lines.slice(0, idx).reduce((s, l) => s + l.split(' ').filter(Boolean).length, 0);
 
     if (overlay.styleType === 'box') {

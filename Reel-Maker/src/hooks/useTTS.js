@@ -255,26 +255,50 @@ export function useTTS(params) {
     setLogs(`${generatedAudios.length} audio(s) added to Voice library.`);
   }, [addGeneratedAudioToVoiceLibrary, generatedAudios, setLogs]);
 
-  const downloadSingleAudio = useCallback((url, filename) => {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  }, []);
+  const downloadSingleAudio = useCallback(async (url, filename) => {
+    const safeName = filename || 'audio.mp3';
+    try {
+      // Cross-origin URLs (backend on another port) make the `download` attribute
+      // no-op and the browser navigates/plays instead. Fetch as a blob and save that.
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = safeName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+    } catch (error) {
+      console.error('Error downloading audio:', error);
+      setLogs?.('Error downloading audio.');
+    }
+  }, [setLogs]);
 
   const downloadAllTTSAudios = useCallback(async () => {
     if (generatedAudios.length === 0) return;
 
     if (generatedAudios[0]?.zipUrl) {
-      const a = document.createElement('a');
-      a.href = generatedAudios[0].zipUrl;
-      a.download = 'tts_audios.zip';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
       setLogs('Downloading TTS ZIP from server...');
+      try {
+        const response = await fetch(generatedAudios[0].zipUrl);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = objectUrl;
+        a.download = 'tts_audios.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+        setLogs('TTS ZIP downloaded!');
+      } catch (error) {
+        console.error('Error downloading ZIP:', error);
+        setLogs('Error downloading ZIP.');
+      }
       return;
     }
 

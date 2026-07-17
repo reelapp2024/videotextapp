@@ -27,6 +27,11 @@ export {
   resolveStrokeWidth,
   resolveTextMaxWidth,
   resolveBlockFontScale,
+  SAFE_MARGIN_RATIO,
+  resolveSafeMarginX,
+  resolveSafeMarginY,
+  resolveSafeContentWidth,
+  resolveSafeContentHeight,
 } from './layout/metrics.js';
 export { wrapText } from './layout/wrapText.js';
 export { applyTextTransform } from './layout/applyTextTransform.js';

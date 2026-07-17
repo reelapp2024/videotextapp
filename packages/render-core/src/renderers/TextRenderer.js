@@ -13,6 +13,8 @@ import {
   resolveBoxCornerRadius,
   resolveBoxPadding,
   resolveFontSizePx,
+  resolveSafeMarginX,
+  resolveSafeMarginY,
   resolveStrokeWidth,
   resolveTextMaxWidth,
 } from '../layout/metrics.js';
@@ -52,9 +54,10 @@ export function buildRowBasedTextScene(params) {
   const boxPadding = resolveBoxPadding(ov, fontSize);
   const boxRadius = resolveBoxCornerRadius(ov, fontSize);
   const strokeW = resolveStrokeWidth(ov, fontSize);
-  const pad = Math.max(boxPadding, 8);
+  const padX = Math.max(resolveSafeMarginX(width), boxPadding);
+  const padY = Math.max(resolveSafeMarginY(height), boxPadding);
 
-  const blockScale = resolveBlockFontScale(lines.length, lineHeight, height, pad);
+  const blockScale = resolveBlockFontScale(lines.length, lineHeight, height, padY);
   if (blockScale < 1) {
     fontSize = Math.round(fontSize * blockScale);
     textMaxWidth = resolveTextMaxWidth(width, ov, fontSize);
@@ -64,7 +67,7 @@ export function buildRowBasedTextScene(params) {
 
   const totalBlockHeight = lines.length * lineHeight;
   let startY = height * (ov.positionY / 100) - totalBlockHeight / 2 + lineHeight / 2;
-  startY = clampBlockStartY(startY, totalBlockHeight, height, pad);
+  startY = clampBlockStartY(startY, totalBlockHeight, height, padY);
   const posX = ov.positionX ?? 50;
   const baseX = width * (posX / 100);
   const fontCss = fontRegistry.buildFontCss(fontWeight, fontSize, fontFamily);
@@ -74,7 +77,7 @@ export function buildRowBasedTextScene(params) {
   lines.forEach((line, lineIdx) => {
     const y = startY + lineIdx * lineHeight;
     const lineWidth = measureCtx.measureText(line).width + letterSpacing * line.length;
-    const lineAnchorX = clampTextAnchorX(baseX, lineWidth, width, ov.textAlign, pad);
+    const lineAnchorX = clampTextAnchorX(baseX, lineWidth, width, ov.textAlign, padX);
 
     if (ov.styleType === 'box') {
       let bx = lineAnchorX - lineWidth / 2 - boxPadding;

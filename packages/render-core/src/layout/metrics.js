@@ -1,20 +1,51 @@
 /**
- * Layout metrics — mirrors Reel-Maker/src/utils/overlayStyleMetrics.js for shared renderer use.
- * Keep in sync until a single import path exists in a later milestone.
+ * Layout metrics — shared by preview (Reel-Maker) and export (render-core).
+ * Keep in sync with Reel-Maker/src/utils/overlayStyleMetrics.js
  */
+
+/** Minimum inset from each edge of the frame (10%). */
+export const SAFE_MARGIN_RATIO = 0.1;
+
+export function resolveSafeMarginX(canvasWidth) {
+  return Math.max(8, Number(canvasWidth) * SAFE_MARGIN_RATIO);
+}
+
+export function resolveSafeMarginY(canvasHeight) {
+  return Math.max(8, Number(canvasHeight) * SAFE_MARGIN_RATIO);
+}
+
+/** Usable content width inside left/right safe margins. */
+export function resolveSafeContentWidth(canvasWidth) {
+  const pad = resolveSafeMarginX(canvasWidth);
+  return Math.max(40, Number(canvasWidth) - pad * 2);
+}
+
+/** Usable content height inside top/bottom safe margins. */
+export function resolveSafeContentHeight(canvasHeight) {
+  const pad = resolveSafeMarginY(canvasHeight);
+  return Math.max(40, Number(canvasHeight) - pad * 2);
+}
 
 export function resolveFontSizePx(overlay, canvasWidth) {
   const pct = Number(overlay?.fontSize) || 5;
-  return Math.max(12, Math.floor(Number(canvasWidth) * (pct / 100)));
+  // Cap so a single glyph can still fit inside the safe content width.
+  const raw = Math.max(12, Math.floor(Number(canvasWidth) * (pct / 100)));
+  const maxPx = Math.floor(resolveSafeContentWidth(canvasWidth) * 0.95);
+  return Math.min(raw, Math.max(12, maxPx));
 }
 
-export function clampBlockStartY(startY, totalBlockHeight, canvasHeight, pad = 8) {
-  const p = Math.max(8, pad);
-  return Math.max(p, Math.min(canvasHeight - totalBlockHeight - p, startY));
+export function clampBlockStartY(startY, totalBlockHeight, canvasHeight, pad = null) {
+  const p = pad != null ? Math.max(8, pad) : resolveSafeMarginY(canvasHeight);
+  const maxStart = canvasHeight - totalBlockHeight - p;
+  if (maxStart < p) {
+    // Block taller than safe area — pin to top safe margin (scale should have run first).
+    return p;
+  }
+  return Math.max(p, Math.min(maxStart, startY));
 }
 
-export function clampTextAnchorX(baseX, textWidth, canvasWidth, textAlign, pad = 8) {
-  const p = Math.max(8, pad);
+export function clampTextAnchorX(baseX, textWidth, canvasWidth, textAlign, pad = null) {
+  const p = pad != null ? Math.max(8, pad) : resolveSafeMarginX(canvasWidth);
   const align = textAlign || 'center';
   if (align === 'left') {
     return Math.max(p, Math.min(canvasWidth - p - textWidth, baseX));
@@ -52,18 +83,27 @@ export function resolveStrokeWidth(overlay, fontSize) {
   return Math.max(0.5, fontSize * (Number(pct) / 100));
 }
 
+/**
+ * Max line width for wrap/fit — stays inside 10% left/right margins,
+ * also reserving room for box padding and stroke so the box never clips.
+ */
 export function resolveTextMaxWidth(canvasWidth, overlay, fontSize) {
   const pad = resolveBoxPadding(overlay, fontSize);
   const stroke =
     overlay?.styleType === 'stroke' ? resolveStrokeWidth(overlay, fontSize) * 2 : 0;
-  const inset = pad * 2 + stroke + 20;
-  return Math.max(canvasWidth * 0.55, canvasWidth * 0.92 - inset);
+  const boxExtra = overlay?.styleType === 'box' ? pad * 2 : pad > 0 ? pad : 0;
+  const inset = boxExtra + stroke;
+  const safeW = resolveSafeContentWidth(canvasWidth);
+  return Math.max(40, safeW - inset);
 }
 
-export function resolveBlockFontScale(lineCount, lineHeight, canvasHeight, pad = 8) {
-  const p = Math.max(8, pad);
-  const maxH = canvasHeight * 0.88 - p * 2;
+/**
+ * Shrink font when the wrapped block is taller than the vertical safe area (80% of frame).
+ */
+export function resolveBlockFontScale(lineCount, lineHeight, canvasHeight, pad = null) {
+  const p = pad != null ? Math.max(8, pad) : resolveSafeMarginY(canvasHeight);
+  const maxH = resolveSafeContentHeight(canvasHeight);
   const blockH = lineCount * lineHeight;
   if (blockH <= maxH || blockH <= 0) return 1;
-  return Math.max(0.55, maxH / blockH);
+  return Math.max(0.45, maxH / blockH);
 }

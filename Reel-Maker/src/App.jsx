@@ -1132,6 +1132,23 @@ const App = () => {
     const lines = [];
     const wp = Math.max(1, wordsPerLine || 4);
     const useWidth = ctx && maxWidth != null && maxWidth > 0;
+    const pushCharChunks = (word) => {
+      if (!useWidth) {
+        lines.push(word);
+        return;
+      }
+      let chunk = '';
+      for (const ch of Array.from(word)) {
+        const test = chunk + ch;
+        if (chunk && ctx.measureText(test).width > maxWidth) {
+          lines.push(chunk);
+          chunk = ch;
+        } else {
+          chunk = test;
+        }
+      }
+      if (chunk) lines.push(chunk);
+    };
     for (const block of blocks) {
       const words = block.split(/\s+/).filter(Boolean);
       let i = 0;
@@ -1143,9 +1160,12 @@ const App = () => {
             take--;
             lineStr = take > 0 ? words.slice(i, i + take).join(' ') : '';
           }
-          if (take === 0) take = 1;
-          lineStr = words.slice(i, i + take).join(' ');
-          lines.push(lineStr);
+          if (take === 0) {
+            pushCharChunks(words[i]);
+            i += 1;
+            continue;
+          }
+          lines.push(words.slice(i, i + take).join(' '));
           i += take;
         } else {
           lines.push(words.slice(i, i + wp).join(' '));

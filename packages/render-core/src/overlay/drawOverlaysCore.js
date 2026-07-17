@@ -11,6 +11,8 @@ import {
   resolveBlockFontScale,
   clampBlockStartY,
   clampTextAnchorX,
+  resolveSafeMarginX,
+  resolveSafeMarginY,
 } from '../layout/metrics.js';
 
 /** @param {CanvasRenderingContext2D} ctx @param {number} width @param {number} height @param {unknown} rowData @param {number|null} videoTime @param {number|null} videoDuration @param {object} cfg @param {object} deps */
@@ -92,8 +94,9 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
       const boxPadding = resolveBoxPadding(ov, fontSize);
       const boxRadius = resolveBoxCornerRadius(ov, fontSize);
       const strokeW = resolveStrokeWidth(ov, fontSize);
-      const pad = Math.max(boxPadding, 8);
-      const blockScale = resolveBlockFontScale(lines.length, lineHeight, height, pad);
+      const padX = Math.max(resolveSafeMarginX(width), boxPadding);
+      const padY = Math.max(resolveSafeMarginY(height), boxPadding);
+      const blockScale = resolveBlockFontScale(lines.length, lineHeight, height, padY);
       if (blockScale < 1) {
         fontSize = Math.round(fontSize * blockScale);
         ctx.font = `${fontWeight} ${fontSize}px ${ov.fontFamily}`;
@@ -103,7 +106,7 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
       }
       const totalBlockHeight = lines.length * lineHeight;
       let startY = (height * (ov.positionY / 100)) - (totalBlockHeight / 2) + (lineHeight / 2);
-      startY = clampBlockStartY(startY, totalBlockHeight, height, pad);
+      startY = clampBlockStartY(startY, totalBlockHeight, height, padY);
       const posX = ov.positionX ?? 50;
       let baseX = width * (posX / 100);
 
@@ -152,7 +155,7 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
           ctx.measureText(line).width + letterSpacing * line.length,
           width,
           ov.textAlign,
-          pad,
+          padX,
         );
         if (ov.styleType === 'box') {
           const tw = ctx.measureText(line).width + letterSpacing * line.length;
@@ -553,8 +556,9 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
       const boxPadding = resolveBoxPadding(overlay, fontSize);
       const boxRadius = resolveBoxCornerRadius(overlay, fontSize);
       const strokeW = resolveStrokeWidth(overlay, fontSize);
-      const pad = Math.max(boxPadding, 8);
-      const blockScale = resolveBlockFontScale(lines.length, lineHeight, height, pad);
+      const padX = Math.max(resolveSafeMarginX(width), boxPadding);
+      const padY = Math.max(resolveSafeMarginY(height), boxPadding);
+      const blockScale = resolveBlockFontScale(lines.length, lineHeight, height, padY);
       if (blockScale < 1) {
         fontSize = Math.round(fontSize * blockScale);
         ctx.font = `${fontWeight} ${fontSize}px ${overlay.fontFamily}`;
@@ -565,7 +569,7 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
 
       const totalBlockHeight = lines.length * lineHeight;
       let startY = (height * (overlay.positionY / 100)) - (totalBlockHeight / 2) + (lineHeight / 2);
-      startY = clampBlockStartY(startY, totalBlockHeight, height, pad);
+      startY = clampBlockStartY(startY, totalBlockHeight, height, padY);
 
       const posX = overlay.positionX ?? 50;
       let baseX = width * (posX / 100);
@@ -819,7 +823,7 @@ export function drawOverlaysCore(ctx, width, height, rowData, videoTime = null, 
           useWordByWord && words.length > 0
             ? lineWidthForBox
             : ctx.measureText(displayLine).width;
-        const lineAnchorX = clampTextAnchorX(baseX, lineDisplayW, width, overlay.textAlign, pad);
+        const lineAnchorX = clampTextAnchorX(baseX, lineDisplayW, width, overlay.textAlign, padX);
 
         // Background box
         if (overlay.styleType === 'box') {
